@@ -26,6 +26,7 @@ type (
 	Engine struct {
 		mtx     sync.Mutex
 		tune    *EngineTunes
+		hooked  bool
 		started bool
 
 		driver       IKey
@@ -65,9 +66,7 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 		cmn.PanicSanity(cmn.Fmt("Failed to start switch: %v", err))
 	}
 
-	// add the chainid and number of validators to the global config
 	tune.Conf.Set("chain_id", stateM.ChainID)
-	tune.Conf.Set("num_vals", stateM.Validators.Size())
 
 	blockStoreDB := dbm.NewDB("blockstore", dbBackend, dbDir)
 	blockStore := blockchain.NewBlockStore(blockStoreDB)
@@ -118,13 +117,13 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	//	pexReactor := p2p.NewPEXReactor(addrBook)
 	//	sw.AddReactor("PEX", pexReactor)
 	// }
-	sw.SetNodePrivKey(driver.GetPrivateKey().(crypto.PrivKeyEd25519))
+	privKey := driver.GetPrivateKey()
+	sw.SetNodePrivKey(privKey.(crypto.PrivKeyEd25519))
 	sw.SetAuthByCA(authByCA(&stateM.Validators))
 	sw.SetAddToRefuselist(addToRefuselist(refuseList))
 	sw.SetRefuseListFilter(refuseListFilter(refuseList))
 	setEventSwitch(eventSwitch, bcReactor, memReactor, consensusReactor)
 
-	privKey := driver.GetPrivateKey()
 	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), sw, &stateM.Validators, refuseList)
 
 	return &Engine{
@@ -138,6 +137,44 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 		mempool:      mem,
 		consensus:    consensusState,
 	}
+}
+
+func (e *Engine) ConnectHooks(hooks types.Hooks) {
+	e.hooked = true
+
+	if hooks.OnNewRound != nil {
+		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
+			data := ed.(types.EventDataHookNewRound)
+			hooks.OnNewRound.Async(data.Height, data.Round, nil)
+		})
+	}
+	if hooks.OnPropose != nil {
+		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookPropose(), func(ed types.TMEventData) {
+			data := ed.(types.EventDataHookPropose)
+			hooks.OnPropose.Async(data.Height, data.Round, nil)
+		})
+	}
+	if hooks.OnPrevote != nil {
+		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookPrevote(), func(ed types.TMEventData) {
+			data := ed.(types.EventDataHookPrevote)
+			hooks.OnPrevote.Async(data.Height, data.Round, data.Block)
+		})
+	}
+	if hooks.OnPrecommit != nil {
+		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookPrecommit(), func(ed types.TMEventData) {
+			data := ed.(types.EventDataHookPrecommit)
+			hooks.OnPrecommit.Async(data.Height, data.Round, data.Block)
+		})
+	}
+
+	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookCommit(), func(ed types.TMEventData) {
+		data := ed.(types.EventDataHookCommit)
+		cs := types.CommitResult{}
+		if hooks.OnCommit != nil {
+			cs = hooks.OnCommit.Sync(data.Height, data.Round, data.Block).(CommitResult)
+		}
+		data.ResCh <- cs
+	})
 }
 
 func (e *Engine) DialSeeds(seeds []string) {
@@ -154,6 +191,12 @@ func (e *Engine) Start() error {
 	defer e.mtx.Unlock()
 	if e.started {
 		return errors.New("can't start engine twice")
+	}
+	if !e.hooked {
+		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookCommit(), func(ed types.TMEventData) {
+			data := ed.(types.EventDataHookCommit)
+			data.ResCh <- types.CommitResult{}
+		})
 	}
 	if _, err := e.p2pSwitch.Start(); err == nil {
 		e.started = true

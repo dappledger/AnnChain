@@ -3,10 +3,11 @@ package state
 import (
 	"errors"
 
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 	"gitlab.zhonganonline.com/ann/angine/plugin"
 	"gitlab.zhonganonline.com/ann/angine/types"
+	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
+	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
+	"time"
 )
 
 //--------------------------------------------------
@@ -170,27 +171,38 @@ func (s *State) validateBlock(block *types.Block) error {
 }
 
 // ApplyBlock executes the block, then commits and updates the mempool atomically
-func (s *State) ApplyBlock(eventCache types.Fireable, block *types.Block, partsHeader types.PartSetHeader, mempool types.IMempool) error {
+func (s *State) ApplyBlock(eventCache types.Fireable, block *types.Block, partsHeader types.PartSetHeader, mempool types.IMempool, round int) error {
 	// Run the block on the State:
 	// + update validator sets
 	// + run txs on the proxyAppConn
-	err := s.ExecBlock(eventCache, block, partsHeader)
+	err := s.ExecBlock(eventCache, block, partsHeader, round)
 	if err != nil {
 		return errors.New(Fmt("Exec failed for application: %v", err))
 	}
 	// lock mempool, commit state, update mempoool
-	err = s.CommitStateUpdateMempool(block, mempool)
+	err = s.CommitStateUpdateMempool(block, mempool, round)
 	if err != nil {
 		return errors.New(Fmt("Commit failed for application: %v", err))
 	}
+
 	return nil
 }
 
 // mempool must be locked during commit and update
 // because state is typically reset on Commit and old txs must be replayed
 // against committed state before new txs are run in the mempool, lest they be invalid
-func (s *State) CommitStateUpdateMempool(block *types.Block, mempool types.IMempool) error {
+func (s *State) CommitStateUpdateMempool(eventCache types.Fireable, block *types.Block, mempool types.IMempool, round int) error {
 	mempool.Update(block.Height, block.Txs)
+	resch := make(types.CommitResult, 1)
+	types.FireEventHookCommit(eventCache, types.EventDataHookCommit{Height: block.Height, Round: round, Block: block, ResCh: resch})
+
+	select {
+	case <-time.After(1 * time.Second):
+		return errors.New("timeout: 1s")
+	case res := <-resch:
+		s.AppHash = res
+	}
+
 	return nil
 }
 

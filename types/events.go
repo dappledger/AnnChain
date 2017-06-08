@@ -32,6 +32,12 @@ func EventStringVote() string             { return "Vote" }
 
 func EventStringSwitchToConsensus() string { return "SwitchToConsensus" }
 
+func EventStringHookPrevote() string   { return "Hook Prevote" }
+func EventStringHookNewRound() string  { return "Hook NewRound" }
+func EventStringHookPropose() string   { return "Hook Propose" }
+func EventStringHookCommit() string    { return "Hook Commit" }
+func EventStringHookPrecommit() string { return "Hook Precommit" }
+
 //----------------------------------------
 
 // implements events.EventData
@@ -46,8 +52,16 @@ const (
 	EventDataTypeTx             = byte(0x03)
 	EventDataTypeNewBlockHeader = byte(0x04)
 
+	EventDataTypeSwitchToConsensus = byte(0x5)
+
 	EventDataTypeRoundState = byte(0x11)
 	EventDataTypeVote       = byte(0x12)
+
+	EventDataTypeHookNewRound  = byte(0x21)
+	EventDataTypeHookPropose   = byte(0x22)
+	EventDataTypeHookPrevote   = byte(0x23)
+	EventDataTypeHookPrecommit = byte(0x24)
+	EventDataTypeHookCommit    = byte(0x25)
 )
 
 var _ = wire.RegisterInterface(
@@ -58,6 +72,14 @@ var _ = wire.RegisterInterface(
 	wire.ConcreteType{EventDataTx{}, EventDataTypeTx},
 	wire.ConcreteType{EventDataRoundState{}, EventDataTypeRoundState},
 	wire.ConcreteType{EventDataVote{}, EventDataTypeVote},
+
+	wire.ConcreteType{EventDataSwitchToConsensus, EventDataTypeSwitchToConsensus},
+
+	wire.ConcreteType{EventDataHookNewRound{}, EventDataTypeHookNewRound},
+	wire.ConcreteType{EventDataHookPropose{}, EventDataTypeHookPropose},
+	wire.ConcreteType{EventDataHookPrevote{}, EventDataTypeHookPrevote},
+	wire.ConcreteType{EventDataHookPrecommit{}, EventDataTypeHookPrecommit},
+	wire.ConcreteType{EventDataHookCommit{}, EventDataTypeHookCommit},
 )
 
 // Most event messages are basic types (a block, a transaction)
@@ -99,12 +121,44 @@ type EventDataSwitchToConsensus struct {
 	State interface{}
 }
 
+type EventDataHookNewRound struct {
+	Height int
+	Round  int
+}
+type EventDataHookPropose struct {
+	Height int
+	Round  int
+	Block  *Block
+}
+type EventDataHookPrevote struct {
+	Height int
+	Round  int
+	Block  *Block
+}
+type EventDataHookPrecommit struct {
+	Height int
+	Round  int
+	Block  *Block
+}
+type EventDataHookCommit struct {
+	Height int
+	Round  int
+	Block  *Block
+	ResCh  chan CommitResult
+}
+
 func (_ EventDataNewBlock) AssertIsTMEventData()          {}
 func (_ EventDataNewBlockHeader) AssertIsTMEventData()    {}
 func (_ EventDataTx) AssertIsTMEventData()                {}
 func (_ EventDataRoundState) AssertIsTMEventData()        {}
 func (_ EventDataVote) AssertIsTMEventData()              {}
 func (_ EventDataSwitchToConsensus) AssertIsTMEventData() {}
+
+func (_ EventDataHookNewRound) AssertIsTMEventData()  {}
+func (_ EventDataHookPropose) AssertIsTMEventData()   {}
+func (_ EventDataHookPrevote) AssertIsTMEventData()   {}
+func (_ EventDataHookPrecommit) AssertIsTMEventData() {}
+func (_ EventDataHookCommit) AssertIsTMEventData()    {}
 
 //----------------------------------------
 // Wrappers for type safety
@@ -206,4 +260,20 @@ func FireEventLock(fireable events.Fireable, rs EventDataRoundState) {
 
 func FireEventSwitchToConsensus(fireable events.Fireable) {
 	fireEvent(fireable, EventStringSwitchToConsensus(), EventDataSwitchToConsensus{})
+}
+
+func FireEventHookNewRound(fireable events.Fireable, d EventDataHookNewRound) {
+	fireEvent(fireable, EventStringHookNewRound(), d)
+}
+func FireEventHookPrevote(fireable events.Fireable, d EventDataHookPrevote) {
+	fireEvent(fireable, EventStringHookPrevote(), d)
+}
+func FireEventHookPropose(fireable events.Fireable, d EventDataHookPropose) {
+	fireEvent(fireable, EventStringHookPropose(), d)
+}
+func FireEventHookPrecommit(fireable events.Fireable, d EventDataHookPrecommit) {
+	fireEvent(fireable, EventStringHookPrecommit(), d)
+}
+func FireEventHookCommit(fireable events.Fireable, d EventDataHookCommit) {
+	fireEvent(fireable, EventStringHookCommit(), d)
 }

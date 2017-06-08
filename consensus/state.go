@@ -9,14 +9,14 @@ import (
 	"sync"
 	"time"
 
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
-	"gitlab.zhonganonline.com/ann/ann-module/logger"
 	bc "gitlab.zhonganonline.com/ann/angine/blockchain"
 	mempl "gitlab.zhonganonline.com/ann/angine/mempool"
 	sm "gitlab.zhonganonline.com/ann/angine/state"
 	"gitlab.zhonganonline.com/ann/angine/types"
+	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
+	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
+	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	"gitlab.zhonganonline.com/ann/ann-module/logger"
 )
 
 //-----------------------------------------------------------------------------
@@ -248,6 +248,12 @@ type ConsensusState struct {
 	decideProposal func(height, round int)
 	doPrevote      func(height, round int)
 	setProposal    func(proposal *types.Proposal) error
+
+	onNewHeightRound func(height, round int)
+	onPropose        func(height, round int, block *types.Block)
+	onPrevote        func(height, round int, block *types.Block)
+	onPrecommit      func(height, round int, block *types.Block)
+	onCommit         func(height, round int, block *types.Block)
 
 	done chan struct{}
 }
@@ -794,7 +800,9 @@ func (cs *ConsensusState) enterNewRound(height int, round int) {
 	}
 	cs.Votes.SetRound(round + 1) // also track next round (round+1) to allow round-skipping
 
-	types.FireEventNewRound(cs.evsw, cs.RoundStateEvent())
+	rse := cs.RoundStateEvent()
+	types.FireEventNewRound(cs.evsw, rse)
+	types.FireEventHookNewRound(cs.evsw, types.EventDataHookNewRound{Height: rse.Height, Round: rse.Round})
 
 	// Immediately go to enterPropose.
 	cs.enterPropose(height, round)
@@ -834,7 +842,6 @@ func (cs *ConsensusState) enterPropose(height int, round int) {
 	} else {
 		log.Info("enterPropose: Our turn to propose", "proposer", cs.Validators.Proposer().Address, "privValidator", cs.privValidator)
 		cs.decideProposal(height, round)
-
 	}
 }
 
@@ -960,9 +967,13 @@ func (cs *ConsensusState) enterPrevote(height int, round int) {
 
 func (cs *ConsensusState) defaultDoPrevote(height int, round int) {
 	// If a block is locked, prevote that.
+	var prevotedBlock *types.Block
+	defer types.FireEventHookPrevote(cs.evsw, types.EventDataHookPrevote{Height: height, Round: round, Block: prevotedBlock})
+
 	if cs.LockedBlock != nil {
 		log.Notice("enterPrevote: Block was locked")
 		cs.signAddVote(types.VoteTypePrevote, cs.LockedBlock.Hash(), cs.LockedBlockParts.Header())
+		prevotedBlock = cs.LockedBlock
 		return
 	}
 
@@ -986,6 +997,7 @@ func (cs *ConsensusState) defaultDoPrevote(height int, round int) {
 	// NOTE: the proposal signature is validated when it is received,
 	// and the proposal block parts are validated as they are received (against the merkle hash in the proposal)
 	cs.signAddVote(types.VoteTypePrevote, cs.ProposalBlock.Hash(), cs.ProposalBlockParts.Header())
+	prevotedBlock = cs.ProposalBlock
 	return
 }
 
@@ -1021,7 +1033,7 @@ func (cs *ConsensusState) enterPrecommit(height int, round int) {
 		log.Debug(Fmt("enterPrecommit(%v/%v): Invalid args. Current step: %v/%v/%v", height, round, cs.Height, cs.Round, cs.Step))
 		return
 	}
-
+	var precommitedBlock *types.Block
 	// cs.stopTimer()
 
 	log.Info(Fmt("enterPrecommit(%v/%v). Current: %v/%v/%v", height, round, cs.Height, cs.Round, cs.Step))
@@ -1030,6 +1042,7 @@ func (cs *ConsensusState) enterPrecommit(height int, round int) {
 		// Done enterPrecommit:
 		cs.updateRoundStep(round, RoundStepPrecommit)
 		cs.newStep()
+		types.FireEventHookPrecommit(cs.evsw, types.EventDataHookPrecommit{Height: height, Round: round, Block: precommitedBlock})
 	}()
 
 	blockID, ok := cs.Votes.Prevotes(round).TwoThirdsMajority()
@@ -1078,6 +1091,7 @@ func (cs *ConsensusState) enterPrecommit(height int, round int) {
 		cs.LockedRound = round
 		types.FireEventRelock(cs.evsw, cs.RoundStateEvent())
 		cs.signAddVote(types.VoteTypePrecommit, blockID.Hash, blockID.PartsHeader)
+		precommitedBlock = cs.LockedBlock
 		return
 	}
 
@@ -1093,6 +1107,7 @@ func (cs *ConsensusState) enterPrecommit(height int, round int) {
 		cs.LockedBlockParts = cs.ProposalBlockParts
 		types.FireEventLock(cs.evsw, cs.RoundStateEvent())
 		cs.signAddVote(types.VoteTypePrecommit, blockID.Hash, blockID.PartsHeader)
+		precommitedBlock = cs.ProposalBlock
 		return
 	}
 
@@ -1246,7 +1261,7 @@ func (cs *ConsensusState) finalizeCommit(height int) {
 	eventCache := types.NewEventCache(cs.evsw)
 	// Execute and commit the block, and update the mempool.
 	// NOTE: the block.AppHash wont reflect these txs until the next block
-	err := stateCopy.ApplyBlock(eventCache, block, blockParts.Header(), cs.mempool)
+	err := stateCopy.ApplyBlock(eventCache, block, blockParts.Header(), cs.mempool, cs.Round)
 	if err != nil {
 		// TODO!
 	}
