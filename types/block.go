@@ -22,24 +22,33 @@ type Block struct {
 }
 
 // TODO: version
-func MakeBlock(height int, chainID string, txs []Tx, commit *Commit,
+func MakeBlock(height int, chainID string, alltxs []Tx, commit *Commit,
 	prevBlockID BlockID, valHash, appHash, receiptsHash []byte, partSize int) (*Block, *PartSet) {
 	block := &Block{
 		Header: &Header{
 			ChainID:        chainID,
 			Height:         height,
 			Time:           time.Now(),
-			NumTxs:         len(txs),
+			NumTxs:         len(alltxs),
 			LastBlockID:    prevBlockID,
 			ValidatorsHash: valHash,
 			AppHash:        appHash,      // state merkle root of txs from the previous block.
 			ReceiptsHash:   receiptsHash, // receipts hash from the previous block
 		},
 		LastCommit: commit,
-		Data: &Data{
-			Txs: txs,
-		},
+		Data:       &Data{},
 	}
+	extxs := []Tx{}
+	txs := []Tx{}
+	for _, tx := range alltxs {
+		if IsSpecialOP(tx) {
+			extxs = append(extxs, tx)
+		} else {
+			txs = append(txs, tx)
+		}
+	}
+	block.Data.Txs, block.Data.ExTxs = txs, extxs
+
 	block.FillHeader()
 	return block, block.MakePartSet(partSize)
 }
@@ -60,8 +69,8 @@ func (b *Block) ValidateBasic(chainID string, lastBlockHeight int, lastBlockID B
 			return errors.New("Invalid Block.Header.Time")
 		}
 	*/
-	if b.NumTxs != len(b.Data.Txs) {
-		return errors.New(Fmt("Wrong Block.Header.NumTxs. Expected %v, got %v", len(b.Data.Txs), b.NumTxs))
+	if b.NumTxs != len(b.Data.Txs)+len(b.Data.ExTxs) {
+		return errors.New(Fmt("Wrong Block.Header.NumTxs. Expected %v, got %v", len(b.Data.Txs)+len(b.Data.ExTxs), b.NumTxs))
 	}
 	if !b.LastBlockID.Equals(lastBlockID) {
 		return errors.New(Fmt("Wrong Block.Header.LastBlockID.  Expected %v, got %v", lastBlockID, b.LastBlockID))
@@ -361,7 +370,8 @@ type Data struct {
 	// Txs that will be applied by state @ block.Height+1.
 	// NOTE: not all txs here are valid.  We're just agreeing on the order first.
 	// This means that block.AppHash does not include these txs.
-	Txs Txs `json:"txs"`
+	Txs   Txs `json:"txs"`
+	ExTxs Txs `json:"extxs"` // this is for all other txs which won't be delivered to app
 
 	// Volatile
 	hash []byte
@@ -369,7 +379,7 @@ type Data struct {
 
 func (data *Data) Hash() []byte {
 	if data.hash == nil {
-		data.hash = data.Txs.Hash() // NOTE: leaves of merkle tree are TxIDs
+		data.hash = merkle.SimpleHashFromTwoHashes(data.Txs.Hash(), data.ExTxs.Hash())
 	}
 	return data.hash
 }
@@ -378,8 +388,8 @@ func (data *Data) StringIndented(indent string) string {
 	if data == nil {
 		return "nil-Data"
 	}
-	txStrings := make([]string, MinInt(len(data.Txs), 21))
-	for i, tx := range data.Txs {
+	txStrings := make([]string, MinInt(len(data.Txs)+len(data.ExTxs), 21))
+	for i, tx := range append(data.Txs, data.ExTxs...) {
 		if i == 20 {
 			txStrings[i] = fmt.Sprintf("... (%v total)", len(data.Txs))
 			break

@@ -9,13 +9,15 @@ type (
 		Sync(int, int, *Block)
 		Async(int, int, *Block)
 		Result() interface{}
+		ResultAsync() (bool, interface{})
 	}
 
 	Hook struct {
 		wg       sync.WaitGroup
 		done     chan struct{}
 		res      interface{}
-		callback func(height, round int, block *Block) error
+		err      error
+		callback func(height, round int, block *Block) (interface{}, error)
 	}
 
 	Hooks struct {
@@ -24,15 +26,11 @@ type (
 		OnPrevote   *Hook
 		OnPrecommit *Hook
 		OnCommit    *Hook
-	}
-
-	CommitResult struct {
-		AppHash      []byte
-		ReceiptsHash []byte
+		OnExecute   *Hook
 	}
 )
 
-func NewHook(cb func(int, int, *Block) error) *Hook {
+func NewHook(cb func(int, int, *Block) (interface{}, error)) *Hook {
 	return &Hook{
 		callback: cb,
 		done:     make(chan struct{}, 1),
@@ -44,10 +42,22 @@ func (h *Hook) Result() interface{} {
 	return h.res
 }
 
+func (h *Hook) ResultAsync() (bool, interface{}) {
+	select {
+	case <-h.done:
+		return true, h.res
+	default:
+		return false, nil
+	}
+}
+
 func (h *Hook) Sync(height, round int, block *Block) {
+	h.res = nil
+	h.err = nil
+	h.drain()
 	h.wg.Add(1)
 	go func() {
-		h.res = h.callback(height, round, block)
+		h.res, h.err = h.callback(height, round, block)
 		h.wg.Done()
 		h.done <- struct{}{}
 	}()
@@ -55,9 +65,11 @@ func (h *Hook) Sync(height, round int, block *Block) {
 }
 
 func (h *Hook) Async(height, round int, block *Block) {
+	h.res = nil
+	h.err = nil
 	h.drain()
 	go func() {
-		h.res = h.callback(height, round, block)
+		h.res, h.err = h.callback(height, round, block)
 		h.done <- struct{}{}
 	}()
 }

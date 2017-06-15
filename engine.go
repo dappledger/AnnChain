@@ -85,7 +85,7 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 		// NOTE: we could improve performance if we
 		// didn't make the app commit to disk every block
 		// ... but we would need a way to get the hash without it persisting
-		if err := stateM.ApplyBlock(eventSwitch, blk, pst.Header(), MockMempool{}); err != nil {
+		if err := stateM.ApplyBlock(eventSwitch, blk, pst.Header(), MockMempool{}, -1); err != nil {
 			return err
 		}
 		stateM.Save()
@@ -139,8 +139,12 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	}
 }
 
-func (e *Engine) ConnectHooks(hooks types.Hooks) {
+func (e *Engine) ConnectApp(app Application) {
 	e.hooked = true
+	hooks := app.GetEngineHooks()
+	if hooks.OnExecute == nil {
+		cmn.PanicSanity("At least implement OnExecute, otherwise what your application is for")
+	}
 
 	if hooks.OnNewRound != nil {
 		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
@@ -166,12 +170,17 @@ func (e *Engine) ConnectHooks(hooks types.Hooks) {
 			hooks.OnPrecommit.Async(data.Height, data.Round, data.Block)
 		})
 	}
-
+	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookExecute(), func(ed types.TMEventData) {
+		data := ed.(types.EventDataHookExecute)
+		hooks.OnExecute.Sync(data.Height, data.Round, data.Block)
+		data.ResCh <- hooks.OnExecute.Result().(types.ExecuteResult)
+	})
 	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookCommit(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookCommit)
 		cs := types.CommitResult{}
 		if hooks.OnCommit != nil {
-			cs = hooks.OnCommit.Sync(data.Height, data.Round, data.Block).(CommitResult)
+			hooks.OnCommit.Sync(data.Height, data.Round, data.Block)
+			cs = hooks.OnCommit.Result().(types.CommitResult)
 		}
 		data.ResCh <- cs
 	})
@@ -214,6 +223,10 @@ func (e *Engine) Stop() {
 func (e *Engine) RegisterNodeInfo(ni *p2p.NodeInfo) {
 	e.nodeInfo = ni
 	e.p2pSwitch.SetNodeInfo(ni)
+}
+
+func (e *Engine) BroadcastTx(tx []byte) error {
+	return e.mempool.CheckTx(tx)
 }
 
 // Replay for world status
@@ -264,10 +277,10 @@ func (e *Engine) ReplayBlocks(appHash []byte, appBlockHeight int) error {
 
 		blockMeta := e.blockstore.LoadBlockMeta(storeBlockHeight)
 		// h.nBlocks++
-		var eventCache types.Fireable
+		// var eventCache types.Fireable
 
 		// replay the latest block
-		return e.stateMachine.ApplyBlock(eventCache, block, blockMeta.PartsHeader, MockMempool{})
+		return e.stateMachine.ApplyBlock(*e.eventSwitch, block, blockMeta.PartsHeader, MockMempool{}, -1)
 	} else if storeBlockHeight != stateBlockHeight {
 		// unless we failed before committing or saving state (previous 2 case),
 		// the store and state should be at the same height!

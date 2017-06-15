@@ -968,7 +968,9 @@ func (cs *ConsensusState) enterPrevote(height int, round int) {
 func (cs *ConsensusState) defaultDoPrevote(height int, round int) {
 	// If a block is locked, prevote that.
 	var prevotedBlock *types.Block
-	defer types.FireEventHookPrevote(cs.evsw, types.EventDataHookPrevote{Height: height, Round: round, Block: prevotedBlock})
+	defer func() {
+		types.FireEventHookPrevote(cs.evsw, types.EventDataHookPrevote{Height: height, Round: round, Block: prevotedBlock})
+	}()
 
 	if cs.LockedBlock != nil {
 		log.Notice("enterPrevote: Block was locked")
@@ -1258,10 +1260,10 @@ func (cs *ConsensusState) finalizeCommit(height int) {
 	// Create a copy of the state for staging
 	// and an event cache for txs
 	stateCopy := cs.state.Copy()
-	eventCache := types.NewEventCache(cs.evsw)
+	// eventCache := types.NewEventCache(cs.evsw)
 	// Execute and commit the block, and update the mempool.
 	// NOTE: the block.AppHash wont reflect these txs until the next block
-	err := stateCopy.ApplyBlock(eventCache, block, blockParts.Header(), cs.mempool, cs.Round)
+	err := stateCopy.ApplyBlock(cs.evsw, block, blockParts.Header(), cs.mempool, cs.Round)
 	if err != nil {
 		// TODO!
 	}
@@ -1270,7 +1272,7 @@ func (cs *ConsensusState) finalizeCommit(height int) {
 	// TODO: Handle app failure.  See #177
 	types.FireEventNewBlock(cs.evsw, types.EventDataNewBlock{block})
 	types.FireEventNewBlockHeader(cs.evsw, types.EventDataNewBlockHeader{block.Header})
-	eventCache.Flush()
+	// eventCache.Flush()
 	// Save the state.
 	stateCopy.Save()
 	// NewHeightStep!

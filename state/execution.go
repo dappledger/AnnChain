@@ -5,9 +5,8 @@ import (
 
 	"gitlab.zhonganonline.com/ann/angine/plugin"
 	"gitlab.zhonganonline.com/ann/angine/types"
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
+	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
-	"time"
 )
 
 //--------------------------------------------------
@@ -15,7 +14,7 @@ import (
 
 // Execute the block to mutate State.
 // Validates block and then executes Data.Txs in the block.
-func (s *State) ExecBlock(eventCache types.Fireable, block *types.Block, blockPartsHeader types.PartSetHeader) error {
+func (s *State) ExecBlock(eventSwitch types.EventSwitch, block *types.Block, blockPartsHeader types.PartSetHeader, round int) error {
 	// Validate the block.
 	if err := s.validateBlock(block); err != nil {
 		return ErrInvalidBlock(err)
@@ -40,7 +39,7 @@ func (s *State) ExecBlock(eventCache types.Fireable, block *types.Block, blockPa
 	// }
 
 	changedValidators := make([]*types.ValidatorAttr, 0)
-
+	s.execBlockOnApp(eventSwitch, block, round)
 	// plugins modify changedValidators inplace
 	s.execEndBlockOnPlugins(block, changedValidators, nextValSet)
 
@@ -59,75 +58,68 @@ func (s *State) ExecBlock(eventCache types.Fireable, block *types.Block, blockPa
 // Executes block's transactions on proxyAppConn.
 // Returns a list of updates to the validator set
 // TODO: Generate a bitmap or otherwise store tx validity in state.
-// func execBlockOnProxyApp(eventCache types.Fireable, proxyAppConn proxy.AppConnConsensus, block *types.Block, state *State) ([]*abci.Validator, error) {
+func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block, round int) ([]*types.ValidatorAttr, error) {
+	// Run Txs of block
 
-// 	var validTxs, invalidTxs = 0, 0
+	// Run ExTxs of block
+	for i, tx := range block.Data.ExTxs {
+		s.deliverTxOnPlugins(tx, i)
+	}
 
-// 	// Execute transactions and get hash
-// 	proxyCb := func(req *abci.Request, res *abci.Response) {
-// 		switch r := res.Value.(type) {
-// 		case *abci.Response_DeliverTx:
-// 			// TODO: make use of res.Log
-// 			// TODO: make use of this info
-// 			// Blocks may include invalid txs.
-// 			txError := ""
-// 			apTx := r.DeliverTx
-// 			if apTx.Code == abci.CodeType_OK {
-// 				validTxs++
-// 			} else {
-// 				logger.Debug("Invalid tx", "code", r.DeliverTx.Code, "log", r.DeliverTx.Log, "data", r.DeliverTx.Data)
-// 				invalidTxs++
-// 				txError = apTx.Code.String()
-// 			}
-// 			// NOTE: if we count we can access the tx from the block instead of
-// 			// pulling it from the req
-// 			event := types.EventDataTx{
-// 				Tx:    req.GetDeliverTx().Tx,
-// 				Data:  apTx.Data,
-// 				Code:  apTx.Code,
-// 				Log:   apTx.Log,
-// 				Error: txError,
-// 			}
-// 			types.FireEventTx(eventCache, event)
-// 		}
-// 	}
-// 	proxyAppConn.SetResponseCallback(proxyCb)
+	resch := make(chan types.ExecuteResult, 1)
+	types.FireEventHookExecute(eventSwitch, types.EventDataHookExecute{Height: block.Height, Round: round, Block: block, ResCh: resch})
+	res := <-resch
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	eventCache := types.NewEventCache(eventSwitch)
+	for _, tx := range res.ValidTxs {
+		txev := types.EventDataTx{
+			Tx:   tx,
+			Code: 0,
+		}
+		types.FireEventTx(eventCache, txev)
+	}
+	eventCache.Flush()
+	// 	// Execute transactions and get hash
+	// 	proxyCb := func(req *abci.Request, res *abci.Response) {
+	// 		switch r := res.Value.(type) {
+	// 		case *abci.Response_DeliverTx:
+	// 			// TODO: make use of res.Log
+	// 			// TODO: make use of this info
+	// 			// Blocks may include invalid txs.
+	// 			txError := ""
+	// 			apTx := r.DeliverTx
+	// 			if apTx.Code == abci.CodeType_OK {
+	// 				validTxs++
+	// 			} else {
+	// 				logger.Debug("Invalid tx", "code", r.DeliverTx.Code, "log", r.DeliverTx.Log, "data", r.DeliverTx.Data)
+	// 				invalidTxs++
+	// 				txError = apTx.Code.String()
+	// 			}
+	// 			// NOTE: if we count we can access the tx from the block instead of
+	// 			// pulling it from the req
+	// 			event := types.EventDataTx{
+	// 				Tx:    req.GetDeliverTx().Tx,
+	// 				Data:  apTx.Data,
+	// 				Code:  apTx.Code,
+	// 				Log:   apTx.Log,
+	// 				Error: txError,
+	// 			}
+	// types.FireEventTx(eventCache, event)
+	// 		}
+	// 	}
+	// 	proxyAppConn.SetResponseCallback(proxyCb)
 
-// 	// Begin block
-// 	err := proxyAppConn.BeginBlockSync(block.Hash(), types.TM2PB.Header(block.Header))
-// 	if err != nil {
-// 		log.Warn("Error in proxyAppConn.BeginBlock", "error", err)
-// 		return nil, err
-// 	}
-// 	// Run txs of block
-// 	for i, tx := range block.Txs {
-// 		if !state.deliverTxOnPlugins(tx, i) {
-// 			validTxs++
-// 			continue // special op will bypass app
-// 		}
+	// logger.Info("Executed block", "height", block.Height, "txs", block.NumTxs, "valid txs", len(res.ValidTxs), "extended txs", len(block.Data.ExTxs))
 
-// 		proxyAppConn.DeliverTxAsync(tx, i)
-// 		if err := proxyAppConn.Error(); err != nil {
-// 			return nil, err
-// 		}
-// 	}
-
-// 	// End block
-// 	respEndBlock, err := proxyAppConn.EndBlockSync(uint64(block.Height))
-// 	if err != nil {
-// 		log.Warn("Error in proxyAppConn.EndBlock", "error", err)
-// 		return nil, err
-// 	}
-
-// 	logger.Info("Executed block", "height", block.Height, "valid txs", validTxs, "invalid txs", invalidTxs)
-
-// 	return respEndBlock.Diffs, nil
-// }
+	return nil, nil
+}
 
 // return a bit array of validators that signed the last commit
 // NOTE: assumes commits have already been authenticated
-func commitBitArrayFromBlock(block *types.Block) *BitArray {
-	signed := NewBitArray(len(block.LastCommit.Precommits))
+func commitBitArrayFromBlock(block *types.Block) *cmn.BitArray {
+	signed := cmn.NewBitArray(len(block.LastCommit.Precommits))
 	for i, precommit := range block.LastCommit.Precommits {
 		if precommit != nil {
 			signed.SetIndex(i, true) // val_.LastCommitHeight = block.Height - 1
@@ -157,7 +149,7 @@ func (s *State) validateBlock(block *types.Block) error {
 		}
 	} else {
 		if len(block.LastCommit.Precommits) != s.LastValidators.Size() {
-			return errors.New(Fmt("Invalid block commit size. Expected %v, got %v",
+			return errors.New(cmn.Fmt("Invalid block commit size. Expected %v, got %v",
 				s.LastValidators.Size(), len(block.LastCommit.Precommits)))
 		}
 		err := s.LastValidators.VerifyCommit(
@@ -171,18 +163,18 @@ func (s *State) validateBlock(block *types.Block) error {
 }
 
 // ApplyBlock executes the block, then commits and updates the mempool atomically
-func (s *State) ApplyBlock(eventCache types.Fireable, block *types.Block, partsHeader types.PartSetHeader, mempool types.IMempool, round int) error {
+func (s *State) ApplyBlock(eventSwitch types.EventSwitch, block *types.Block, partsHeader types.PartSetHeader, mempool types.IMempool, round int) error {
 	// Run the block on the State:
 	// + update validator sets
 	// + run txs on the proxyAppConn
-	err := s.ExecBlock(eventCache, block, partsHeader, round)
+	err := s.ExecBlock(eventSwitch, block, partsHeader, round)
 	if err != nil {
-		return errors.New(Fmt("Exec failed for application: %v", err))
+		return errors.New(cmn.Fmt("Exec failed for application: %v", err))
 	}
 	// lock mempool, commit state, update mempoool
-	err = s.CommitStateUpdateMempool(block, mempool, round)
+	err = s.CommitStateUpdateMempool(eventSwitch, block, mempool, round)
 	if err != nil {
-		return errors.New(Fmt("Commit failed for application: %v", err))
+		return errors.New(cmn.Fmt("Commit failed for application: %v", err))
 	}
 
 	return nil
@@ -191,18 +183,12 @@ func (s *State) ApplyBlock(eventCache types.Fireable, block *types.Block, partsH
 // mempool must be locked during commit and update
 // because state is typically reset on Commit and old txs must be replayed
 // against committed state before new txs are run in the mempool, lest they be invalid
-func (s *State) CommitStateUpdateMempool(eventCache types.Fireable, block *types.Block, mempool types.IMempool, round int) error {
+func (s *State) CommitStateUpdateMempool(eventSwitch types.EventSwitch, block *types.Block, mempool types.IMempool, round int) error {
 	mempool.Update(block.Height, block.Txs)
-	resch := make(types.CommitResult, 1)
-	types.FireEventHookCommit(eventCache, types.EventDataHookCommit{Height: block.Height, Round: round, Block: block, ResCh: resch})
-
-	select {
-	case <-time.After(1 * time.Second):
-		return errors.New("timeout: 1s")
-	case res := <-resch:
-		s.AppHash = res
-	}
-
+	resch := make(chan types.CommitResult, 1)
+	types.FireEventHookCommit(eventSwitch, types.EventDataHookCommit{Height: block.Height, Round: round, Block: block, ResCh: resch})
+	res := <-resch
+	s.AppHash = res.AppHash
 	return nil
 }
 

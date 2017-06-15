@@ -37,6 +37,7 @@ func EventStringHookNewRound() string  { return "Hook NewRound" }
 func EventStringHookPropose() string   { return "Hook Propose" }
 func EventStringHookCommit() string    { return "Hook Commit" }
 func EventStringHookPrecommit() string { return "Hook Precommit" }
+func EventStringHookExecute() string   { return "Hook Execute" }
 
 //----------------------------------------
 
@@ -62,6 +63,7 @@ const (
 	EventDataTypeHookPrevote   = byte(0x23)
 	EventDataTypeHookPrecommit = byte(0x24)
 	EventDataTypeHookCommit    = byte(0x25)
+	EventDataTypeHookExecute   = byte(0x26)
 )
 
 var _ = wire.RegisterInterface(
@@ -73,13 +75,14 @@ var _ = wire.RegisterInterface(
 	wire.ConcreteType{EventDataRoundState{}, EventDataTypeRoundState},
 	wire.ConcreteType{EventDataVote{}, EventDataTypeVote},
 
-	wire.ConcreteType{EventDataSwitchToConsensus, EventDataTypeSwitchToConsensus},
+	wire.ConcreteType{EventDataSwitchToConsensus{}, EventDataTypeSwitchToConsensus},
 
 	wire.ConcreteType{EventDataHookNewRound{}, EventDataTypeHookNewRound},
 	wire.ConcreteType{EventDataHookPropose{}, EventDataTypeHookPropose},
 	wire.ConcreteType{EventDataHookPrevote{}, EventDataTypeHookPrevote},
 	wire.ConcreteType{EventDataHookPrecommit{}, EventDataTypeHookPrecommit},
 	wire.ConcreteType{EventDataHookCommit{}, EventDataTypeHookCommit},
+	wire.ConcreteType{EventDataHookExecute{}, EventDataTypeHookExecute},
 )
 
 // Most event messages are basic types (a block, a transaction)
@@ -146,6 +149,12 @@ type EventDataHookCommit struct {
 	Block  *Block
 	ResCh  chan CommitResult
 }
+type EventDataHookExecute struct {
+	Height int
+	Round  int
+	Block  *Block
+	ResCh  chan ExecuteResult
+}
 
 func (_ EventDataNewBlock) AssertIsTMEventData()          {}
 func (_ EventDataNewBlockHeader) AssertIsTMEventData()    {}
@@ -159,6 +168,7 @@ func (_ EventDataHookPropose) AssertIsTMEventData()   {}
 func (_ EventDataHookPrevote) AssertIsTMEventData()   {}
 func (_ EventDataHookPrecommit) AssertIsTMEventData() {}
 func (_ EventDataHookCommit) AssertIsTMEventData()    {}
+func (_ EventDataHookExecute) AssertIsTMEventData()   {}
 
 //----------------------------------------
 // Wrappers for type safety
@@ -276,4 +286,7 @@ func FireEventHookPrecommit(fireable events.Fireable, d EventDataHookPrecommit) 
 }
 func FireEventHookCommit(fireable events.Fireable, d EventDataHookCommit) {
 	fireEvent(fireable, EventStringHookCommit(), d)
+}
+func FireEventHookExecute(fireable events.Fireable, d EventDataHookExecute) {
+	fireEvent(fireable, EventStringHookExecute(), d)
 }
