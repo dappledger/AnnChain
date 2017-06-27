@@ -11,6 +11,7 @@ const (
 	CodeType_Unauthorized      CodeType = 4
 	CodeType_InsufficientFunds CodeType = 5
 	CodeType_UnknownRequest    CodeType = 6
+	CodeType_InvalidTx         CodeType = 7
 	// Reserved for basecoin, 100 ~ 199
 	CodeType_BaseDuplicateAddress     CodeType = 101
 	CodeType_BaseEncodingError        CodeType = 102

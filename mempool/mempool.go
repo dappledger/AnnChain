@@ -6,11 +6,11 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"gitlab.zhonganonline.com/ann/angine/types"
 	auto "gitlab.zhonganonline.com/ann/ann-module/lib/go-autofile"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-clist"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
-	"gitlab.zhonganonline.com/ann/angine/types"
 )
 
 const cacheSize = 100000
@@ -25,7 +25,7 @@ type Mempool struct {
 	mtx     sync.Mutex
 	txs     *clist.CList // concurrent linked-list of good txs
 	counter int64        // simple incrementing counter
-	height  int          // the last block Update()'d to
+	height  int64        // the last block Update()'d to
 
 	// Keep a cache of already-seen txs.
 	cache *txCache
@@ -108,10 +108,10 @@ func (mem *Mempool) CheckTx(tx types.Tx) (err error) {
 
 	// reach here means the tx can be put into mempool, we just leave the original machanism untouched
 	mem.cache.Push(tx)
-	mem.counter++
+	nc := atomic.AddInt64(&mem.counter, 1)
 	memTx := &mempoolTx{
-		counter: mem.counter,
-		height:  int64(mem.height),
+		counter: nc,
+		height:  atomic.LoadInt64(&mem.height),
 		tx:      tx,
 	}
 	mem.txs.PushBack(memTx)
@@ -132,7 +132,7 @@ func (mem *Mempool) Reap(maxTxs int) []types.Tx {
 // Mempool will discard these txs.
 // NOTE: this should be called *after* block is committed by consensus.
 // NOTE: unsafe; Lock/Unlock must be managed by caller
-func (mem *Mempool) Update(height int, txs []types.Tx) {
+func (mem *Mempool) Update(height int64, txs []types.Tx) {
 	// First, create a lookup map of txns in new txs.
 	txsMap := make(map[string]struct{})
 	for _, tx := range txs {
@@ -140,7 +140,8 @@ func (mem *Mempool) Update(height int, txs []types.Tx) {
 	}
 
 	// Set height
-	mem.height = height
+	atomic.StoreInt64(&mem.height, height)
+
 	mem.Lock()
 	// Remove transactions that are already in txs, also re-run txs through filters
 	mem.refreshMempoolTxs(txsMap)

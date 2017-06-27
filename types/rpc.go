@@ -35,7 +35,7 @@ type ResultStatus struct {
 type ResultNetInfo struct {
 	Listening bool     `json:"listening"`
 	Listeners []string `json:"listeners"`
-	Peers     []Peer   `json:"peers"`
+	Peers     []*Peer  `json:"peers"`
 }
 
 type ResultDialSeeds struct {
@@ -124,9 +124,10 @@ type ResultSurveillance struct {
 }
 
 type ResultCoreVersion struct {
-	Version string `json:"version"`
-	AppName string `json:"appname"`
-	Hash    string `json:"hash"`
+	Version    string `json:"version"`
+	AppName    string `json:"appname"`
+	AppVersion string `json:"appversion"`
+	Hash       string `json:"hash"`
 }
 
 //----------------------------------------

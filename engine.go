@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"gitlab.zhonganonline.com/ann/angine/blockchain"
 	"gitlab.zhonganonline.com/ann/angine/consensus"
@@ -18,7 +19,9 @@ import (
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 	crypto "gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 	dbm "gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
+	"gitlab.zhonganonline.com/ann/ann-module/lib/go-events"
 	p2p "gitlab.zhonganonline.com/ann/ann-module/lib/go-p2p"
+	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
 
 type (
@@ -81,10 +84,6 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	})
 	bcReactor.SetBlockExecuter(func(blk *types.Block, pst *types.PartSet, c *types.Commit) error {
 		blockStore.SaveBlock(blk, pst, c)
-		// TODO: should we be firing events? need to fire NewBlock events manually ...
-		// NOTE: we could improve performance if we
-		// didn't make the app commit to disk every block
-		// ... but we would need a way to get the hash without it persisting
 		if err := stateM.ApplyBlock(eventSwitch, blk, pst.Header(), MockMempool{}, -1); err != nil {
 			return err
 		}
@@ -142,48 +141,72 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 func (e *Engine) ConnectApp(app Application) {
 	e.hooked = true
 	hooks := app.GetEngineHooks()
-	if hooks.OnExecute == nil {
-		cmn.PanicSanity("At least implement OnExecute, otherwise what your application is for")
+	if hooks.OnExecute == nil || hooks.OnCommit == nil {
+		cmn.PanicSanity("At least implement OnExecute & OnCommit, otherwise what your application is for")
 	}
 
-	if hooks.OnNewRound != nil {
-		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
-			data := ed.(types.EventDataHookNewRound)
-			hooks.OnNewRound.Async(data.Height, data.Round, nil)
-		})
-	}
+	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
+		data := ed.(types.EventDataHookNewRound)
+		if hooks.OnNewRound == nil {
+			data.ResCh <- types.NewRoundResult{}
+			return
+		}
+		hooks.OnNewRound.Sync(data.Height, data.Round, nil)
+		result := hooks.OnNewRound.Result()
+		if r, ok := result.(types.NewRoundResult); ok {
+			data.ResCh <- r
+		} else {
+			data.ResCh <- types.NewRoundResult{}
+		}
+	})
 	if hooks.OnPropose != nil {
 		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookPropose(), func(ed types.TMEventData) {
 			data := ed.(types.EventDataHookPropose)
-			hooks.OnPropose.Async(data.Height, data.Round, nil)
+			hooks.OnPropose.Async(data.Height, data.Round, nil, nil, nil)
 		})
 	}
 	if hooks.OnPrevote != nil {
 		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookPrevote(), func(ed types.TMEventData) {
 			data := ed.(types.EventDataHookPrevote)
-			hooks.OnPrevote.Async(data.Height, data.Round, data.Block)
+			hooks.OnPrevote.Async(data.Height, data.Round, data.Block, nil, nil)
 		})
 	}
 	if hooks.OnPrecommit != nil {
 		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookPrecommit(), func(ed types.TMEventData) {
 			data := ed.(types.EventDataHookPrecommit)
-			hooks.OnPrecommit.Async(data.Height, data.Round, data.Block)
+			hooks.OnPrecommit.Async(data.Height, data.Round, data.Block, nil, nil)
 		})
 	}
 	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookExecute(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookExecute)
 		hooks.OnExecute.Sync(data.Height, data.Round, data.Block)
-		data.ResCh <- hooks.OnExecute.Result().(types.ExecuteResult)
+		result := hooks.OnExecute.Result()
+		if r, ok := result.(types.ExecuteResult); ok {
+			data.ResCh <- r
+		} else {
+			data.ResCh <- types.ExecuteResult{}
+		}
+
 	})
 	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookCommit(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookCommit)
-		cs := types.CommitResult{}
-		if hooks.OnCommit != nil {
-			hooks.OnCommit.Sync(data.Height, data.Round, data.Block)
-			cs = hooks.OnCommit.Result().(types.CommitResult)
+		if hooks.OnCommit == nil {
+			data.ResCh <- types.CommitResult{}
+			return
 		}
-		data.ResCh <- cs
+		hooks.OnCommit.Sync(data.Height, data.Round, data.Block)
+		result := hooks.OnCommit.Result()
+		if cs, ok := result.(types.CommitResult); ok {
+			data.ResCh <- cs
+		} else {
+			data.ResCh <- types.CommitResult{}
+		}
 	})
+
+	info := app.Info()
+	if err := e.ReplayBlocks(info.LastBlockAppHash, int(info.LastBlockHeight)); err != nil {
+		cmn.PanicSanity("replay blocks on engine start failed")
+	}
 }
 
 func (e *Engine) DialSeeds(seeds []string) {
@@ -202,10 +225,7 @@ func (e *Engine) Start() error {
 		return errors.New("can't start engine twice")
 	}
 	if !e.hooked {
-		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookCommit(), func(ed types.TMEventData) {
-			data := ed.(types.EventDataHookCommit)
-			data.ResCh <- types.CommitResult{}
-		})
+		e.hookDefaults()
 	}
 	if _, err := e.p2pSwitch.Start(); err == nil {
 		e.started = true
@@ -225,8 +245,106 @@ func (e *Engine) RegisterNodeInfo(ni *p2p.NodeInfo) {
 	e.p2pSwitch.SetNodeInfo(ni)
 }
 
+func (e *Engine) Height() int {
+	return e.blockstore.Height()
+}
+
+func (e *Engine) GetBlock(height int) (*types.Block, *types.BlockMeta) {
+	if height == 0 {
+		return nil, nil
+	}
+	return e.blockstore.LoadBlock(height), e.blockstore.LoadBlockMeta(height)
+}
+
 func (e *Engine) BroadcastTx(tx []byte) error {
 	return e.mempool.CheckTx(tx)
+}
+
+func (e *Engine) BroadcastTxCommit(tx []byte) error {
+	committed := make(chan types.EventDataTx, 1)
+	eventString := types.EventStringTx(tx)
+	types.AddListenerForEvent(*e.eventSwitch, "engine", eventString, func(data types.TMEventData) {
+		committed <- data.(types.EventDataTx)
+	})
+	defer func() {
+		(*e.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "engine")
+	}()
+
+	if err := e.mempool.CheckTx(tx); err != nil {
+		return err
+	}
+	timer := time.NewTimer(60 * 2 * time.Second)
+	select {
+	case <-committed:
+		return nil
+	case <-timer.C:
+		return fmt.Errorf("Timed out waiting for transaction to be included in a block")
+	}
+}
+
+func (e *Engine) FlushMempool() {
+	e.mempool.Flush()
+}
+
+func (e *Engine) GetValidators() (int, []*types.Validator) {
+	return e.stateMachine.LastBlockHeight, e.stateMachine.Validators.Validators
+}
+
+func (e *Engine) GetP2PNetInfo() (bool, []string, []*types.Peer) {
+	listening := e.p2pSwitch.IsListening()
+	listeners := []string{}
+	for _, l := range e.p2pSwitch.Listeners() {
+		listeners = append(listeners, l.String())
+	}
+	peers := make([]*types.Peer, 0, e.p2pSwitch.Peers().Size())
+	for _, p := range e.p2pSwitch.Peers().List() {
+		peers = append(peers, &types.Peer{
+			NodeInfo:         *p.NodeInfo,
+			IsOutbound:       p.IsOutbound(),
+			ConnectionStatus: p.Connection().Status(),
+		})
+	}
+	return listening, listeners, peers
+}
+
+func (e *Engine) GetNumPeers() int {
+	o, i, d := e.p2pSwitch.NumPeers()
+	return o + i + d
+}
+
+func (e *Engine) GetConsensusStateInfo() (string, []string) {
+	roundState := e.consensus.GetRoundState()
+	peerRoundStates := make([]string, 0, e.p2pSwitch.Peers().Size())
+	for _, p := range e.p2pSwitch.Peers().List() {
+		peerState := p.Data.Get(types.PeerStateKey).(*consensus.PeerState)
+		peerRoundState := peerState.GetRoundState()
+		peerRoundStateStr := p.Key + ":" + string(wire.JSONBytes(peerRoundState))
+		peerRoundStates = append(peerRoundStates, peerRoundStateStr)
+	}
+	return roundState.String(), peerRoundStates
+}
+
+func (e *Engine) GetNumUnconfirmedTxs() int {
+	return e.mempool.Size()
+}
+
+func (e *Engine) GetUnconfirmedTxs() []types.Tx {
+	return e.mempool.Reap(-1)
+}
+
+func (e *Engine) IsNodeValidator(pub crypto.PubKey) bool {
+	edPub := pub.(crypto.PubKeyEd25519)
+	_, vals := e.consensus.GetValidators()
+	for _, v := range vals {
+		if edPub.KeyString() == v.PubKey.KeyString() {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *Engine) GetBlacklist() []string {
+	return e.refuseList.ListAllKey()
 }
 
 // Replay for world status
@@ -241,7 +359,6 @@ func (e *Engine) ReplayBlocks(appHash []byte, appBlockHeight int) error {
 	} else if storeBlockHeight < appBlockHeight {
 		// if the app is ahead, there's nothing we can do
 		return state.ErrAppBlockHeightTooHigh{storeBlockHeight, appBlockHeight}
-
 	} else if storeBlockHeight == appBlockHeight {
 		// We ran Commit, but if we crashed before state.Save(),
 		// load the intermediate state and update the state.AppHash.
@@ -277,10 +394,8 @@ func (e *Engine) ReplayBlocks(appHash []byte, appBlockHeight int) error {
 
 		blockMeta := e.blockstore.LoadBlockMeta(storeBlockHeight)
 		// h.nBlocks++
-		// var eventCache types.Fireable
-
 		// replay the latest block
-		return e.stateMachine.ApplyBlock(*e.eventSwitch, block, blockMeta.PartsHeader, MockMempool{}, -1)
+		return e.stateMachine.ApplyBlock(*e.eventSwitch, block, blockMeta.PartsHeader, MockMempool{}, 0)
 	} else if storeBlockHeight != stateBlockHeight {
 		// unless we failed before committing or saving state (previous 2 case),
 		// the store and state should be at the same height!
@@ -292,29 +407,39 @@ func (e *Engine) ReplayBlocks(appHash []byte, appBlockHeight int) error {
 		} else {
 			cmn.PanicSanity(cmn.Fmt("Expected storeHeight (%d) and stateHeight (%d) to match.", storeBlockHeight, stateBlockHeight))
 		}
-
 	} else {
 		// store is more than one ahead,
 		// so app wants to replay many blocks
-
 		// replay all blocks starting with appBlockHeight+1
 		// var eventCache types.Fireable // nil
-
-		// TODO: use stateBlockHeight instead and let the consensus state
-		// do the replay
-		// var appHash []byte
-		// for i := appBlockHeight + 1; i <= storeBlockHeight; i++ {
-		// h.nBlocks++
-		// block := e.blockstore.LoadBlock(i)
-		// Commit block, get hash back
-		// appHash = res.Data
-		// }
-		// if !bytes.Equal(e.stateMachine.AppHash, appHash) {
-		// 	return errors.New(fmt.Sprintf("Ann state.AppHash does not match AppHash after replay. Got %X, expected %X", appHash, e.stateMachine.AppHash))
-		// }
+		// TODO: use stateBlockHeight instead and let the consensus state do the replay
+		for h := appBlockHeight + 1; h <= storeBlockHeight; h++ {
+			// h.nBlocks++
+			block := e.blockstore.LoadBlock(h)
+			blockMeta := e.blockstore.LoadBlockMeta(h)
+			e.stateMachine.ApplyBlock(*e.eventSwitch, block, blockMeta.PartsHeader, MockMempool{}, 0)
+		}
+		if !bytes.Equal(e.stateMachine.AppHash, appHash) {
+			return fmt.Errorf("Ann state.AppHash does not match AppHash after replay. Got %X, expected %X", appHash, e.stateMachine.AppHash)
+		}
 		return nil
 	}
 	return nil
+}
+
+func (e *Engine) hookDefaults() {
+	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
+		data := ed.(types.EventDataHookNewRound)
+		data.ResCh <- types.NewRoundResult{}
+	})
+	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookExecute(), func(ed types.TMEventData) {
+		data := ed.(types.EventDataHookExecute)
+		data.ResCh <- types.ExecuteResult{}
+	})
+	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookCommit(), func(ed types.TMEventData) {
+		data := ed.(types.EventDataHookCommit)
+		data.ResCh <- types.CommitResult{}
+	})
 }
 
 func setEventSwitch(evsw types.EventSwitch, eventables ...types.Eventable) {
@@ -391,9 +516,9 @@ func fastSyncable(conf cfg.Config, selfAddress []byte, validators *types.Validat
 type MockMempool struct {
 }
 
-func (m MockMempool) Lock()                             {}
-func (m MockMempool) Unlock()                           {}
-func (m MockMempool) Update(height int, txs []types.Tx) {}
+func (m MockMempool) Lock()                               {}
+func (m MockMempool) Unlock()                             {}
+func (m MockMempool) Update(height int64, txs []types.Tx) {}
 
 type ITxCheck interface {
 	CheckTx(types.Tx) (bool, error)

@@ -802,7 +802,10 @@ func (cs *ConsensusState) enterNewRound(height int, round int) {
 
 	rse := cs.RoundStateEvent()
 	types.FireEventNewRound(cs.evsw, rse)
-	types.FireEventHookNewRound(cs.evsw, types.EventDataHookNewRound{Height: rse.Height, Round: rse.Round})
+
+	ed := types.NewEventDataHookNewRound(rse.Height, rse.Round)
+	types.FireEventHookNewRound(cs.evsw, ed)
+	<-ed.ResCh
 
 	// Immediately go to enterPropose.
 	cs.enterPropose(height, round)

@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
+	"gitlab.zhonganonline.com/ann/angine/plugin"
+	"gitlab.zhonganonline.com/ann/angine/types"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 	dbm "gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
-	"gitlab.zhonganonline.com/ann/angine/plugin"
-	"gitlab.zhonganonline.com/ann/angine/types"
 )
 
 var (
@@ -63,7 +63,6 @@ func loadState(db dbm.DB, key []byte) *State {
 	r, n, err := bytes.NewReader(buf), new(int), new(error)
 	wire.ReadBinaryPtr(&s, r, 0, n, err)
 	if *err != nil {
-		// DATA HAS BEEN CORRUPTED OR THE SPEC HAS CHANGED
 		Exit(Fmt("Data has been corrupted or its spec has changed: %v\n", *err))
 	}
 	// TODO: ensure that buf is completely read.

@@ -2,7 +2,9 @@ package state
 
 import (
 	"errors"
+	"fmt"
 
+	"encoding/hex"
 	"gitlab.zhonganonline.com/ann/angine/plugin"
 	"gitlab.zhonganonline.com/ann/angine/types"
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
@@ -59,28 +61,36 @@ func (s *State) ExecBlock(eventSwitch types.EventSwitch, block *types.Block, blo
 // Returns a list of updates to the validator set
 // TODO: Generate a bitmap or otherwise store tx validity in state.
 func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block, round int) ([]*types.ValidatorAttr, error) {
-	// Run Txs of block
-
 	// Run ExTxs of block
 	for i, tx := range block.Data.ExTxs {
 		s.deliverTxOnPlugins(tx, i)
 	}
-
-	resch := make(chan types.ExecuteResult, 1)
-	types.FireEventHookExecute(eventSwitch, types.EventDataHookExecute{Height: block.Height, Round: round, Block: block, ResCh: resch})
-	res := <-resch
-	if res.Error != nil {
-		return nil, res.Error
-	}
+	ed := types.NewEventDataHookExecute(block.Height, round, block)
+	types.FireEventHookExecute(eventSwitch, ed) // Run Txs of block
+	res := <-ed.ResCh
 	eventCache := types.NewEventCache(eventSwitch)
 	for _, tx := range res.ValidTxs {
 		txev := types.EventDataTx{
 			Tx:   tx,
-			Code: 0,
+			Code: types.CodeType_OK,
+		}
+		types.FireEventTx(eventCache, txev)
+	}
+	for _, invalid := range res.InvalidTxs {
+		txev := types.EventDataTx{
+			Tx:   invalid.Bytes,
+			Code: types.CodeType_InvalidTx,
+			Log:  invalid.Error.Error(),
 		}
 		types.FireEventTx(eventCache, txev)
 	}
 	eventCache.Flush()
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return nil, nil
+
 	// 	// Execute transactions and get hash
 	// 	proxyCb := func(req *abci.Request, res *abci.Response) {
 	// 		switch r := res.Value.(type) {
@@ -112,8 +122,6 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 	// 	proxyAppConn.SetResponseCallback(proxyCb)
 
 	// logger.Info("Executed block", "height", block.Height, "txs", block.NumTxs, "valid txs", len(res.ValidTxs), "extended txs", len(block.Data.ExTxs))
-
-	return nil, nil
 }
 
 // return a bit array of validators that signed the last commit
@@ -184,11 +192,13 @@ func (s *State) ApplyBlock(eventSwitch types.EventSwitch, block *types.Block, pa
 // because state is typically reset on Commit and old txs must be replayed
 // against committed state before new txs are run in the mempool, lest they be invalid
 func (s *State) CommitStateUpdateMempool(eventSwitch types.EventSwitch, block *types.Block, mempool types.IMempool, round int) error {
-	mempool.Update(block.Height, block.Txs)
-	resch := make(chan types.CommitResult, 1)
-	types.FireEventHookCommit(eventSwitch, types.EventDataHookCommit{Height: block.Height, Round: round, Block: block, ResCh: resch})
-	res := <-resch
+	mempool.Update(int64(block.Height), block.Txs)
+	ed := types.NewEventDataHookCommit(block.Height, round, block)
+	types.FireEventHookCommit(eventSwitch, ed)
+	res := <-ed.ResCh
 	s.AppHash = res.AppHash
+	s.ReceiptsHash = res.ReceiptsHash
+	fmt.Println("hashes after commit:", hex.EncodeToString(s.AppHash), " , ", hex.EncodeToString(s.ReceiptsHash))
 	return nil
 }
 

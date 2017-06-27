@@ -6,10 +6,9 @@ import (
 
 type (
 	Hooker interface {
-		Sync(int, int, *Block)
+		Sync(int, int, *Block) (interface{}, error)
 		Async(int, int, *Block)
 		Result() interface{}
-		ResultAsync() (bool, interface{})
 	}
 
 	Hook struct {
@@ -42,16 +41,11 @@ func (h *Hook) Result() interface{} {
 	return h.res
 }
 
-func (h *Hook) ResultAsync() (bool, interface{}) {
-	select {
-	case <-h.done:
-		return true, h.res
-	default:
-		return false, nil
-	}
+func (h *Hook) Error() error {
+	return h.err
 }
 
-func (h *Hook) Sync(height, round int, block *Block) {
+func (h *Hook) Sync(height, round int, block *Block) (interface{}, error) {
 	h.res = nil
 	h.err = nil
 	h.drain()
@@ -62,14 +56,25 @@ func (h *Hook) Sync(height, round int, block *Block) {
 		h.done <- struct{}{}
 	}()
 	h.wg.Wait()
+
+	return h.res, h.err
 }
 
-func (h *Hook) Async(height, round int, block *Block) {
-	h.res = nil
-	h.err = nil
+func (h *Hook) Async(height, round int, block *Block, cb func(interface{}), onError func(error)) {
+	var (
+		res interface{}
+		err error
+	)
 	h.drain()
 	go func() {
-		h.res, h.err = h.callback(height, round, block)
+		res, err = h.callback(height, round, block)
+		if err != nil && onError != nil {
+			onError(err)
+		} else {
+			if cb != nil {
+				cb(res)
+			}
+		}
 		h.done <- struct{}{}
 	}()
 }

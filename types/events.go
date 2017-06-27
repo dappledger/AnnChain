@@ -99,11 +99,11 @@ type EventDataNewBlockHeader struct {
 
 // All txs fire EventDataTx
 type EventDataTx struct {
-	Tx    Tx     `json:"tx"`
-	Data  []byte `json:"data"`
-	Log   string `json:"log"`
-	Code  int32  `json:"code"`
-	Error string `json:"error"` // this is redundant information for now
+	Tx    Tx       `json:"tx"`
+	Data  []byte   `json:"data"`
+	Log   string   `json:"log"`
+	Code  CodeType `json:"code"`
+	Error string   `json:"error"` // this is redundant information for now
 }
 
 // NOTE: This goes into the replay WAL
@@ -127,6 +127,7 @@ type EventDataSwitchToConsensus struct {
 type EventDataHookNewRound struct {
 	Height int
 	Round  int
+	ResCh  chan NewRoundResult
 }
 type EventDataHookPropose struct {
 	Height int
@@ -154,6 +155,32 @@ type EventDataHookExecute struct {
 	Round  int
 	Block  *Block
 	ResCh  chan ExecuteResult
+}
+
+func NewEventDataHookNewRound(height, round int) EventDataHookNewRound {
+	return EventDataHookNewRound{
+		Height: height,
+		Round:  round,
+		ResCh:  make(chan NewRoundResult, 1),
+	}
+}
+
+func NewEventDataHookExecute(height, round int, block *Block) EventDataHookExecute {
+	return EventDataHookExecute{
+		Height: height,
+		Round:  round,
+		Block:  block,
+		ResCh:  make(chan ExecuteResult, 1),
+	}
+}
+
+func NewEventDataHookCommit(height, round int, block *Block) EventDataHookCommit {
+	return EventDataHookCommit{
+		Height: height,
+		Round:  round,
+		Block:  block,
+		ResCh:  make(chan CommitResult, 1),
+	}
 }
 
 func (_ EventDataNewBlock) AssertIsTMEventData()          {}

@@ -11,14 +11,23 @@ type Result struct {
 	Log  string // Can be non-deterministic
 }
 
+type NewRoundResult struct {
+}
+
 type CommitResult struct {
 	AppHash      []byte
 	ReceiptsHash []byte
 }
 
+type ExecuteInvalidTx struct {
+	Bytes []byte
+	Error error
+}
+
 type ExecuteResult struct {
-	ValidTxs [][]byte
-	Error    error
+	ValidTxs   [][]byte
+	InvalidTxs []ExecuteInvalidTx
+	Error      error
 }
 
 func NewResult(code CodeType, data []byte, log string) Result {
