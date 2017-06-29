@@ -7,11 +7,11 @@ import (
 	"reflect"
 	"time"
 
+	"gitlab.zhonganonline.com/ann/angine/types"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-p2p"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
-	"gitlab.zhonganonline.com/ann/angine/types"
 )
 
 const (
@@ -204,12 +204,7 @@ FOR_LOOP:
 			if bcR.pool.IsCaughtUp() {
 				log.Notice("Time to switch to consensus reactor!", "height", height)
 				bcR.pool.Stop()
-
-				// conR := bcR.Switch.Reactor("CONSENSUS").(consensusReactor)
-				// conR.SwitchToConsensus(bcR.state)
-				// use event instead
 				types.FireEventSwitchToConsensus(bcR.evsw)
-
 				break FOR_LOOP
 			}
 		case _ = <-trySyncTicker.C: // chan time
@@ -230,7 +225,7 @@ FOR_LOOP:
 				// first.Hash() doesn't verify the tx contents, so MakePartSet() is
 				// currently necessary.
 
-				if err := bcR.blockVerifier(types.BlockID{first.Hash(), firstPartsHeader}, first.Height, second.LastCommit); err != nil {
+				if err := bcR.blockVerifier(types.BlockID{Hash: first.Hash(), PartsHeader: firstPartsHeader}, first.Height, second.LastCommit); err != nil {
 					log.Info("error in validation", "error", err)
 					bcR.pool.RedoRequest(first.Height)
 					break SYNC_LOOP

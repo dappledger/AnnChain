@@ -79,18 +79,6 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	_ = apphash // just bypass golint
 	_, stateLastHeight, _ := stateM.GetLastBlockInfo()
 	bcReactor := blockchain.NewBlockchainReactor(tune.Conf, stateLastHeight, blockStore, fastSync)
-	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int, lc *types.Commit) error {
-		return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)
-	})
-	bcReactor.SetBlockExecuter(func(blk *types.Block, pst *types.PartSet, c *types.Commit) error {
-		blockStore.SaveBlock(blk, pst, c)
-		if err := stateM.ApplyBlock(eventSwitch, blk, pst.Header(), MockMempool{}, -1); err != nil {
-			return err
-		}
-		stateM.Save()
-		return nil
-	})
-
 	mem := mempool.NewMempool(tune.Conf)
 	for _, p := range stateM.Plugins {
 		mem.RegisterFilter(NewMempoolFilter(p.CheckTx))
@@ -100,6 +88,19 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	consensusState := consensus.NewConsensusState(tune.Conf, stateM, blockStore, mem)
 	consensusState.SetPrivValidator(driver)
 	consensusReactor := consensus.NewConsensusReactor(consensusState, fastSync)
+
+	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int, lc *types.Commit) error {
+		return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)
+	})
+	bcReactor.SetBlockExecuter(func(blk *types.Block, pst *types.PartSet, c *types.Commit) error {
+		blockStore.SaveBlock(blk, pst, c)
+		if err := stateM.ApplyBlock(eventSwitch, blk, pst.Header(), MockMempool{}, -1); err != nil {
+			return err
+		}
+		stateM.Save()
+		fmt.Println(stateM.LastBlockHeight)
+		return nil
+	})
 
 	// Make p2p network switch
 	sw := p2p.NewSwitch(tune.Conf.GetConfig("p2p"))
@@ -204,7 +205,7 @@ func (e *Engine) ConnectApp(app Application) {
 	})
 
 	info := app.Info()
-	if err := e.ReplayBlocks(info.LastBlockAppHash, int(info.LastBlockHeight)); err != nil {
+	if err := e.RecoverFromCrash(info.LastBlockAppHash, int(info.LastBlockHeight)); err != nil {
 		cmn.PanicSanity("replay blocks on engine start failed")
 	}
 }
@@ -347,18 +348,21 @@ func (e *Engine) GetBlacklist() []string {
 	return e.refuseList.ListAllKey()
 }
 
-// Replay for world status
+// Recover world status
 // Replay all blocks after blockHeight and ensure the result matches the current state.
-func (e *Engine) ReplayBlocks(appHash []byte, appBlockHeight int) error {
+func (e *Engine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 	storeBlockHeight := e.blockstore.Height()
 	stateBlockHeight := e.stateMachine.LastBlockHeight
-	log.Notice("Replay Blocks", "appHeight", appBlockHeight, "storeHeight", storeBlockHeight, "stateHeight", stateBlockHeight)
 
 	if storeBlockHeight == 0 {
-		return nil
-	} else if storeBlockHeight < appBlockHeight {
+		return nil // no blocks to replay
+	}
+
+	log.Notice("Replay Blocks", "appHeight", appBlockHeight, "storeHeight", storeBlockHeight, "stateHeight", stateBlockHeight)
+
+	if storeBlockHeight < appBlockHeight {
 		// if the app is ahead, there's nothing we can do
-		return state.ErrAppBlockHeightTooHigh{storeBlockHeight, appBlockHeight}
+		return state.ErrAppBlockHeightTooHigh{CoreHeight: storeBlockHeight, AppHeight: appBlockHeight}
 	} else if storeBlockHeight == appBlockHeight {
 		// We ran Commit, but if we crashed before state.Save(),
 		// load the intermediate state and update the state.AppHash.
@@ -389,7 +393,7 @@ func (e *Engine) ReplayBlocks(appHash []byte, appBlockHeight int) error {
 		// check that the lastBlock.AppHash matches the state apphash
 		block := e.blockstore.LoadBlock(storeBlockHeight)
 		if !bytes.Equal(block.Header.AppHash, appHash) {
-			return state.ErrLastStateMismatch{storeBlockHeight, block.Header.AppHash, appHash}
+			return state.ErrLastStateMismatch{Height: storeBlockHeight, Core: block.Header.AppHash, App: appHash}
 		}
 
 		blockMeta := e.blockstore.LoadBlockMeta(storeBlockHeight)

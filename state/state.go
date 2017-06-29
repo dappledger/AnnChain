@@ -143,7 +143,8 @@ func (s *State) Bytes() []byte {
 // after running EndBlock
 func (s *State) SetBlockAndValidators(header *types.Header, blockPartsHeader types.PartSetHeader, prevValSet, nextValSet *types.ValidatorSet) {
 	s.setBlockAndValidators(header.Height,
-		types.BlockID{header.Hash(), blockPartsHeader}, header.Time,
+		types.BlockID{Hash: header.Hash(), PartsHeader: blockPartsHeader},
+		header.Time,
 		prevValSet, nextValSet)
 }
 

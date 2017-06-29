@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
+	sm "gitlab.zhonganonline.com/ann/angine/state"
+	"gitlab.zhonganonline.com/ann/angine/types"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-p2p"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
-	sm "gitlab.zhonganonline.com/ann/angine/state"
-	"gitlab.zhonganonline.com/ann/angine/types"
 )
 
 const (
@@ -70,13 +70,46 @@ func (conR *ConsensusReactor) OnStop() {
 // Switch from the fast_sync to the consensus:
 // reset the state, turn off fast_sync, start the consensus-state-machine
 func (conR *ConsensusReactor) SwitchToConsensus(state *sm.State) {
-	log.Notice("SwitchToConsensus")
-	conR.conS.reconstructLastCommit(state)
-	// NOTE: The line below causes broadcastNewRoundStepRoutine() to
-	// broadcast a NewRoundStepMessage.
-	conR.conS.updateToState(state)
+	cs := conR.conS
+	height := state.LastBlockHeight + 1
+
+	cs.reconstructLastCommit(state)
+
+	// Reset fields based on state.
+	validators := state.Validators
+	lastPrecommits := (*types.VoteSet)(nil)
+	if cs.CommitRound > -1 && cs.Votes != nil {
+		if !cs.Votes.Precommits(cs.CommitRound).HasTwoThirdsMajority() {
+			PanicSanity("updateToState(state) called but last Precommit round didn't have +2/3")
+		}
+		lastPrecommits = cs.Votes.Precommits(cs.CommitRound)
+	}
+
+	// RoundState fields
+	cs.updateHeight(height)
+	cs.updateRoundStep(0, RoundStepNewHeight)
+	if cs.CommitTime.IsZero() {
+		cs.StartTime = cs.timeoutParams.Commit(time.Now())
+	} else {
+		cs.StartTime = cs.timeoutParams.Commit(cs.CommitTime)
+	}
+	cs.Validators = validators
+	cs.Proposal = nil
+	cs.ProposalBlock = nil
+	cs.ProposalBlockParts = nil
+	cs.LockedRound = 0
+	cs.LockedBlock = nil
+	cs.LockedBlockParts = nil
+	cs.Votes = NewHeightVoteSet(cs.config.GetString("chain_id"), height, validators)
+	cs.CommitRound = -1
+	cs.LastCommit = lastPrecommits
+	cs.LastValidators = state.LastValidators
+
+	// Finally, broadcast RoundState
+	cs.newStep()
+
 	conR.fastSync = false
-	conR.conS.Start()
+	cs.Start()
 }
 
 // Implements Reactor

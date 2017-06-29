@@ -2,9 +2,7 @@ package state
 
 import (
 	"errors"
-	"fmt"
 
-	"encoding/hex"
 	"gitlab.zhonganonline.com/ann/angine/plugin"
 	"gitlab.zhonganonline.com/ann/angine/types"
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
@@ -198,7 +196,6 @@ func (s *State) CommitStateUpdateMempool(eventSwitch types.EventSwitch, block *t
 	res := <-ed.ResCh
 	s.AppHash = res.AppHash
 	s.ReceiptsHash = res.ReceiptsHash
-	fmt.Println("hashes after commit:", hex.EncodeToString(s.AppHash), " , ", hex.EncodeToString(s.ReceiptsHash))
 	return nil
 }
 

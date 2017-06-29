@@ -81,6 +81,10 @@ func (cs *ConsensusState) readReplayMessage(msgBytes []byte, newStepCh chan inte
 	return nil
 }
 
+func (cs *ConsensusState) CatchupReplay(height int) error {
+	return cs.catchupReplay(height)
+}
+
 // replay only those messages since the last block.
 // timeoutRoutine should run concurrently to read off tickChan
 func (cs *ConsensusState) catchupReplay(csHeight int) error {

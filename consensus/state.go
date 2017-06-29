@@ -16,7 +16,6 @@ import (
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
-	"gitlab.zhonganonline.com/ann/ann-module/logger"
 )
 
 //-----------------------------------------------------------------------------
@@ -249,12 +248,6 @@ type ConsensusState struct {
 	doPrevote      func(height, round int)
 	setProposal    func(proposal *types.Proposal) error
 
-	onNewHeightRound func(height, round int)
-	onPropose        func(height, round int, block *types.Block)
-	onPrevote        func(height, round int, block *types.Block)
-	onPrecommit      func(height, round int, block *types.Block)
-	onCommit         func(height, round int, block *types.Block)
-
 	done chan struct{}
 }
 
@@ -279,6 +272,19 @@ func NewConsensusState(config cfg.Config, state *sm.State, blockStore *bc.BlockS
 	// We do that upon Start().
 	cs.reconstructLastCommit(state)
 	cs.BaseService = *NewBaseService(log, "ConsensusState", cs)
+
+	walDir := cs.config.GetString("cs_wal_dir")
+	err := EnsureDir(walDir, 0700)
+	if err != nil {
+		log.Error("Error ensuring ConsensusState wal dir", "error", err.Error())
+		return nil
+	}
+	err = cs.OpenWAL(walDir)
+	if err != nil {
+		log.Error("Error loading ConsensusState wal", "error", err.Error())
+		return nil
+	}
+
 	return cs
 }
 
@@ -349,18 +355,6 @@ func (cs *ConsensusState) LoadCommit(height int) *types.Commit {
 
 func (cs *ConsensusState) OnStart() error {
 	cs.BaseService.OnStart()
-
-	walDir := cs.config.GetString("cs_wal_dir")
-	err := EnsureDir(walDir, 0700)
-	if err != nil {
-		log.Error("Error ensuring ConsensusState wal dir", "error", err.Error())
-		return err
-	}
-	err = cs.OpenWAL(walDir)
-	if err != nil {
-		log.Error("Error loading ConsensusState wal", "error", err.Error())
-		return err
-	}
 
 	// If the latest block was applied in the abci handshake,
 	// we may not have written the current height to the wal,
@@ -1227,7 +1221,7 @@ func (cs *ConsensusState) finalizeCommit(height int) {
 		log.Debug(Fmt("finalizeCommit(%v): Invalid args. Current step: %v/%v/%v", height, cs.Height, cs.Round, cs.Step))
 		return
 	}
-	logger.Info("ann-stopwatch consensusTime elapsed ", cs.RoundState.CommitTime.Sub(cs.RoundState.StartTime).String())
+	// logger.Info("ann-stopwatch consensusTime elapsed ", cs.RoundState.CommitTime.Sub(cs.RoundState.StartTime).String())
 
 	blockID, ok := cs.Votes.Precommits(cs.CommitRound).TwoThirdsMajority()
 	block, blockParts := cs.ProposalBlock, cs.ProposalBlockParts
