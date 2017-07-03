@@ -30,3 +30,14 @@ func (txs Txs) Hash() []byte {
 		return merkle.SimpleHashFromTwoHashes(left, right)
 	}
 }
+
+func WrapTx(prefix []byte, tx []byte) []byte {
+	return append(prefix, tx...)
+}
+
+func UnwrapTx(tx []byte) []byte {
+	if len(tx) > 4 {
+		return tx[4:]
+	}
+	return tx
+}

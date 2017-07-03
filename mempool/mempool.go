@@ -9,7 +9,7 @@ import (
 	"gitlab.zhonganonline.com/ann/angine/types"
 	auto "gitlab.zhonganonline.com/ann/ann-module/lib/go-autofile"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-clist"
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
+	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 )
 
@@ -155,7 +155,7 @@ func (mem *Mempool) collectTxs(maxTxs int) []types.Tx {
 	} else if maxTxs < 0 {
 		maxTxs = mem.txs.Len()
 	} else {
-		maxTxs = MinInt(mem.txs.Len(), maxTxs)
+		maxTxs = cmn.MinInt(mem.txs.Len(), maxTxs)
 	}
 	txs := make([]types.Tx, 0, maxTxs)
 	for e := mem.txs.Front(); e != nil && len(txs) < maxTxs; e = e.Next() {
@@ -204,15 +204,15 @@ func (mem *Mempool) checkTxWithFilters(tx types.Tx) error {
 func (mem *Mempool) initWAL() {
 	walDir := mem.config.GetString("mempool_wal_dir")
 	if walDir != "" {
-		err := EnsureDir(walDir, 0700)
+		err := cmn.EnsureDir(walDir, 0700)
 		if err != nil {
 			log.Error("Error ensuring Mempool wal dir", "error", err)
-			PanicSanity(err)
+			cmn.PanicSanity(err)
 		}
 		af, err := auto.OpenAutoFile(walDir + "/wal")
 		if err != nil {
 			log.Error("Error opening Mempool wal file", "error", err)
-			PanicSanity(err)
+			cmn.PanicSanity(err)
 		}
 		mem.wal = af
 	}

@@ -31,16 +31,9 @@ const (
 )
 
 func TagSpecialOPTx(tx []byte) []byte {
-	return append([]byte("zaop"), tx...)
+	return WrapTx([]byte("zaop"), tx)
 }
 
 func IsSpecialOP(tx []byte) bool {
 	return bytes.HasPrefix(tx, []byte("zaop"))
-}
-
-func SpecialOPGetBody(tx []byte) []byte {
-	if len(tx) > 4 {
-		return tx[4:]
-	}
-	return tx
 }

@@ -3,15 +3,13 @@ package mempool
 import (
 	"bytes"
 	"fmt"
-	"reflect"
 	"time"
 
+	"gitlab.zhonganonline.com/ann/angine/types"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-clist"
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-p2p"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
-	"gitlab.zhonganonline.com/ann/angine/types"
 )
 
 const (
@@ -77,7 +75,7 @@ func (memR *MempoolReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 		log.Info("Added valid tx", "tx", msg.Tx)
 		// broadcasting happens from go routines per peer
 	default:
-		log.Warn(Fmt("Unknown message type %v", reflect.TypeOf(msg)))
+		log.Warn(fmt.Sprintf("Unknown message type %T", msg))
 	}
 }
 

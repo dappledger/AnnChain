@@ -53,7 +53,7 @@ func (s *Specialop) CheckTx(tx []byte) (bool, error) {
 		return true, nil
 	}
 	var cmd types.SpecialOPCmd
-	err := wire.ReadBinaryBytes(types.SpecialOPGetBody(tx), &cmd)
+	err := wire.ReadBinaryBytes(types.UnwrapTx(tx), &cmd)
 	if err != nil || cmd.CmdCode != types.SpecialOP {
 		return true, err
 	}
@@ -65,7 +65,7 @@ func (s *Specialop) DeliverTx(tx []byte, i int) (bool, error) {
 		return true, nil
 	}
 	var cmd types.SpecialOPCmd
-	err := wire.ReadBinaryBytes(types.SpecialOPGetBody(tx), &cmd)
+	err := wire.ReadBinaryBytes(types.UnwrapTx(tx), &cmd)
 	if err != nil || cmd.CmdCode != types.SpecialOP {
 		return true, err
 	}
@@ -306,7 +306,7 @@ func (s *Specialop) updateValidators(validators *types.ValidatorSet, changedVali
 			// remove val
 			_, removed := validators.Remove(address)
 			if !removed {
-				return fmt.Errorf("Failed to remove validator %X)")
+				return fmt.Errorf("Failed to remove validator %X", address)
 			}
 		} else {
 			if val.VotingPower != power || val.IsCA != v.IsCA {

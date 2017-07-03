@@ -237,8 +237,8 @@ func (e *Engine) Start() error {
 }
 
 // Stop just wrap around swtich.Stop, which will stop reactors, listeners,etc
-func (e *Engine) Stop() {
-	e.p2pSwitch.Stop()
+func (e *Engine) Stop() bool {
+	return e.p2pSwitch.Stop()
 }
 
 func (e *Engine) RegisterNodeInfo(ni *p2p.NodeInfo) {
