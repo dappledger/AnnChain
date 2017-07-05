@@ -1080,6 +1080,21 @@ func (cs *ConsensusState) enterPrecommit(height int, round int) {
 		return
 	}
 
+	if cs.ProposalBlock.HashesTo(blockID.Hash) && cs.ProposalBlock.NumTxs == 0 {
+		log.Info("enterPrecommit: proposal block is empty, vote nil, no locking")
+		cs.signAddVote(types.VoteTypePrecommit, nil, types.PartSetHeader{})
+		return
+	}
+
+	if cs.LockedBlock.HashesTo(blockID.Hash) && cs.LockedBlock.NumTxs == 0 {
+		log.Info("enterPrecommit: locked block is empty, vote nil, unlocking")
+		cs.signAddVote(types.VoteTypePrecommit, nil, types.PartSetHeader{})
+		cs.LockedBlock = nil
+		cs.LockedRound = 0
+		cs.LockedBlockParts = nil
+		return
+	}
+
 	// At this point, +2/3 prevoted for a particular block.
 
 	// If we're already locked on that block, precommit it, and update the LockedRound
