@@ -176,8 +176,9 @@ func (s *State) GetChainID() string {
 func GetState(config cfg.Config, stateDB dbm.DB) *State {
 	state := LoadState(stateDB)
 	if state == nil {
-		state = MakeGenesisStateFromFile(stateDB, config.GetString("genesis_file"))
-		state.Save()
+		if state = MakeGenesisStateFromFile(stateDB, config.GetString("genesis_file")); state != nil {
+			state.Save()
+		}
 	}
 	return state
 }
@@ -188,7 +189,7 @@ func GetState(config cfg.Config, stateDB dbm.DB) *State {
 func MakeGenesisStateFromFile(db dbm.DB, genDocFile string) *State {
 	genDocJSON, err := ioutil.ReadFile(genDocFile)
 	if err != nil {
-		Exit(Fmt("Couldn't read GenesisDoc file: %v", err))
+		return nil
 	}
 	genDoc := types.GenesisDocFromJSON(genDocJSON)
 	return MakeGenesisState(db, genDoc)

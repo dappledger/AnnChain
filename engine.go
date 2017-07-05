@@ -44,7 +44,8 @@ type (
 	}
 
 	EngineTunes struct {
-		Conf cfg.Config
+		Conf    cfg.Config
+		Genesis *types.GenesisDoc
 	}
 
 	IKey interface {
@@ -62,11 +63,17 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	dbDir := tune.Conf.GetString("db_dir")
 	stateDB := dbm.NewDB("state", dbBackend, dbDir)
 	stateM := state.GetState(tune.Conf, stateDB)
+	if stateM == nil {
+		stateM = state.MakeGenesisState(stateDB, tune.Genesis)
+	}
+	if stateM == nil {
+		cmn.Exit(cmn.Fmt("Fail to get genesis state"))
+	}
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
 	eventSwitch := types.NewEventSwitch()
 	fastSync := fastSyncable(tune.Conf, driver.GetAddress(), stateM.Validators)
 	if _, err := eventSwitch.Start(); err != nil {
-		cmn.PanicSanity(cmn.Fmt("Failed to start switch: %v", err))
+		cmn.PanicSanity(cmn.Fmt("Fail to start switch: %v", err))
 	}
 
 	tune.Conf.Set("chain_id", stateM.ChainID)
