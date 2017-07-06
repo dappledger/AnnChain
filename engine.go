@@ -44,8 +44,9 @@ type (
 	}
 
 	EngineTunes struct {
-		Conf    cfg.Config
-		Genesis *types.GenesisDoc
+		Conf     cfg.Config
+		Genesis  *types.GenesisDoc
+		Listener p2p.Listener
 	}
 
 	IKey interface {
@@ -64,19 +65,18 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	stateDB := dbm.NewDB("state", dbBackend, dbDir)
 	stateM := state.GetState(tune.Conf, stateDB)
 	if stateM == nil {
-		stateM = state.MakeGenesisState(stateDB, tune.Genesis)
+		if stateM = state.MakeGenesisState(stateDB, tune.Genesis); stateM == nil {
+			cmn.Exit(cmn.Fmt("Fail to get genesis state"))
+		}
 	}
-	if stateM == nil {
-		cmn.Exit(cmn.Fmt("Fail to get genesis state"))
-	}
+	tune.Conf.Set("chain_id", stateM.ChainID)
+
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
 	eventSwitch := types.NewEventSwitch()
 	fastSync := fastSyncable(tune.Conf, driver.GetAddress(), stateM.Validators)
 	if _, err := eventSwitch.Start(); err != nil {
-		cmn.PanicSanity(cmn.Fmt("Fail to start switch: %v", err))
+		cmn.PanicSanity(cmn.Fmt("Fail to start event switch: %v", err))
 	}
-
-	tune.Conf.Set("chain_id", stateM.ChainID)
 
 	blockStoreDB := dbm.NewDB("blockstore", dbBackend, dbDir)
 	blockStore := blockchain.NewBlockStore(blockStoreDB)
@@ -109,11 +109,18 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 		return nil
 	})
 
-	// Make p2p network switch
-	sw := p2p.NewSwitch(tune.Conf.GetConfig("p2p"))
-	sw.AddReactor("MEMPOOL", memReactor)
-	sw.AddReactor("BLOCKCHAIN", bcReactor)
-	sw.AddReactor("CONSENSUS", consensusReactor)
+	privKey := driver.GetPrivateKey()
+	p2psw := p2p.NewSwitch(tune.Conf.GetConfig("p2p"))
+	p2psw.AddReactor("MEMPOOL", memReactor)
+	p2psw.AddReactor("BLOCKCHAIN", bcReactor)
+	p2psw.AddReactor("CONSENSUS", consensusReactor)
+	p2psw.SetNodePrivKey(privKey.(crypto.PrivKeyEd25519))
+	p2psw.SetAuthByCA(authByCA(&stateM.Validators))
+	p2psw.SetAddToRefuselist(addToRefuselist(refuseList))
+	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
+	if tune.Listener != nil {
+		p2psw.AddListener(tune.Listener)
+	}
 
 	// TODO: just ignore the pex for a short while
 	// Optionally, start the pex reactor
@@ -124,19 +131,14 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	//	pexReactor := p2p.NewPEXReactor(addrBook)
 	//	sw.AddReactor("PEX", pexReactor)
 	// }
-	privKey := driver.GetPrivateKey()
-	sw.SetNodePrivKey(privKey.(crypto.PrivKeyEd25519))
-	sw.SetAuthByCA(authByCA(&stateM.Validators))
-	sw.SetAddToRefuselist(addToRefuselist(refuseList))
-	sw.SetRefuseListFilter(refuseListFilter(refuseList))
-	setEventSwitch(eventSwitch, bcReactor, memReactor, consensusReactor)
 
-	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), sw, &stateM.Validators, refuseList)
+	setEventSwitch(eventSwitch, bcReactor, memReactor, consensusReactor)
+	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), p2psw, &stateM.Validators, refuseList)
 
 	return &Engine{
 		tune:         tune,
 		stateMachine: stateM,
-		p2pSwitch:    sw,
+		p2pSwitch:    p2psw,
 		eventSwitch:  &eventSwitch,
 		refuseList:   refuseList,
 		driver:       driver,
@@ -222,6 +224,7 @@ func (e *Engine) DialSeeds(seeds []string) {
 }
 
 // AddListener abstract a role for a listener
+// TODO:: implement role
 func (e *Engine) AddListener(role string, l p2p.Listener) {
 	e.p2pSwitch.AddListener(l)
 }
