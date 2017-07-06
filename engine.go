@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"path"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 
 	"gitlab.zhonganonline.com/ann/angine/blockchain"
 	"gitlab.zhonganonline.com/ann/angine/consensus"
@@ -41,12 +44,16 @@ type (
 		p2pSwitch    *p2p.Switch
 		eventSwitch  *types.EventSwitch
 		refuseList   *refuse_list.RefuseList
+
+		log *zap.Logger
 	}
 
 	EngineTunes struct {
-		Conf     cfg.Config
-		Genesis  *types.GenesisDoc
-		Listener p2p.Listener
+		Conf        cfg.Config
+		Genesis     *types.GenesisDoc
+		Listener    p2p.Listener
+		LogPath     string
+		Environment string
 	}
 
 	IKey interface {
@@ -70,6 +77,14 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 		}
 	}
 	tune.Conf.Set("chain_id", stateM.ChainID)
+
+	logPath := path.Join(tune.LogPath, "engine-"+stateM.ChainID)
+	cmn.EnsureDir(logPath, 0700)
+	log := InitializeLog(tune.Environment, logPath)
+
+	mempool.SetLog(log)
+	consensus.SetLog(log)
+	blockchain.SetLog(log)
 
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
 	eventSwitch := types.NewEventSwitch()
@@ -115,7 +130,7 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	p2psw.AddReactor("BLOCKCHAIN", bcReactor)
 	p2psw.AddReactor("CONSENSUS", consensusReactor)
 	p2psw.SetNodePrivKey(privKey.(crypto.PrivKeyEd25519))
-	p2psw.SetAuthByCA(authByCA(&stateM.Validators))
+	p2psw.SetAuthByCA(authByCA(&stateM.Validators, log))
 	p2psw.SetAddToRefuselist(addToRefuselist(refuseList))
 	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
 	if tune.Listener != nil {
@@ -145,6 +160,8 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 		blockstore:   blockStore,
 		mempool:      mem,
 		consensus:    consensusState,
+
+		log: log,
 	}
 }
 
@@ -368,7 +385,7 @@ func (e *Engine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 		return nil // no blocks to replay
 	}
 
-	log.Notice("Replay Blocks", "appHeight", appBlockHeight, "storeHeight", storeBlockHeight, "stateHeight", stateBlockHeight)
+	e.log.Info("Replay Blocks", zap.Int("appHeight", appBlockHeight), zap.Int("storeHeight", storeBlockHeight), zap.Int("stateHeight", stateBlockHeight))
 
 	if storeBlockHeight < appBlockHeight {
 		// if the app is ahead, there's nothing we can do
@@ -383,13 +400,13 @@ func (e *Engine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 
 		if bytes.Equal(stateAppHash, appHash) {
 			// we're all synced up
-			log.Debug("RelpayBlocks: Already synced")
+			e.log.Debug("RelpayBlocks: Already synced")
 		} else if bytes.Equal(stateAppHash, lastBlockAppHash) {
 			// we crashed after commit and before saving state,
 			// so load the intermediate state and update the hash
 			e.stateMachine.LoadIntermediate()
 			e.stateMachine.AppHash = appHash
-			log.Debug("RelpayBlocks: Loaded intermediate state and updated state.AppHash")
+			e.log.Debug("RelpayBlocks: Loaded intermediate state and updated state.AppHash")
 		} else {
 			cmn.PanicSanity(cmn.Fmt("Unexpected state.AppHash: state.AppHash %X; app.AppHash %X, lastBlock.AppHash %X", stateAppHash, appHash, lastBlockAppHash))
 		}
@@ -478,7 +495,7 @@ func refuseListFilter(refuseList *refuse_list.RefuseList) func(crypto.PubKeyEd25
 	}
 }
 
-func authByCA(ppValidators **types.ValidatorSet) func(*p2p.NodeInfo) error {
+func authByCA(ppValidators **types.ValidatorSet, log *zap.Logger) func(*p2p.NodeInfo) error {
 	valset := *ppValidators
 	return func(peerNodeInfo *p2p.NodeInfo) error {
 		for _, val := range valset.Validators {
@@ -491,11 +508,11 @@ func authByCA(ppValidators **types.ValidatorSet) func(*p2p.NodeInfo) error {
 				return err
 			}
 			if ed25519.Verify(&valPk, peerNodeInfo.PubKey[:], &signedPkByte64) {
-				log.Info("Peer handshake", "peerNodeInfo", peerNodeInfo)
+				log.Sugar().Infow("Peer handshake", "peerNodeInfo", peerNodeInfo)
 				return nil
 			}
 		}
-		err := fmt.Errorf("Reject Peer , has no CA sig")
+		err := fmt.Errorf("Reject Peer, has no CA sig")
 		log.Warn(err.Error())
 		return err
 	}

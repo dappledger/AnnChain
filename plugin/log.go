@@ -1,7 +1,11 @@
 package plugin
 
 import (
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-logger"
+	"go.uber.org/zap"
 )
 
-var log = logger.New("module", "node")
+var log *zap.Logger
+
+func SetLog(l *zap.Logger) {
+	log = l
+}

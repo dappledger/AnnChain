@@ -11,12 +11,11 @@ import (
 	"strings"
 	"time"
 
+	sm "gitlab.zhonganonline.com/ann/angine/state"
+	"gitlab.zhonganonline.com/ann/angine/types"
 	auto "gitlab.zhonganonline.com/ann/ann-module/lib/go-autofile"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
-
-	sm "gitlab.zhonganonline.com/ann/angine/state"
-	"gitlab.zhonganonline.com/ann/angine/types"
 )
 
 // Unmarshal and apply a single message to the consensus state
@@ -39,7 +38,7 @@ func (cs *ConsensusState) readReplayMessage(msgBytes []byte, newStepCh chan inte
 	// for logging
 	switch m := msg.Msg.(type) {
 	case types.EventDataRoundState:
-		log.Notice("Replay: New Step", "height", m.Height, "round", m.Round, "step", m.Step)
+		slog.Info("Replay: New Step", "height", m.Height, "round", m.Round, "step", m.Step)
 		// these are playback checks
 		ticker := time.After(time.Second * 2)
 		if newStepCh != nil {
@@ -61,19 +60,19 @@ func (cs *ConsensusState) readReplayMessage(msgBytes []byte, newStepCh chan inte
 		switch msg := m.Msg.(type) {
 		case *ProposalMessage:
 			p := msg.Proposal
-			log.Notice("Replay: Proposal", "height", p.Height, "round", p.Round, "header",
+			slog.Info("Replay: Proposal", "height", p.Height, "round", p.Round, "header",
 				p.BlockPartsHeader, "pol", p.POLRound, "peer", peerKey)
 		case *BlockPartMessage:
-			log.Notice("Replay: BlockPart", "height", msg.Height, "round", msg.Round, "peer", peerKey)
+			slog.Info("Replay: BlockPart", "height", msg.Height, "round", msg.Round, "peer", peerKey)
 		case *VoteMessage:
 			v := msg.Vote
-			log.Notice("Replay: Vote", "height", v.Height, "round", v.Round, "type", v.Type,
+			slog.Info("Replay: Vote", "height", v.Height, "round", v.Round, "type", v.Type,
 				"blockID", v.BlockID, "peer", peerKey)
 		}
 
 		cs.handleMsg(m, cs.RoundState)
 	case timeoutInfo:
-		log.Notice("Replay: Timeout", "height", m.Height, "round", m.Round, "step", m.Step, "dur", m.Duration)
+		slog.Info("Replay: Timeout", "height", m.Height, "round", m.Round, "step", m.Step, "dur", m.Duration)
 		cs.handleTimeout(m, cs.RoundState)
 	default:
 		return fmt.Errorf("Replay: Unknown TimedWALMessage type: %v", reflect.TypeOf(msg.Msg))
@@ -105,7 +104,7 @@ func (cs *ConsensusState) catchupReplay(csHeight int) error {
 	// Search for height marker
 	gr, found, err = cs.wal.group.Search("#HEIGHT: ", makeHeightSearchFunc(csHeight))
 	if err == io.EOF {
-		log.Warn("Replay: wal.group.Search returned EOF", "height", csHeight)
+		slog.Warn("Replay: wal.group.Search returned EOF", "height", csHeight)
 		return nil
 	} else if err != nil {
 		return err
@@ -115,7 +114,7 @@ func (cs *ConsensusState) catchupReplay(csHeight int) error {
 	}
 	defer gr.Close()
 
-	log.Notice("Catchup by replaying consensus messages", "height", csHeight)
+	slog.Info("Catchup by replaying consensus messages", "height", csHeight)
 
 	for {
 		line, err := gr.ReadLine()
@@ -133,7 +132,7 @@ func (cs *ConsensusState) catchupReplay(csHeight int) error {
 			return err
 		}
 	}
-	log.Notice("Replay: Done")
+	log.Info("Replay: Done")
 	return nil
 }
 
@@ -234,7 +233,7 @@ func (pb *playback) replayReset(count int, newStepCh chan interface{}) error {
 	pb.fp = fp
 	pb.scanner = bufio.NewScanner(fp)
 	count = pb.count - count
-	log.Notice(Fmt("Reseting from %d to %d", pb.count, count))
+	log.Info(Fmt("Reseting from %d to %d", pb.count, count))
 	pb.count = 0
 	pb.cs = newCS
 	for i := 0; pb.scanner.Scan() && i < count; i++ {

@@ -1,18 +1,11 @@
 package mempool
 
 import (
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-logger"
+	"go.uber.org/zap"
 )
 
-var log = logger.New("module", "mempool")
+var log *zap.Logger
 
-/*
-func init() {
-	log.SetHandler(
-		logger.LvlFilterHandler(
-			logger.LvlDebug,
-			logger.BypassHandler(),
-		),
-	)
+func SetLog(l *zap.Logger) {
+	log = l
 }
-*/

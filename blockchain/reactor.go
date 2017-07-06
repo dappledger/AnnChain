@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"time"
 
+	"go.uber.org/zap"
+
 	"gitlab.zhonganonline.com/ann/angine/types"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
@@ -128,11 +130,11 @@ func (bcR *BlockchainReactor) RemovePeer(peer *p2p.Peer, reason interface{}) {
 func (bcR *BlockchainReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 	_, msg, err := DecodeMessage(msgBytes)
 	if err != nil {
-		log.Warn("Error decoding message", "error", err)
+		log.Warn("Error decoding message", zap.String("error", err.Error()))
 		return
 	}
 
-	log.Debug("Receive", "src", src, "chID", chID, "msg", msg)
+	log.Sugar().Debugw("Receive", "src", src, "chID", chID, "msg", msg)
 
 	switch msg := msg.(type) {
 	case *bcBlockRequestMessage:
@@ -199,10 +201,10 @@ FOR_LOOP:
 		case _ = <-switchToConsensusTicker.C:
 			height, numPending, _ := bcR.pool.GetStatus()
 			outbound, inbound, _ := bcR.Switch.NumPeers()
-			log.Info("Consensus ticker", "numPending", numPending, "total", len(bcR.pool.requesters),
-				"outbound", outbound, "inbound", inbound)
+			log.Debug("Consensus ticker", zap.Int32("numPending", numPending), zap.Int("total", len(bcR.pool.requesters)),
+				zap.Int("outbound", outbound), zap.Int("inbound", inbound))
 			if bcR.pool.IsCaughtUp() {
-				log.Notice("Time to switch to consensus reactor!", "height", height)
+				log.Info("Time to switch to consensus reactor!", zap.Int("height", height))
 				bcR.pool.Stop()
 				types.FireEventSwitchToConsensus(bcR.evsw)
 				break FOR_LOOP
@@ -213,7 +215,6 @@ FOR_LOOP:
 			for i := 0; i < 10; i++ {
 				// See if there are any blocks to sync.
 				first, second := bcR.pool.PeekTwoBlocks()
-				//log.Info("TrySync peeked", "first", first, "second", second)
 				if first == nil || second == nil {
 					// We need both to sync the first block.
 					break SYNC_LOOP
@@ -226,7 +227,7 @@ FOR_LOOP:
 				// currently necessary.
 
 				if err := bcR.blockVerifier(types.BlockID{Hash: first.Hash(), PartsHeader: firstPartsHeader}, first.Height, second.LastCommit); err != nil {
-					log.Info("error in validation", "error", err)
+					log.Error("error in validation", zap.String("error", err.Error()))
 					bcR.pool.RedoRequest(first.Height)
 					break SYNC_LOOP
 				} else {

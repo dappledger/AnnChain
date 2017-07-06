@@ -206,12 +206,10 @@ func (mem *Mempool) initWAL() {
 	if walDir != "" {
 		err := cmn.EnsureDir(walDir, 0700)
 		if err != nil {
-			log.Error("Error ensuring Mempool wal dir", "error", err)
 			cmn.PanicSanity(err)
 		}
 		af, err := auto.OpenAutoFile(walDir + "/wal")
 		if err != nil {
-			log.Error("Error opening Mempool wal file", "error", err)
 			cmn.PanicSanity(err)
 		}
 		mem.wal = af

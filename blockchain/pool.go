@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
+
 	"gitlab.zhonganonline.com/ann/angine/types"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	flow "gitlab.zhonganonline.com/ann/ann-module/lib/go-flowrate/flowrate"
@@ -107,7 +109,7 @@ func (pool *BlockPool) removeTimedoutPeers() {
 			// XXX remove curRate != 0
 			if curRate != 0 && curRate < minRecvRate {
 				pool.sendTimeout(peer.id)
-				log.Warn("SendTimeout", "peer", peer.id, "reason", "curRate too low")
+				log.Warn("SendTimeout", zap.String("peer", peer.id), zap.String("reason", "curRate too low"))
 				peer.didTimeout = true
 			}
 		}
@@ -143,7 +145,7 @@ func (pool *BlockPool) IsCaughtUp() bool {
 	}
 
 	isCaughtUp := (height > 0 || time.Now().Sub(pool.startTime) > 5*time.Second) && (maxPeerHeight == 0 || height >= maxPeerHeight)
-	log.Notice(Fmt("IsCaughtUp: %v", isCaughtUp), "height", height, "maxPeerHeight", maxPeerHeight)
+	log.Info(Fmt("IsCaughtUp: %v", isCaughtUp), zap.Int("height", height), zap.Int("maxPeerHeight", maxPeerHeight))
 	return isCaughtUp
 }
 
@@ -376,7 +378,7 @@ func (peer *bpPeer) onTimeout() {
 	defer peer.pool.mtx.Unlock()
 
 	peer.pool.sendTimeout(peer.id)
-	log.Warn("SendTimeout", "peer", peer.id, "reason", "onTimeout")
+	log.Warn("SendTimeout", zap.String("peer", peer.id), zap.String("reason", "onTimeout"))
 	peer.didTimeout = true
 }
 
@@ -467,7 +469,6 @@ OUTER_LOOP:
 			}
 			peer = bpr.pool.pickIncrAvailablePeer(bpr.height)
 			if peer == nil {
-				//log.Info("No peers available", "height", height)
 				time.Sleep(requestIntervalMS * time.Millisecond)
 				continue PICK_PEER_LOOP
 			}

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"go.uber.org/zap"
+
 	"gitlab.zhonganonline.com/ann/angine/types"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-clist"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
@@ -60,22 +62,22 @@ func (memR *MempoolReactor) RemovePeer(peer *p2p.Peer, reason interface{}) {
 func (memR *MempoolReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 	_, msg, err := DecodeMessage(msgBytes)
 	if err != nil {
-		log.Warn("Error decoding message", "error", err)
+		log.Warn("Error decoding message", zap.String("error", err.Error()))
 		return
 	}
-	log.Debug("Receive", "src", src, "chId", chID, "msg", msg)
+	log.Sugar().Debugw("Receive", "src", src, "chId", chID, "msg", msg)
 
 	switch msg := msg.(type) {
 	case *TxMessage:
 		if err := memR.Mempool.CheckTx(msg.Tx); err != nil {
 			// Bad, seen, or conflicting tx.
-			log.Info("Could not add tx", "tx", msg.Tx)
+			log.Debug("Could not add tx", zap.ByteString("tx", msg.Tx))
 			return
 		}
-		log.Info("Added valid tx", "tx", msg.Tx)
+		log.Debug("Added valid tx", zap.ByteString("tx", msg.Tx))
 		// broadcasting happens from go routines per peer
 	default:
-		log.Warn(fmt.Sprintf("Unknown message type %T", msg))
+		log.Info(fmt.Sprintf("Unknown message type %T", msg))
 	}
 }
 
