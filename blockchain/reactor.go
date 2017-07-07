@@ -76,6 +76,8 @@ func NewBlockchainReactor(logger *zap.Logger, config cfg.Config, lastBlockHeight
 		fastSync:   fastSync,
 		requestsCh: requestsCh,
 		timeoutsCh: timeoutsCh,
+
+		logger: logger,
 	}
 	bcR.BaseReactor = *p2p.NewBaseReactor(logger, "BlockchainReactor", bcR)
 	return bcR

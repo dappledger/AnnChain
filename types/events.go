@@ -1,6 +1,8 @@
 package types
 
 import (
+	"go.uber.org/zap"
+
 	// for registering TMEventData as events.EventData
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-events"
@@ -217,8 +219,8 @@ type EventCache interface {
 	Flush()
 }
 
-func NewEventSwitch() EventSwitch {
-	return events.NewEventSwitch()
+func NewEventSwitch(logger *zap.Logger) EventSwitch {
+	return events.NewEventSwitch(logger)
 }
 
 func NewEventCache(evsw EventSwitch) EventCache {

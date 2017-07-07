@@ -83,7 +83,7 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	logger := InitializeLog(tune.Environment, logPath)
 
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
-	eventSwitch := types.NewEventSwitch()
+	eventSwitch := types.NewEventSwitch(logger)
 	fastSync := fastSyncable(tune.Conf, driver.GetAddress(), stateM.Validators)
 	if _, err := eventSwitch.Start(); err != nil {
 		cmn.PanicSanity(cmn.Fmt("Fail to start event switch: %v", err))
@@ -121,7 +121,7 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	})
 
 	privKey := driver.GetPrivateKey()
-	p2psw := p2p.NewSwitch(tune.Conf.GetConfig("p2p"))
+	p2psw := p2p.NewSwitch(logger, tune.Conf.GetConfig("p2p"))
 	p2psw.AddReactor("MEMPOOL", memReactor)
 	p2psw.AddReactor("BLOCKCHAIN", bcReactor)
 	p2psw.AddReactor("CONSENSUS", consensusReactor)
