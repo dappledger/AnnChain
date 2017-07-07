@@ -3,6 +3,8 @@ package consensus
 import (
 	"time"
 
+	"go.uber.org/zap"
+
 	"gitlab.zhonganonline.com/ann/angine/types"
 	auto "gitlab.zhonganonline.com/ann/ann-module/lib/go-autofile"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
@@ -38,18 +40,21 @@ type WAL struct {
 
 	group *auto.Group
 	light bool // ignore block parts
+
+	logger *zap.Logger
 }
 
-func NewWAL(walDir string, light bool) (*WAL, error) {
+func NewWAL(logger *zap.Logger, walDir string, light bool) (*WAL, error) {
 	group, err := auto.OpenGroup(walDir + "/wal")
 	if err != nil {
 		return nil, err
 	}
 	wal := &WAL{
-		group: group,
-		light: light,
+		group:  group,
+		light:  light,
+		logger: logger,
 	}
-	wal.BaseService = *NewBaseService(log, "WAL", wal)
+	wal.BaseService = *NewBaseService(logger, "WAL", wal)
 	_, err = wal.Start()
 	return wal, err
 }

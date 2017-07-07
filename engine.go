@@ -45,7 +45,7 @@ type (
 		eventSwitch  *types.EventSwitch
 		refuseList   *refuse_list.RefuseList
 
-		log *zap.Logger
+		logger *zap.Logger
 	}
 
 	EngineTunes struct {
@@ -80,11 +80,7 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 
 	logPath := path.Join(tune.LogPath, "engine-"+stateM.ChainID)
 	cmn.EnsureDir(logPath, 0700)
-	log := InitializeLog(tune.Environment, logPath)
-
-	mempool.SetLog(log)
-	consensus.SetLog(log)
-	blockchain.SetLog(log)
+	logger := InitializeLog(tune.Environment, logPath)
 
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
 	eventSwitch := types.NewEventSwitch()
@@ -100,16 +96,16 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	}
 	_ = apphash // just bypass golint
 	_, stateLastHeight, _ := stateM.GetLastBlockInfo()
-	bcReactor := blockchain.NewBlockchainReactor(tune.Conf, stateLastHeight, blockStore, fastSync)
-	mem := mempool.NewMempool(tune.Conf)
+	bcReactor := blockchain.NewBlockchainReactor(logger, tune.Conf, stateLastHeight, blockStore, fastSync)
+	mem := mempool.NewMempool(logger, tune.Conf)
 	for _, p := range stateM.Plugins {
 		mem.RegisterFilter(NewMempoolFilter(p.CheckTx))
 	}
-	memReactor := mempool.NewMempoolReactor(tune.Conf, mem)
+	memReactor := mempool.NewMempoolReactor(logger, tune.Conf, mem)
 
-	consensusState := consensus.NewConsensusState(tune.Conf, stateM, blockStore, mem)
+	consensusState := consensus.NewConsensusState(logger, tune.Conf, stateM, blockStore, mem)
 	consensusState.SetPrivValidator(driver)
-	consensusReactor := consensus.NewConsensusReactor(consensusState, fastSync)
+	consensusReactor := consensus.NewConsensusReactor(logger, consensusState, fastSync)
 
 	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int, lc *types.Commit) error {
 		return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)
@@ -130,7 +126,7 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	p2psw.AddReactor("BLOCKCHAIN", bcReactor)
 	p2psw.AddReactor("CONSENSUS", consensusReactor)
 	p2psw.SetNodePrivKey(privKey.(crypto.PrivKeyEd25519))
-	p2psw.SetAuthByCA(authByCA(&stateM.Validators, log))
+	p2psw.SetAuthByCA(authByCA(&stateM.Validators, logger))
 	p2psw.SetAddToRefuselist(addToRefuselist(refuseList))
 	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
 	if tune.Listener != nil {
@@ -161,7 +157,7 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 		mempool:      mem,
 		consensus:    consensusState,
 
-		log: log,
+		logger: logger,
 	}
 }
 
@@ -385,7 +381,7 @@ func (e *Engine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 		return nil // no blocks to replay
 	}
 
-	e.log.Info("Replay Blocks", zap.Int("appHeight", appBlockHeight), zap.Int("storeHeight", storeBlockHeight), zap.Int("stateHeight", stateBlockHeight))
+	e.logger.Info("Replay Blocks", zap.Int("appHeight", appBlockHeight), zap.Int("storeHeight", storeBlockHeight), zap.Int("stateHeight", stateBlockHeight))
 
 	if storeBlockHeight < appBlockHeight {
 		// if the app is ahead, there's nothing we can do
@@ -400,13 +396,13 @@ func (e *Engine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 
 		if bytes.Equal(stateAppHash, appHash) {
 			// we're all synced up
-			e.log.Debug("RelpayBlocks: Already synced")
+			e.logger.Debug("RelpayBlocks: Already synced")
 		} else if bytes.Equal(stateAppHash, lastBlockAppHash) {
 			// we crashed after commit and before saving state,
 			// so load the intermediate state and update the hash
 			e.stateMachine.LoadIntermediate()
 			e.stateMachine.AppHash = appHash
-			e.log.Debug("RelpayBlocks: Loaded intermediate state and updated state.AppHash")
+			e.logger.Debug("RelpayBlocks: Loaded intermediate state and updated state.AppHash")
 		} else {
 			cmn.PanicSanity(cmn.Fmt("Unexpected state.AppHash: state.AppHash %X; app.AppHash %X, lastBlock.AppHash %X", stateAppHash, appHash, lastBlockAppHash))
 		}

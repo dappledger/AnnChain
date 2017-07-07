@@ -3,6 +3,8 @@ package consensus
 import (
 	"time"
 
+	"go.uber.org/zap"
+
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 )
 
@@ -31,16 +33,22 @@ type timeoutTicker struct {
 	timer    *time.Timer
 	tickChan chan timeoutInfo
 	tockChan chan timeoutInfo
+
+	logger  *zap.Logger
+	slogger *zap.SugaredLogger
 }
 
-func NewTimeoutTicker() TimeoutTicker {
+func NewTimeoutTicker(logger *zap.Logger) TimeoutTicker {
 	tt := &timeoutTicker{
 		timer:    time.NewTimer(0),
 		tickChan: make(chan timeoutInfo, tickTockBufferSize),
 		tockChan: make(chan timeoutInfo, tickTockBufferSize),
+
+		logger:  logger,
+		slogger: logger.Sugar(),
 	}
 	tt.stopTimer() // don't want to fire until the first scheduled timeout
-	tt.BaseService = *NewBaseService(log, "TimeoutTicker", tt)
+	tt.BaseService = *NewBaseService(logger, "TimeoutTicker", tt)
 	return tt
 }
 
@@ -76,7 +84,7 @@ func (t *timeoutTicker) stopTimer() {
 		select {
 		case <-t.timer.C:
 		default:
-			log.Debug("Timer already stopped")
+			t.logger.Debug("Timer already stopped")
 		}
 	}
 }
@@ -85,7 +93,7 @@ func (t *timeoutTicker) stopTimer() {
 // timers are interupted and replaced by new ticks from later steps
 // timeouts of 0 on the tickChan will be immediately relayed to the tockChan
 func (t *timeoutTicker) timeoutRoutine() {
-	log.Debug("Starting timeout routine")
+	t.logger.Debug("Starting timeout routine")
 	var ti timeoutInfo
 	for {
 		select {
@@ -110,9 +118,9 @@ func (t *timeoutTicker) timeoutRoutine() {
 			// NOTE time.Timer allows duration to be non-positive
 			ti = newti
 			t.timer.Reset(ti.Duration)
-			slog.Debug("Scheduled timeout", "dur", ti.Duration, "height", ti.Height, "round", ti.Round, "step", ti.Step)
+			t.slogger.Debugw("Scheduled timeout", "dur", ti.Duration, "height", ti.Height, "round", ti.Round, "step", ti.Step)
 		case <-t.timer.C:
-			slog.Info("Timed out", "dur", ti.Duration, "height", ti.Height, "round", ti.Round, "step", ti.Step)
+			t.slogger.Infow("Timed out", "dur", ti.Duration, "height", ti.Height, "round", ti.Round, "step", ti.Step)
 			// go routine here gaurantees timeoutRoutine doesn't block.
 			// Determinism comes from playback in the receiveRoutine.
 			// We can eliminate it by merging the timeoutRoutine into receiveRoutine

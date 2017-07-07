@@ -50,9 +50,11 @@ type BlockchainReactor struct {
 	blockExecuter func(*types.Block, *types.PartSet, *types.Commit) error
 
 	evsw types.EventSwitch
+
+	logger *zap.Logger
 }
 
-func NewBlockchainReactor(config cfg.Config, lastBlockHeight int, store *BlockStore, fastSync bool) *BlockchainReactor {
+func NewBlockchainReactor(logger *zap.Logger, config cfg.Config, lastBlockHeight int, store *BlockStore, fastSync bool) *BlockchainReactor {
 	if lastBlockHeight == store.Height()-1 {
 		store.height -= 1 // XXX HACK, make this better
 	}
@@ -62,6 +64,7 @@ func NewBlockchainReactor(config cfg.Config, lastBlockHeight int, store *BlockSt
 	requestsCh := make(chan BlockRequest, defaultChannelCapacity)
 	timeoutsCh := make(chan string, defaultChannelCapacity)
 	pool := NewBlockPool(
+		logger,
 		store.Height()+1,
 		requestsCh,
 		timeoutsCh,
@@ -74,7 +77,7 @@ func NewBlockchainReactor(config cfg.Config, lastBlockHeight int, store *BlockSt
 		requestsCh: requestsCh,
 		timeoutsCh: timeoutsCh,
 	}
-	bcR.BaseReactor = *p2p.NewBaseReactor(log, "BlockchainReactor", bcR)
+	bcR.BaseReactor = *p2p.NewBaseReactor(logger, "BlockchainReactor", bcR)
 	return bcR
 }
 
@@ -130,11 +133,11 @@ func (bcR *BlockchainReactor) RemovePeer(peer *p2p.Peer, reason interface{}) {
 func (bcR *BlockchainReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 	_, msg, err := DecodeMessage(msgBytes)
 	if err != nil {
-		log.Warn("Error decoding message", zap.String("error", err.Error()))
+		bcR.logger.Warn("Error decoding message", zap.String("error", err.Error()))
 		return
 	}
 
-	log.Sugar().Debugw("Receive", "src", src, "chID", chID, "msg", msg)
+	bcR.logger.Sugar().Debugw("Receive", "src", src, "chID", chID, "msg", msg)
 
 	switch msg := msg.(type) {
 	case *bcBlockRequestMessage:
@@ -162,7 +165,7 @@ func (bcR *BlockchainReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte)
 		// Got a peer status. Unverified.
 		bcR.pool.SetPeerHeight(src.Key, msg.Height)
 	default:
-		log.Warn(Fmt("Unknown message type %v", reflect.TypeOf(msg)))
+		bcR.logger.Warn(Fmt("Unknown message type %v", reflect.TypeOf(msg)))
 	}
 }
 
@@ -201,10 +204,10 @@ FOR_LOOP:
 		case _ = <-switchToConsensusTicker.C:
 			height, numPending, _ := bcR.pool.GetStatus()
 			outbound, inbound, _ := bcR.Switch.NumPeers()
-			log.Debug("Consensus ticker", zap.Int32("numPending", numPending), zap.Int("total", len(bcR.pool.requesters)),
+			bcR.logger.Debug("Consensus ticker", zap.Int32("numPending", numPending), zap.Int("total", len(bcR.pool.requesters)),
 				zap.Int("outbound", outbound), zap.Int("inbound", inbound))
 			if bcR.pool.IsCaughtUp() {
-				log.Info("Time to switch to consensus reactor!", zap.Int("height", height))
+				bcR.logger.Info("Time to switch to consensus reactor!", zap.Int("height", height))
 				bcR.pool.Stop()
 				types.FireEventSwitchToConsensus(bcR.evsw)
 				break FOR_LOOP
@@ -227,7 +230,7 @@ FOR_LOOP:
 				// currently necessary.
 
 				if err := bcR.blockVerifier(types.BlockID{Hash: first.Hash(), PartsHeader: firstPartsHeader}, first.Height, second.LastCommit); err != nil {
-					log.Error("error in validation", zap.String("error", err.Error()))
+					bcR.logger.Error("error in validation", zap.String("error", err.Error()))
 					bcR.pool.RedoRequest(first.Height)
 					break SYNC_LOOP
 				} else {

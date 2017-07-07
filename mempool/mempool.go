@@ -6,6 +6,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"go.uber.org/zap"
+
 	"gitlab.zhonganonline.com/ann/angine/types"
 	auto "gitlab.zhonganonline.com/ann/ann-module/lib/go-autofile"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-clist"
@@ -35,9 +37,11 @@ type Mempool struct {
 	txLimit int
 
 	txFilters []IFilter
+
+	logger *zap.Logger
 }
 
-func NewMempool(config cfg.Config) *Mempool {
+func NewMempool(logger *zap.Logger, config cfg.Config) *Mempool {
 	mempool := &Mempool{
 		config:  config,
 		txs:     clist.New(),
@@ -45,6 +49,7 @@ func NewMempool(config cfg.Config) *Mempool {
 		height:  0,
 		cache:   newTxCache(cacheSize),
 		txLimit: config.GetInt("block_size") * 2,
+		logger:  logger,
 	}
 	mempool.initWAL()
 	return mempool

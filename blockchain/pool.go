@@ -47,9 +47,11 @@ type BlockPool struct {
 
 	requestsCh chan<- BlockRequest
 	timeoutsCh chan<- string
+
+	logger *zap.Logger
 }
 
-func NewBlockPool(start int, requestsCh chan<- BlockRequest, timeoutsCh chan<- string) *BlockPool {
+func NewBlockPool(logger *zap.Logger, start int, requestsCh chan<- BlockRequest, timeoutsCh chan<- string) *BlockPool {
 	bp := &BlockPool{
 		peers: make(map[string]*bpPeer),
 
@@ -59,8 +61,10 @@ func NewBlockPool(start int, requestsCh chan<- BlockRequest, timeoutsCh chan<- s
 
 		requestsCh: requestsCh,
 		timeoutsCh: timeoutsCh,
+
+		logger: logger,
 	}
-	bp.BaseService = *NewBaseService(log, "BlockPool", bp)
+	bp.BaseService = *NewBaseService(logger, "BlockPool", bp)
 	return bp
 }
 
@@ -109,7 +113,7 @@ func (pool *BlockPool) removeTimedoutPeers() {
 			// XXX remove curRate != 0
 			if curRate != 0 && curRate < minRecvRate {
 				pool.sendTimeout(peer.id)
-				log.Warn("SendTimeout", zap.String("peer", peer.id), zap.String("reason", "curRate too low"))
+				pool.logger.Warn("SendTimeout", zap.String("peer", peer.id), zap.String("reason", "curRate too low"))
 				peer.didTimeout = true
 			}
 		}
@@ -135,7 +139,7 @@ func (pool *BlockPool) IsCaughtUp() bool {
 
 	// Need at least 1 peer to be considered caught up.
 	if len(pool.peers) == 0 {
-		log.Debug("Blockpool has no peers")
+		pool.logger.Debug("Blockpool has no peers")
 		return false
 	}
 
@@ -145,7 +149,7 @@ func (pool *BlockPool) IsCaughtUp() bool {
 	}
 
 	isCaughtUp := (height > 0 || time.Now().Sub(pool.startTime) > 5*time.Second) && (maxPeerHeight == 0 || height >= maxPeerHeight)
-	log.Info(Fmt("IsCaughtUp: %v", isCaughtUp), zap.Int("height", height), zap.Int("maxPeerHeight", maxPeerHeight))
+	pool.logger.Info(Fmt("IsCaughtUp: %v", isCaughtUp), zap.Int("height", height), zap.Int("maxPeerHeight", maxPeerHeight))
 	return isCaughtUp
 }
 
@@ -378,7 +382,7 @@ func (peer *bpPeer) onTimeout() {
 	defer peer.pool.mtx.Unlock()
 
 	peer.pool.sendTimeout(peer.id)
-	log.Warn("SendTimeout", zap.String("peer", peer.id), zap.String("reason", "onTimeout"))
+	peer.pool.logger.Warn("SendTimeout", zap.String("peer", peer.id), zap.String("reason", "onTimeout"))
 	peer.didTimeout = true
 }
 

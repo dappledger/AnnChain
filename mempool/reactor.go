@@ -27,14 +27,16 @@ type MempoolReactor struct {
 	config  cfg.Config
 	Mempool *Mempool
 	evsw    types.EventSwitch
+	logger  *zap.Logger
 }
 
-func NewMempoolReactor(config cfg.Config, mempool *Mempool) *MempoolReactor {
+func NewMempoolReactor(logger *zap.Logger, config cfg.Config, mempool *Mempool) *MempoolReactor {
 	memR := &MempoolReactor{
 		config:  config,
 		Mempool: mempool,
+		logger:  logger,
 	}
-	memR.BaseReactor = *p2p.NewBaseReactor(log, "MempoolReactor", memR)
+	memR.BaseReactor = *p2p.NewBaseReactor(logger, "MempoolReactor", memR)
 	return memR
 }
 
@@ -62,22 +64,22 @@ func (memR *MempoolReactor) RemovePeer(peer *p2p.Peer, reason interface{}) {
 func (memR *MempoolReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 	_, msg, err := DecodeMessage(msgBytes)
 	if err != nil {
-		log.Warn("Error decoding message", zap.String("error", err.Error()))
+		memR.logger.Warn("Error decoding message", zap.String("error", err.Error()))
 		return
 	}
-	log.Sugar().Debugw("Receive", "src", src, "chId", chID, "msg", msg)
+	memR.logger.Sugar().Debugw("Receive", "src", src, "chId", chID, "msg", msg)
 
 	switch msg := msg.(type) {
 	case *TxMessage:
 		if err := memR.Mempool.CheckTx(msg.Tx); err != nil {
 			// Bad, seen, or conflicting tx.
-			log.Debug("Could not add tx", zap.ByteString("tx", msg.Tx))
+			memR.logger.Debug("Could not add tx", zap.ByteString("tx", msg.Tx))
 			return
 		}
-		log.Debug("Added valid tx", zap.ByteString("tx", msg.Tx))
+		memR.logger.Debug("Added valid tx", zap.ByteString("tx", msg.Tx))
 		// broadcasting happens from go routines per peer
 	default:
-		log.Info(fmt.Sprintf("Unknown message type %T", msg))
+		memR.logger.Info(fmt.Sprintf("Unknown message type %T", msg))
 	}
 }
 

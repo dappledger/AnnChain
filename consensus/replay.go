@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+
 	sm "gitlab.zhonganonline.com/ann/angine/state"
 	"gitlab.zhonganonline.com/ann/angine/types"
 	auto "gitlab.zhonganonline.com/ann/ann-module/lib/go-autofile"
@@ -38,7 +40,7 @@ func (cs *ConsensusState) readReplayMessage(msgBytes []byte, newStepCh chan inte
 	// for logging
 	switch m := msg.Msg.(type) {
 	case types.EventDataRoundState:
-		slog.Info("Replay: New Step", "height", m.Height, "round", m.Round, "step", m.Step)
+		cs.logger.Info("Replay: New Step", zap.Int("height", m.Height), zap.Int("round", m.Round), zap.String("step", m.Step))
 		// these are playback checks
 		ticker := time.After(time.Second * 2)
 		if newStepCh != nil {
@@ -60,19 +62,19 @@ func (cs *ConsensusState) readReplayMessage(msgBytes []byte, newStepCh chan inte
 		switch msg := m.Msg.(type) {
 		case *ProposalMessage:
 			p := msg.Proposal
-			slog.Info("Replay: Proposal", "height", p.Height, "round", p.Round, "header",
+			cs.slogger.Infow("Replay: Proposal", "height", p.Height, "round", p.Round, "header",
 				p.BlockPartsHeader, "pol", p.POLRound, "peer", peerKey)
 		case *BlockPartMessage:
-			slog.Info("Replay: BlockPart", "height", msg.Height, "round", msg.Round, "peer", peerKey)
+			cs.logger.Info("Replay: BlockPart", zap.Int("height", msg.Height), zap.Int("round", msg.Round), zap.String("peer", peerKey))
 		case *VoteMessage:
 			v := msg.Vote
-			slog.Info("Replay: Vote", "height", v.Height, "round", v.Round, "type", v.Type,
+			cs.slogger.Infow("Replay: Vote", "height", v.Height, "round", v.Round, "type", v.Type,
 				"blockID", v.BlockID, "peer", peerKey)
 		}
 
 		cs.handleMsg(m, cs.RoundState)
 	case timeoutInfo:
-		slog.Info("Replay: Timeout", "height", m.Height, "round", m.Round, "step", m.Step, "dur", m.Duration)
+		cs.slogger.Infow("Replay: Timeout", "height", m.Height, "round", m.Round, "step", m.Step, "dur", m.Duration)
 		cs.handleTimeout(m, cs.RoundState)
 	default:
 		return fmt.Errorf("Replay: Unknown TimedWALMessage type: %v", reflect.TypeOf(msg.Msg))
@@ -104,7 +106,7 @@ func (cs *ConsensusState) catchupReplay(csHeight int) error {
 	// Search for height marker
 	gr, found, err = cs.wal.group.Search("#HEIGHT: ", makeHeightSearchFunc(csHeight))
 	if err == io.EOF {
-		slog.Warn("Replay: wal.group.Search returned EOF", "height", csHeight)
+		cs.logger.Warn("Replay: wal.group.Search returned EOF", zap.Int("height", csHeight))
 		return nil
 	} else if err != nil {
 		return err
@@ -114,7 +116,7 @@ func (cs *ConsensusState) catchupReplay(csHeight int) error {
 	}
 	defer gr.Close()
 
-	slog.Info("Catchup by replaying consensus messages", "height", csHeight)
+	cs.logger.Info("Catchup by replaying consensus messages", zap.Int("height", csHeight))
 
 	for {
 		line, err := gr.ReadLine()
@@ -132,7 +134,7 @@ func (cs *ConsensusState) catchupReplay(csHeight int) error {
 			return err
 		}
 	}
-	log.Info("Replay: Done")
+	cs.logger.Info("Replay: Done")
 	return nil
 }
 
@@ -169,7 +171,7 @@ func (cs *ConsensusState) replay(file string, console bool) error {
 		return err
 	}
 
-	pb := newPlayback(file, fp, cs, cs.state.Copy())
+	pb := newPlayback(cs.slogger, file, fp, cs, cs.state.Copy())
 	defer pb.fp.Close()
 
 	var nextN int // apply N msgs in a row
@@ -203,15 +205,18 @@ type playback struct {
 	// replays can be reset to beginning
 	fileName     string    // so we can close/reopen the file
 	genesisState *sm.State // so the replay session knows where to restart from
+
+	slogger *zap.SugaredLogger
 }
 
-func newPlayback(fileName string, fp *os.File, cs *ConsensusState, genState *sm.State) *playback {
+func newPlayback(slogger *zap.SugaredLogger, fileName string, fp *os.File, cs *ConsensusState, genState *sm.State) *playback {
 	return &playback{
 		cs:           cs,
 		fp:           fp,
 		fileName:     fileName,
 		genesisState: genState,
 		scanner:      bufio.NewScanner(fp),
+		slogger:      slogger,
 	}
 }
 
@@ -221,7 +226,7 @@ func (pb *playback) replayReset(count int, newStepCh chan interface{}) error {
 	pb.cs.Stop()
 	pb.cs.Wait()
 
-	newCS := NewConsensusState(pb.cs.config, pb.genesisState.Copy(), pb.cs.blockStore, pb.cs.mempool)
+	newCS := NewConsensusState(pb.slogger.Desugar(), pb.cs.config, pb.genesisState.Copy(), pb.cs.blockStore, pb.cs.mempool)
 	newCS.SetEventSwitch(pb.cs.evsw)
 	newCS.startForReplay()
 
@@ -233,7 +238,7 @@ func (pb *playback) replayReset(count int, newStepCh chan interface{}) error {
 	pb.fp = fp
 	pb.scanner = bufio.NewScanner(fp)
 	count = pb.count - count
-	log.Info(Fmt("Reseting from %d to %d", pb.count, count))
+	pb.slogger.Infof("Reseting from %d to %d", pb.count, count)
 	pb.count = 0
 	pb.cs = newCS
 	for i := 0; pb.scanner.Scan() && i < count; i++ {
@@ -249,7 +254,7 @@ func (cs *ConsensusState) startForReplay() {
 	// don't want to start full cs
 	cs.BaseService.OnStart()
 
-	log.Warn("Replay commands are disabled until someone updates them and writes tests")
+	cs.logger.Warn("Replay commands are disabled until someone updates them and writes tests")
 	/* TODO:!
 	// since we replay tocks we just ignore ticks
 		go func() {

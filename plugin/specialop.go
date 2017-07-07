@@ -70,9 +70,6 @@ func (s *Specialop) DeliverTx(tx []byte, i int) (bool, error) {
 		return true, err
 	}
 	err = s.ProcessSpecialOP(&cmd)
-	if err != nil {
-		log.Info(err.Error())
-	}
 	return false, err
 }
 

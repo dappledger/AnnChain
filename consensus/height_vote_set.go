@@ -91,7 +91,6 @@ func (hvs *HeightVoteSet) addRound(round int) {
 	if _, ok := hvs.roundVoteSets[round]; ok {
 		PanicSanity("addRound() for an existing round")
 	}
-	slog.Debug("addRound(round)", "round", round)
 	prevotes := types.NewVoteSet(hvs.chainID, hvs.height, round, types.VoteTypePrevote, hvs.valSet)
 	precommits := types.NewVoteSet(hvs.chainID, hvs.height, round, types.VoteTypePrecommit, hvs.valSet)
 	hvs.roundVoteSets[round] = RoundVoteSet{
@@ -118,7 +117,7 @@ func (hvs *HeightVoteSet) AddVote(vote *types.Vote, peerKey string) (added bool,
 			// Peer has sent a vote that does not match our round,
 			// for more than one round.  Bad peer!
 			// TODO punish peer.
-			log.Warn("Deal with peer giving votes from unwanted rounds")
+			// log.Warn("Deal with peer giving votes from unwanted rounds")
 			return
 		}
 	}
