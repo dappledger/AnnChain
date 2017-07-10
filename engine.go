@@ -125,23 +125,22 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	p2psw.AddReactor("MEMPOOL", memReactor)
 	p2psw.AddReactor("BLOCKCHAIN", bcReactor)
 	p2psw.AddReactor("CONSENSUS", consensusReactor)
+
+	if tune.Conf.GetBool("pex_reactor") {
+		addrBook := p2p.NewAddrBook(logger, tune.Conf.GetString("addrbook_file"), tune.Conf.GetBool("addrbook_strict"))
+		addrBook.Start()
+		pexReactor := p2p.NewPEXReactor(logger, addrBook)
+		p2psw.AddReactor("PEX", pexReactor)
+	}
+
 	p2psw.SetNodePrivKey(privKey.(crypto.PrivKeyEd25519))
-	p2psw.SetAuthByCA(authByCA(&stateM.Validators, logger))
+	p2psw.SetAuthByCA(authByCA(stateM.ChainID, &stateM.Validators, logger))
 	p2psw.SetAddToRefuselist(addToRefuselist(refuseList))
 	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
+
 	if tune.Listener != nil {
 		p2psw.AddListener(tune.Listener)
 	}
-
-	// TODO: just ignore the pex for a short while
-	// Optionally, start the pex reactor
-	// TODO: this is a dev feature, it needs some love
-	// if config.GetBool("pex_reactor") {
-	//	addrBook := p2p.NewAddrBook(config.GetString("addrbook_file"), config.GetBool("addrbook_strict"))
-	//	addrBook.Start()
-	//	pexReactor := p2p.NewPEXReactor(addrBook)
-	//	sw.AddReactor("PEX", pexReactor)
-	// }
 
 	setEventSwitch(eventSwitch, bcReactor, memReactor, consensusReactor)
 	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), p2psw, &stateM.Validators, refuseList)
@@ -491,9 +490,11 @@ func refuseListFilter(refuseList *refuse_list.RefuseList) func(crypto.PubKeyEd25
 	}
 }
 
-func authByCA(ppValidators **types.ValidatorSet, log *zap.Logger) func(*p2p.NodeInfo) error {
+func authByCA(chainID string, ppValidators **types.ValidatorSet, log *zap.Logger) func(*p2p.NodeInfo) error {
 	valset := *ppValidators
+	chainIDBytes := []byte(chainID)
 	return func(peerNodeInfo *p2p.NodeInfo) error {
+		msg := append(peerNodeInfo.PubKey[:], chainIDBytes...)
 		for _, val := range valset.Validators {
 			if !val.IsCA {
 				continue // CA must be validator
@@ -503,7 +504,7 @@ func authByCA(ppValidators **types.ValidatorSet, log *zap.Logger) func(*p2p.Node
 			if err != nil {
 				return err
 			}
-			if ed25519.Verify(&valPk, peerNodeInfo.PubKey[:], &signedPkByte64) {
+			if ed25519.Verify(&valPk, msg, &signedPkByte64) {
 				log.Sugar().Infow("Peer handshake", "peerNodeInfo", peerNodeInfo)
 				return nil
 			}
