@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	"encoding/json"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
@@ -48,4 +49,25 @@ func GenesisDocFromJSON(jsonBlob []byte) (genState *GenesisDoc) {
 		Exit(Fmt("Couldn't read GenesisDoc: %v", err))
 	}
 	return
+}
+
+type GenesisValidatorJson struct {
+	PubKey     [32]byte `json:"pub_key"`
+	Amount     int64    `json:"amount"`
+	Name       string   `json:"name"`
+	IsCA       bool     `json:"is_ca"`
+	RPCAddress string   `json:"rpc"`
+}
+
+func (gv *GenesisValidator) UnmarshalJSON(b []byte) error {
+	gj := GenesisValidatorJson{}
+	if err := json.Unmarshal(b, &gj); err != nil {
+		return err
+	}
+	gv.Amount = gj.Amount
+	gv.IsCA = gj.IsCA
+	gv.Name = gj.Name
+	gv.PubKey = crypto.PubKeyEd25519(gj.PubKey)
+	gv.RPCAddress = gj.RPCAddress
+	return nil
 }

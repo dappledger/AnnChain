@@ -1,0 +1,9 @@
+* Application Interface
+** An application should define two methods
+   #+BEGIN_SRC
+   func (app *DefaultApp) GetEngineHooks() types.Hooks {
+       return app.engineHooks
+   }
+
+   func (app *DefaultApp) CompatibleWithAngine() {}
+   #+END_SRC
