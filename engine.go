@@ -160,7 +160,7 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	}
 }
 
-func (e *Engine) ConnectApp(app Application) {
+func (e *Engine) ConnectApp(app types.Application) {
 	e.hooked = true
 	hooks := app.GetEngineHooks()
 	if hooks.OnExecute == nil || hooks.OnCommit == nil {
