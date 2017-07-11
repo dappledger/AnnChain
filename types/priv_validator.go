@@ -8,11 +8,12 @@ import (
 	"os"
 	"sync"
 
+	"go.uber.org/zap"
+
+	"gitlab.zhonganonline.com/ann/ann-module/lib/ed25519"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
-
-	"gitlab.zhonganonline.com/ann/ann-module/lib/ed25519"
 )
 
 const (
@@ -51,6 +52,8 @@ type PrivValidator struct {
 	// Overloaded for testing.
 	filePath string
 	mtx      sync.Mutex
+
+	logger *zap.Logger
 }
 
 // This is used to sign votes.
@@ -80,7 +83,7 @@ func (privVal *PrivValidator) SetSigner(s Signer) {
 }
 
 // Generates a new validator with private key.
-func GenPrivValidator() *PrivValidator {
+func GenPrivValidator(logger *zap.Logger) *PrivValidator {
 	privKeyBytes := new([64]byte)
 	copy(privKeyBytes[:32], crypto.CRandBytes(32))
 	pubKeyBytes := ed25519.MakePublicKey(privKeyBytes)
@@ -97,10 +100,11 @@ func GenPrivValidator() *PrivValidator {
 		LastSignBytes: nil,
 		filePath:      "",
 		Signer:        NewDefaultSigner(privKey),
+		logger:        logger,
 	}
 }
 
-func LoadPrivValidator(filePath string) *PrivValidator {
+func LoadPrivValidator(logger *zap.Logger, filePath string) *PrivValidator {
 	privValJSONBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		Exit(err.Error())
@@ -111,20 +115,21 @@ func LoadPrivValidator(filePath string) *PrivValidator {
 	}
 	privVal.filePath = filePath
 	privVal.Signer = NewDefaultSigner(privVal.PrivKey)
+	privVal.logger = logger
 	return privVal
 }
 
-func LoadOrGenPrivValidator(filePath string) *PrivValidator {
+func LoadOrGenPrivValidator(logger *zap.Logger, filePath string) *PrivValidator {
 	var privValidator *PrivValidator
 	if _, err := os.Stat(filePath); err == nil {
-		privValidator = LoadPrivValidator(filePath)
-		log.Notice("Loaded PrivValidator",
+		privValidator = LoadPrivValidator(logger, filePath)
+		logger.Sugar().Infow("Loaded PrivValidator",
 			"file", filePath, "privValidator", privValidator)
 	} else {
-		privValidator = GenPrivValidator()
+		privValidator = GenPrivValidator(logger)
 		privValidator.SetFile(filePath)
 		privValidator.Save()
-		log.Notice("Generated PrivValidator", "file", filePath)
+		logger.Info("Generated PrivValidator", zap.String("file", filePath))
 	}
 	return privValidator
 }
@@ -218,7 +223,7 @@ func (privVal *PrivValidator) signBytesHRS(height, round int, step int8, signByt
 					// NOTE: proposals are non-deterministic (include time),
 					// so we can actually lose them, but will still never sign conflicting ones
 					if bytes.Equal(privVal.LastSignBytes, signBytes) {
-						log.Notice("Using privVal.LastSignature", "sig", privVal.LastSignature)
+						privVal.logger.Sugar().Infof("Using privVal.LastSignature: %X", privVal.LastSignature)
 						return privVal.LastSignature, nil
 					}
 				}

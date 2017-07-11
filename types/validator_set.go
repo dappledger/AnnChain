@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"go.uber.org/zap"
+
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-merkle"
 )
@@ -310,11 +312,11 @@ func (ac accumComparable) Less(o interface{}) bool {
 // For testing
 
 // NOTE: PrivValidator are in order.
-func RandValidatorSet(numValidators int, votingPower int64) (*ValidatorSet, []*PrivValidator) {
+func RandValidatorSet(logger *zap.Logger, numValidators int, votingPower int64) (*ValidatorSet, []*PrivValidator) {
 	vals := make([]*Validator, numValidators)
 	privValidators := make([]*PrivValidator, numValidators)
 	for i := 0; i < numValidators; i++ {
-		val, privValidator := RandValidator(false, votingPower)
+		val, privValidator := RandValidator(logger, false, votingPower)
 		vals[i] = val
 		privValidators[i] = privValidator
 	}

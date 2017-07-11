@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 
+	"go.uber.org/zap"
+
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
@@ -29,8 +31,10 @@ type ValidatorAttr struct {
 	IsCA       bool   `json:"isCA,omitempty"`
 }
 
-func (m *ValidatorAttr) Reset()                    { *m = ValidatorAttr{} }
-func (m *ValidatorAttr) String() string            { return fmt.Sprintf("[%s,%s,%s,%s]", m.PubKey, m.Power, m.IsCA, m.RPCAddress) }
+func (m *ValidatorAttr) Reset() { *m = ValidatorAttr{} }
+func (m *ValidatorAttr) String() string {
+	return fmt.Sprintf("[%s,%s,%s,%s]", m.PubKey, m.Power, m.IsCA, m.RPCAddress)
+}
 func (m *ValidatorAttr) GetPubKey() []byte {
 	if m != nil {
 		return m.PubKey
@@ -134,8 +138,8 @@ func (vc validatorCodec) Compare(o1 interface{}, o2 interface{}) int {
 //--------------------------------------------------------------------------------
 // For testing...
 
-func RandValidator(randPower bool, minPower int64) (*Validator, *PrivValidator) {
-	privVal := GenPrivValidator()
+func RandValidator(logger *zap.Logger, randPower bool, minPower int64) (*Validator, *PrivValidator) {
+	privVal := GenPrivValidator(logger)
 	_, tempFilePath := Tempfile("priv_validator_")
 	privVal.SetFile(tempFilePath)
 	votePower := minPower
