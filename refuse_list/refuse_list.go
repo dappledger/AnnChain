@@ -22,6 +22,10 @@ func NewRefuseList(dbBackend, dbDir string) *RefuseList {
 	return &RefuseList{refuseListDB}
 }
 
+func (rl *RefuseList) Stop() {
+	rl.db.Close()
+}
+
 func (rl *RefuseList) QueryRefuseKey(pubKey [32]byte) (keyExist bool) {
 	ret := rl.db.Get(pubKey[:])
 	if len(ret) == 1 {

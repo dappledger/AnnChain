@@ -10,6 +10,8 @@ type Application interface {
 	CheckTx([]byte) error
 	Query([]byte) Result
 	Info() ResultInfo
+	Start()
+	Stop()
 }
 
 type AppMaker func(config.Config) Application

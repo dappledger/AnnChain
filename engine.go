@@ -39,6 +39,8 @@ type (
 		hooked  bool
 		started bool
 
+		statedb       dbm.DB
+		blockdb       dbm.DB
 		privValidator *types.PrivValidator
 		blockstore    *blockchain.BlockStore
 		mempool       *mempool.Mempool
@@ -187,6 +189,8 @@ func NewEngine(tune *EngineTunes) *Engine {
 	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), p2psw, &stateM.Validators, refuseList)
 
 	return &Engine{
+		statedb:       stateDB,
+		blockdb:       blockStoreDB,
 		tune:          tune,
 		stateMachine:  stateM,
 		p2pSwitch:     p2psw,
@@ -320,6 +324,9 @@ func (e *Engine) Start() error {
 
 // Stop just wrap around swtich.Stop, which will stop reactors, listeners,etc
 func (e *Engine) Stop() bool {
+	e.refuseList.Stop()
+	e.statedb.Close()
+	e.blockdb.Close()
 	return e.p2pSwitch.Stop()
 }
 
