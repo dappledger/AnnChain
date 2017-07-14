@@ -4,13 +4,17 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
 	"go.uber.org/zap"
 
 	"gitlab.zhonganonline.com/ann/angine/blockchain"
+	ac "gitlab.zhonganonline.com/ann/angine/config"
 	"gitlab.zhonganonline.com/ann/angine/consensus"
 	"gitlab.zhonganonline.com/ann/angine/mempool"
 	"gitlab.zhonganonline.com/ann/angine/plugin"
@@ -35,56 +39,94 @@ type (
 		hooked  bool
 		started bool
 
-		driver       IKey
-		nodeInfo     *p2p.NodeInfo
-		blockstore   *blockchain.BlockStore
-		mempool      *mempool.Mempool
-		consensus    *consensus.ConsensusState
-		stateMachine *state.State
-		p2pSwitch    *p2p.Switch
-		eventSwitch  *types.EventSwitch
-		refuseList   *refuse_list.RefuseList
+		privValidator *types.PrivValidator
+		blockstore    *blockchain.BlockStore
+		mempool       *mempool.Mempool
+		consensus     *consensus.ConsensusState
+		stateMachine  *state.State
+		p2pSwitch     *p2p.Switch
+		eventSwitch   *types.EventSwitch
+		refuseList    *refuse_list.RefuseList
+		p2pHost       string
+		p2pPort       uint16
+		genesis       *types.GenesisDoc
 
 		logger *zap.Logger
 	}
 
 	EngineTunes struct {
-		Conf        cfg.Config
-		Genesis     *types.GenesisDoc
-		Listener    p2p.Listener
-		LogPath     string
-		Environment string
-	}
-
-	IKey interface {
-		GetAddress() []byte
-		SignVote(chainID string, vote *types.Vote) error
-		SignProposal(chainID string, proposal *types.Proposal) error
-		GetPrivateKey() crypto.PrivKey
+		Runtime string
+		Conf    *cfg.MapConfig
 	}
 )
 
+func Initialize(tune *EngineTunes) {
+	var conf *cfg.MapConfig
+	if tune.Conf == nil {
+		conf = ac.GetConfig(tune.Runtime)
+	} else {
+		conf = tune.Conf
+	}
+
+	privValidator := types.GenPrivValidator(nil)
+	privValidator.SetFile(conf.GetString("priv_validator_file"))
+	privValidator.Save()
+
+	genDoc := types.GenesisDoc{
+		ChainID: cmn.Fmt("annchain-%v", cmn.RandStr(6)),
+		Plugins: "specialop",
+	}
+	genDoc.Validators = []types.GenesisValidator{types.GenesisValidator{
+		PubKey:     privValidator.PubKey,
+		Amount:     100,
+		IsCA:       true,
+		RPCAddress: "tcp://0.0.0.0:46657",
+	}}
+
+	err := genDoc.SaveAs(conf.GetString("genesis_file"))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(127)
+	}
+
+	fmt.Println("Initialized ", genDoc.ChainID, "genesis", conf.GetString("genesis_file"), "priv_validator", conf.GetString("priv_validator_file"))
+	fmt.Println("Check the files generated, make sure everything is OK.")
+}
+
 // NewEngine makes and returns a new engine, which can be used directly after being imported
-func NewEngine(driver IKey, tune *EngineTunes) *Engine {
+func NewEngine(tune *EngineTunes) *Engine {
+	var conf *cfg.MapConfig
+	if tune.Conf == nil {
+		conf = ac.GetConfig(tune.Runtime)
+	} else {
+		conf = tune.Conf
+	}
+
 	apphash := []byte{}
-	dbBackend := tune.Conf.GetString("db_backend")
-	dbDir := tune.Conf.GetString("db_dir")
+	dbBackend := conf.GetString("db_backend")
+	dbDir := conf.GetString("db_dir")
 	stateDB := dbm.NewDB("state", dbBackend, dbDir)
-	stateM := state.GetState(tune.Conf, stateDB)
+	stateM := state.GetState(conf, stateDB)
+	genesis := getGenesisFileMust(conf)
 	if stateM == nil {
-		if stateM = state.MakeGenesisState(stateDB, tune.Genesis); stateM == nil {
+		if stateM = state.MakeGenesisState(stateDB, genesis); stateM == nil {
 			cmn.Exit(cmn.Fmt("Fail to get genesis state"))
 		}
 	}
-	tune.Conf.Set("chain_id", stateM.ChainID)
+	conf.Set("chain_id", stateM.ChainID)
 
-	logPath := path.Join(tune.LogPath, "engine-"+stateM.ChainID)
-	cmn.EnsureDir(logPath, 0700)
-	logger := InitializeLog(tune.Environment, logPath)
+	logpath := conf.GetString("log_path")
+	if logpath == "" {
+		logpath, _ = os.Getwd()
+	}
+	logpath = path.Join(logpath, "engine-"+stateM.ChainID)
+	cmn.EnsureDir(logpath, 0700)
+	logger := InitializeLog(conf.GetString("environment"), logpath)
 
+	privValidator := types.LoadOrGenPrivValidator(logger, conf.GetString("priv_validator_file"))
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
 	eventSwitch := types.NewEventSwitch(logger)
-	fastSync := fastSyncable(tune.Conf, driver.GetAddress(), stateM.Validators)
+	fastSync := fastSyncable(conf, privValidator.GetAddress(), stateM.Validators)
 	if _, err := eventSwitch.Start(); err != nil {
 		cmn.PanicSanity(cmn.Fmt("Fail to start event switch: %v", err))
 	}
@@ -96,15 +138,15 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	}
 	_ = apphash // just bypass golint
 	_, stateLastHeight, _ := stateM.GetLastBlockInfo()
-	bcReactor := blockchain.NewBlockchainReactor(logger, tune.Conf, stateLastHeight, blockStore, fastSync)
-	mem := mempool.NewMempool(logger, tune.Conf)
+	bcReactor := blockchain.NewBlockchainReactor(logger, conf, stateLastHeight, blockStore, fastSync)
+	mem := mempool.NewMempool(logger, conf)
 	for _, p := range stateM.Plugins {
 		mem.RegisterFilter(NewMempoolFilter(p.CheckTx))
 	}
-	memReactor := mempool.NewMempoolReactor(logger, tune.Conf, mem)
+	memReactor := mempool.NewMempoolReactor(logger, conf, mem)
 
-	consensusState := consensus.NewConsensusState(logger, tune.Conf, stateM, blockStore, mem)
-	consensusState.SetPrivValidator(driver)
+	consensusState := consensus.NewConsensusState(logger, conf, stateM, blockStore, mem)
+	consensusState.SetPrivValidator(privValidator)
 	consensusReactor := consensus.NewConsensusReactor(logger, consensusState, fastSync)
 
 	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int, lc *types.Commit) error {
@@ -116,18 +158,17 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 			return err
 		}
 		stateM.Save()
-		fmt.Println(stateM.LastBlockHeight)
 		return nil
 	})
 
-	privKey := driver.GetPrivateKey()
-	p2psw := p2p.NewSwitch(logger, tune.Conf.GetConfig("p2p"))
+	privKey := privValidator.GetPrivateKey()
+	p2psw := p2p.NewSwitch(logger, conf.GetConfig("p2p"))
 	p2psw.AddReactor("MEMPOOL", memReactor)
 	p2psw.AddReactor("BLOCKCHAIN", bcReactor)
 	p2psw.AddReactor("CONSENSUS", consensusReactor)
 
-	if tune.Conf.GetBool("pex_reactor") {
-		addrBook := p2p.NewAddrBook(logger, tune.Conf.GetString("addrbook_file"), tune.Conf.GetBool("addrbook_strict"))
+	if conf.GetBool("pex_reactor") {
+		addrBook := p2p.NewAddrBook(logger, conf.GetString("addrbook_file"), conf.GetBool("addrbook_strict"))
 		addrBook.Start()
 		pexReactor := p2p.NewPEXReactor(logger, addrBook)
 		p2psw.AddReactor("PEX", pexReactor)
@@ -138,23 +179,26 @@ func NewEngine(driver IKey, tune *EngineTunes) *Engine {
 	p2psw.SetAddToRefuselist(addToRefuselist(refuseList))
 	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
 
-	if tune.Listener != nil {
-		p2psw.AddListener(tune.Listener)
-	}
+	protocol, address := ProtocolAndAddress(conf.GetString("node_laddr"))
+	defaultListener := p2p.NewDefaultListener(logger, protocol, address, conf.GetBool("skip_upnp"))
+	p2psw.AddListener(defaultListener)
 
 	setEventSwitch(eventSwitch, bcReactor, memReactor, consensusReactor)
 	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), p2psw, &stateM.Validators, refuseList)
 
 	return &Engine{
-		tune:         tune,
-		stateMachine: stateM,
-		p2pSwitch:    p2psw,
-		eventSwitch:  &eventSwitch,
-		refuseList:   refuseList,
-		driver:       driver,
-		blockstore:   blockStore,
-		mempool:      mem,
-		consensus:    consensusState,
+		tune:          tune,
+		stateMachine:  stateM,
+		p2pSwitch:     p2psw,
+		eventSwitch:   &eventSwitch,
+		refuseList:    refuseList,
+		privValidator: privValidator,
+		blockstore:    blockStore,
+		mempool:       mem,
+		consensus:     consensusState,
+		p2pHost:       defaultListener.ExternalAddress().IP.String(),
+		p2pPort:       defaultListener.ExternalAddress().Port,
+		genesis:       genesis,
 
 		logger: logger,
 	}
@@ -231,14 +275,24 @@ func (e *Engine) ConnectApp(app types.Application) {
 	}
 }
 
-func (e *Engine) DialSeeds(seeds []string) {
-	e.p2pSwitch.DialSeeds(seeds)
+func (e *Engine) PrivValidator() *types.PrivValidator {
+	return e.privValidator
 }
 
-// AddListener abstract a role for a listener
-// TODO:: implement role
-func (e *Engine) AddListener(role string, l p2p.Listener) {
-	e.p2pSwitch.AddListener(l)
+func (e *Engine) Genesis() *types.GenesisDoc {
+	return e.genesis
+}
+
+func (e *Engine) P2PHost() string {
+	return e.p2pHost
+}
+
+func (e *Engine) P2PPort() uint16 {
+	return e.p2pPort
+}
+
+func (e *Engine) DialSeeds(seeds []string) {
+	e.p2pSwitch.DialSeeds(seeds)
 }
 
 func (e *Engine) Start() error {
@@ -255,6 +309,12 @@ func (e *Engine) Start() error {
 	} else {
 		return err
 	}
+
+	seeds := e.tune.Conf.GetString("seeds")
+	if seeds != "" {
+		e.DialSeeds(strings.Split(seeds, ","))
+	}
+
 	return nil
 }
 
@@ -264,7 +324,6 @@ func (e *Engine) Stop() bool {
 }
 
 func (e *Engine) RegisterNodeInfo(ni *p2p.NodeInfo) {
-	e.nodeInfo = ni
 	e.p2pSwitch.SetNodeInfo(ni)
 }
 
@@ -537,6 +596,34 @@ func fastSyncable(conf cfg.Config, selfAddress []byte, validators *types.Validat
 		}
 	}
 	return fastSync
+}
+
+func getGenesisFileMust(conf cfg.Config) *types.GenesisDoc {
+	genDocFile := conf.GetString("genesis_file")
+	if !cmn.FileExists(genDocFile) {
+		cmn.PanicSanity("missing genesis_file")
+	}
+	jsonBlob, err := ioutil.ReadFile(genDocFile)
+	if err != nil {
+		cmn.Exit(cmn.Fmt("Couldn't read GenesisDoc file: %v", err))
+	}
+	genDoc := types.GenesisDocFromJSON(jsonBlob)
+	if genDoc.ChainID == "" {
+		cmn.PanicSanity(cmn.Fmt("Genesis doc %v must include non-empty chain_id", genDocFile))
+	}
+	conf.Set("chain_id", genDoc.ChainID)
+
+	return genDoc
+}
+
+// Defaults to tcp
+func ProtocolAndAddress(listenAddr string) (string, string) {
+	protocol, address := "tcp", listenAddr
+	parts := strings.SplitN(address, "://", 2)
+	if len(parts) == 2 {
+		protocol, address = parts[0], parts[1]
+	}
+	return protocol, address
 }
 
 // Updates to the mempool need to be synchronized with committing a block

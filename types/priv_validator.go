@@ -123,13 +123,16 @@ func LoadOrGenPrivValidator(logger *zap.Logger, filePath string) *PrivValidator 
 	var privValidator *PrivValidator
 	if _, err := os.Stat(filePath); err == nil {
 		privValidator = LoadPrivValidator(logger, filePath)
-		logger.Sugar().Infow("Loaded PrivValidator",
-			"file", filePath, "privValidator", privValidator)
+		if logger != nil {
+			logger.Sugar().Infow("Loaded PrivValidator", "file", filePath, "privValidator", privValidator)
+		}
 	} else {
 		privValidator = GenPrivValidator(logger)
 		privValidator.SetFile(filePath)
 		privValidator.Save()
-		logger.Info("Generated PrivValidator", zap.String("file", filePath))
+		if logger != nil {
+			logger.Info("Generated PrivValidator", zap.String("file", filePath))
+		}
 	}
 	return privValidator
 }
@@ -223,7 +226,9 @@ func (privVal *PrivValidator) signBytesHRS(height, round int, step int8, signByt
 					// NOTE: proposals are non-deterministic (include time),
 					// so we can actually lose them, but will still never sign conflicting ones
 					if bytes.Equal(privVal.LastSignBytes, signBytes) {
-						privVal.logger.Sugar().Infof("Using privVal.LastSignature: %X", privVal.LastSignature)
+						if privVal.logger != nil {
+							privVal.logger.Sugar().Infof("Using privVal.LastSignature: %X", privVal.LastSignature)
+						}
 						return privVal.LastSignature, nil
 					}
 				}
