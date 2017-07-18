@@ -5,7 +5,7 @@ import (
 )
 
 type Application interface {
-	GetEngineHooks() Hooks
+	GetAngineHooks() Hooks
 	CompatibleWithAngine()
 	CheckTx([]byte) error
 	Query([]byte) Result

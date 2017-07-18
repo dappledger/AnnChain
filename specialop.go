@@ -13,7 +13,7 @@ import (
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
 
-func (e *Engine) ProcessSpecialOP(tx []byte) error {
+func (e *Angine) ProcessSpecialOP(tx []byte) error {
 	if !types.IsSpecialOP(tx) {
 		return fmt.Errorf("tx is not a specialop: %v", tx)
 	}
@@ -62,7 +62,7 @@ type voteResult struct {
 }
 
 // CollectSpecialVotes returns nil means the vote passed
-func (e *Engine) CollectSpecialVotes(cmd *types.SpecialOPCmd, tx []byte) error {
+func (e *Angine) CollectSpecialVotes(cmd *types.SpecialOPCmd, tx []byte) error {
 	var votedAny, major23VotingPower int64
 	totalVotingPower := e.consensus.GetTotalVotingPower()
 	_, validators := e.GetValidators()
@@ -118,7 +118,7 @@ COLLECT:
 	return nil
 }
 
-func (e *Engine) CheckSpecialOp(cmd *types.SpecialOPCmd) ([]byte, error) {
+func (e *Angine) CheckSpecialOp(cmd *types.SpecialOPCmd) ([]byte, error) {
 	switch cmd.CmdType {
 	case types.SpecialOP_ChangeValidator,
 		types.SpecialOP_Disconnect,

@@ -1,9 +1,100 @@
-* Application Interface
-** An application should define two methods
-   #+BEGIN_SRC
-   func (app *DefaultApp) GetEngineHooks() types.Hooks {
-       return app.engineHooks
-   }
+* What is angine?
 
-   func (app *DefaultApp) CompatibleWithAngine() {}
-   #+END_SRC
+  Angine is a completely self-contained blockchain consensus engine. 
+  At the core, we use Tendermint BFT. It is an implementation of a Byzantine Fault Tolerant PoS consensus algorithm. So thank you Tendermint team.
+  We just wrap those many things that tendermint already offered together under a concept, "Angine". 
+
+* Structure of Angine
+  #+BEGIN_SRC 
+├── blockchain
+│   ├── pool.go
+│   ├── pool_test.go
+│   ├── reactor.go
+│   └── store.go
+├── config
+│   ├── config.go
+│   └── templates.go
+├── consensus
+│   ├── byzantine_test.go
+│   ├── common.go
+│   ├── common_test.go
+│   ├── height_vote_set.go
+│   ├── height_vote_set_test.go
+│   ├── mempool_test.go
+│   ├── reactor.go
+│   ├── reactor_test.go
+│   ├── README.md
+│   ├── replay.go
+│   ├── replay_test.go
+│   ├── state.go
+│   ├── state_test.go
+│   ├── test_data
+│   │   ├── build.sh
+│   │   ├── empty_block.cswal
+│   │   ├── README.md
+│   │   ├── small_block1.cswal
+│   │   └── small_block2.cswal
+│   ├── ticker.go
+│   ├── version.go
+│   └── wal.go
+├── angine.go
+├── log.go
+├── mempool
+│   ├── mempool.go
+│   ├── mempool_test.go
+│   └── reactor.go
+├── plugin
+│   ├── init.go
+│   └── specialop.go
+├── README.org
+├── refuse_list
+│   ├── refuse_list.go
+│   └── refuse_list_test.go
+├── specialop.go
+├── state
+│   ├── errors.go
+│   ├── execution.go
+│   ├── execution_test.go
+│   ├── plugin.go
+│   ├── state.go
+│   └── state_test.go
+└── types
+    ├── application.go
+    ├── block.go
+    ├── block_meta.go
+    ├── canonical_json.go
+    ├── common.go
+    ├── events.go
+    ├── genesis.go
+    ├── hooks.go
+    ├── keys.go
+    ├── mempool.go
+    ├── part_set.go
+    ├── part_set_test.go
+    ├── priv_validator.go
+    ├── proposal.go
+    ├── proposal_test.go
+    ├── resultcode.go
+    ├── result.go
+    ├── rpc.go
+    ├── signable.go
+    ├── specialOP.go
+    ├── tx.go
+    ├── validator.go
+    ├── validator_set.go
+    ├── validator_set_test.go
+    ├── vote.go
+    ├── vote_set.go
+    ├── vote_set_test.go
+    └── vote_test.go
+  #+END_SRC
+  This is directory structure of Angine, you can see that we have packed every module under its own directory. This give you a clear view of the parts making up an Angine.
+**** state/ is the running state of the Angine, which is driven by blockchain/, mempool/ and consensus/
+**** blockchain/ takes charge of syncing blocks, loading blocks, persisting blocks and anything that physically related to "block"
+**** mempool/ takes charge of buffering effective transactions and reaching an agreement about the order of transactions
+**** consensus/ takes charge of gossipping between peers, consensus algorithm related data stream
+
+* What we have fulfilled
+
+**** CA based on asymmetric cyrpto
+**** Dynamically changing ValidatorSet of ConsensusState

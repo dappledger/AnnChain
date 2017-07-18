@@ -34,10 +34,10 @@ import (
 const version = "0.6.0"
 
 type (
-	// Engine is a high level abstraction of all the state, consensus, mempool blah blah...
-	Engine struct {
+	// Angine is a high level abstraction of all the state, consensus, mempool blah blah...
+	Angine struct {
 		mtx     sync.Mutex
-		tune    *EngineTunes
+		tune    *AngineTunes
 		hooked  bool
 		started bool
 
@@ -60,13 +60,13 @@ type (
 		getSpecialVote func([]byte, *types.Validator) ([]byte, error)
 	}
 
-	EngineTunes struct {
+	AngineTunes struct {
 		Runtime string
 		Conf    *cfg.MapConfig
 	}
 )
 
-func Initialize(tune *EngineTunes) {
+func Initialize(tune *AngineTunes) {
 	var conf *cfg.MapConfig
 	if tune.Conf == nil {
 		conf = ac.GetConfig(tune.Runtime)
@@ -99,8 +99,8 @@ func Initialize(tune *EngineTunes) {
 	fmt.Println("Check the files generated, make sure everything is OK.")
 }
 
-// NewEngine makes and returns a new engine, which can be used directly after being imported
-func NewEngine(tune *EngineTunes) *Engine {
+// NewAngine makes and returns a new angine, which can be used directly after being imported
+func NewAngine(tune *AngineTunes) *Angine {
 	var conf *cfg.MapConfig
 	if tune.Conf == nil {
 		conf = ac.GetConfig(tune.Runtime)
@@ -125,7 +125,7 @@ func NewEngine(tune *EngineTunes) *Engine {
 	if logpath == "" {
 		logpath, _ = os.Getwd()
 	}
-	logpath = path.Join(logpath, "engine-"+stateM.ChainID)
+	logpath = path.Join(logpath, "angine-"+stateM.ChainID)
 	cmn.EnsureDir(logpath, 0700)
 	logger := InitializeLog(conf.GetString("environment"), logpath)
 
@@ -188,19 +188,19 @@ func NewEngine(tune *EngineTunes) *Engine {
 	protocol, address := ProtocolAndAddress(conf.GetString("node_laddr"))
 	defaultListener := p2p.NewDefaultListener(logger, protocol, address, conf.GetBool("skip_upnp"))
 	p2psw.AddListener(defaultListener)
-	engineNodeInfo := &p2p.NodeInfo{
+	angineNodeInfo := &p2p.NodeInfo{
 		PubKey:      privKey.PubKey().(crypto.PubKeyEd25519),
 		SigndPubKey: conf.GetString("signbyCA"),
 		Moniker:     conf.GetString("moniker"),
 		ListenAddr:  defaultListener.ExternalAddress().String(),
 		Version:     version,
 	}
-	p2psw.SetNodeInfo(engineNodeInfo)
+	p2psw.SetNodeInfo(angineNodeInfo)
 
 	setEventSwitch(eventSwitch, bcReactor, memReactor, consensusReactor)
 	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), p2psw, &stateM.Validators, refuseList)
 
-	return &Engine{
+	return &Angine{
 		statedb:       stateDB,
 		blockdb:       blockStoreDB,
 		tune:          tune,
@@ -220,18 +220,18 @@ func NewEngine(tune *EngineTunes) *Engine {
 	}
 }
 
-func (e *Engine) SetSpecialVoteRPC(f func([]byte, *types.Validator) ([]byte, error)) {
+func (e *Angine) SetSpecialVoteRPC(f func([]byte, *types.Validator) ([]byte, error)) {
 	e.getSpecialVote = f
 }
 
-func (e *Engine) ConnectApp(app types.Application) {
+func (e *Angine) ConnectApp(app types.Application) {
 	e.hooked = true
-	hooks := app.GetEngineHooks()
+	hooks := app.GetAngineHooks()
 	if hooks.OnExecute == nil || hooks.OnCommit == nil {
 		cmn.PanicSanity("At least implement OnExecute & OnCommit, otherwise what your application is for")
 	}
 
-	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookNewRound)
 		if hooks.OnNewRound == nil {
 			data.ResCh <- types.NewRoundResult{}
@@ -246,24 +246,24 @@ func (e *Engine) ConnectApp(app types.Application) {
 		}
 	})
 	if hooks.OnPropose != nil {
-		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookPropose(), func(ed types.TMEventData) {
+		types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookPropose(), func(ed types.TMEventData) {
 			data := ed.(types.EventDataHookPropose)
 			hooks.OnPropose.Async(data.Height, data.Round, nil, nil, nil)
 		})
 	}
 	if hooks.OnPrevote != nil {
-		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookPrevote(), func(ed types.TMEventData) {
+		types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookPrevote(), func(ed types.TMEventData) {
 			data := ed.(types.EventDataHookPrevote)
 			hooks.OnPrevote.Async(data.Height, data.Round, data.Block, nil, nil)
 		})
 	}
 	if hooks.OnPrecommit != nil {
-		types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookPrecommit(), func(ed types.TMEventData) {
+		types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookPrecommit(), func(ed types.TMEventData) {
 			data := ed.(types.EventDataHookPrecommit)
 			hooks.OnPrecommit.Async(data.Height, data.Round, data.Block, nil, nil)
 		})
 	}
-	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookExecute(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookExecute(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookExecute)
 		hooks.OnExecute.Sync(data.Height, data.Round, data.Block)
 		result := hooks.OnExecute.Result()
@@ -274,7 +274,7 @@ func (e *Engine) ConnectApp(app types.Application) {
 		}
 
 	})
-	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookCommit(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookCommit(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookCommit)
 		if hooks.OnCommit == nil {
 			data.ResCh <- types.CommitResult{}
@@ -291,35 +291,35 @@ func (e *Engine) ConnectApp(app types.Application) {
 
 	info := app.Info()
 	if err := e.RecoverFromCrash(info.LastBlockAppHash, int(info.LastBlockHeight)); err != nil {
-		cmn.PanicSanity("replay blocks on engine start failed")
+		cmn.PanicSanity("replay blocks on angine start failed")
 	}
 }
 
-func (e *Engine) PrivValidator() *types.PrivValidator {
+func (e *Angine) PrivValidator() *types.PrivValidator {
 	return e.privValidator
 }
 
-func (e *Engine) Genesis() *types.GenesisDoc {
+func (e *Angine) Genesis() *types.GenesisDoc {
 	return e.genesis
 }
 
-func (e *Engine) P2PHost() string {
+func (e *Angine) P2PHost() string {
 	return e.p2pHost
 }
 
-func (e *Engine) P2PPort() uint16 {
+func (e *Angine) P2PPort() uint16 {
 	return e.p2pPort
 }
 
-func (e *Engine) DialSeeds(seeds []string) {
+func (e *Angine) DialSeeds(seeds []string) {
 	e.p2pSwitch.DialSeeds(seeds)
 }
 
-func (e *Engine) Start() error {
+func (e *Angine) Start() error {
 	e.mtx.Lock()
 	defer e.mtx.Unlock()
 	if e.started {
-		return errors.New("can't start engine twice")
+		return errors.New("can't start angine twice")
 	}
 	if !e.hooked {
 		e.hookDefaults()
@@ -339,44 +339,44 @@ func (e *Engine) Start() error {
 }
 
 // Stop just wrap around swtich.Stop, which will stop reactors, listeners,etc
-func (e *Engine) Stop() bool {
+func (e *Angine) Stop() bool {
 	e.refuseList.Stop()
 	e.statedb.Close()
 	e.blockdb.Close()
 	return e.p2pSwitch.Stop()
 }
 
-func (e *Engine) RegisterNodeInfo(ni *p2p.NodeInfo) {
+func (e *Angine) RegisterNodeInfo(ni *p2p.NodeInfo) {
 	e.p2pSwitch.SetNodeInfo(ni)
 }
 
-func (e *Engine) GetNodeInfo() *p2p.NodeInfo {
+func (e *Angine) GetNodeInfo() *p2p.NodeInfo {
 	return e.p2pSwitch.NodeInfo()
 }
 
-func (e *Engine) Height() int {
+func (e *Angine) Height() int {
 	return e.blockstore.Height()
 }
 
-func (e *Engine) GetBlock(height int) (*types.Block, *types.BlockMeta) {
+func (e *Angine) GetBlock(height int) (*types.Block, *types.BlockMeta) {
 	if height == 0 {
 		return nil, nil
 	}
 	return e.blockstore.LoadBlock(height), e.blockstore.LoadBlockMeta(height)
 }
 
-func (e *Engine) BroadcastTx(tx []byte) error {
+func (e *Angine) BroadcastTx(tx []byte) error {
 	return e.mempool.CheckTx(tx)
 }
 
-func (e *Engine) BroadcastTxCommit(tx []byte) error {
+func (e *Angine) BroadcastTxCommit(tx []byte) error {
 	committed := make(chan types.EventDataTx, 1)
 	eventString := types.EventStringTx(tx)
-	types.AddListenerForEvent(*e.eventSwitch, "engine", eventString, func(data types.TMEventData) {
+	types.AddListenerForEvent(*e.eventSwitch, "angine", eventString, func(data types.TMEventData) {
 		committed <- data.(types.EventDataTx)
 	})
 	defer func() {
-		(*e.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "engine")
+		(*e.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "angine")
 	}()
 
 	if err := e.mempool.CheckTx(tx); err != nil {
@@ -391,15 +391,15 @@ func (e *Engine) BroadcastTxCommit(tx []byte) error {
 	}
 }
 
-func (e *Engine) FlushMempool() {
+func (e *Angine) FlushMempool() {
 	e.mempool.Flush()
 }
 
-func (e *Engine) GetValidators() (int, []*types.Validator) {
+func (e *Angine) GetValidators() (int, []*types.Validator) {
 	return e.stateMachine.LastBlockHeight, e.stateMachine.Validators.Validators
 }
 
-func (e *Engine) GetP2PNetInfo() (bool, []string, []*types.Peer) {
+func (e *Angine) GetP2PNetInfo() (bool, []string, []*types.Peer) {
 	listening := e.p2pSwitch.IsListening()
 	listeners := []string{}
 	for _, l := range e.p2pSwitch.Listeners() {
@@ -416,12 +416,12 @@ func (e *Engine) GetP2PNetInfo() (bool, []string, []*types.Peer) {
 	return listening, listeners, peers
 }
 
-func (e *Engine) GetNumPeers() int {
+func (e *Angine) GetNumPeers() int {
 	o, i, d := e.p2pSwitch.NumPeers()
 	return o + i + d
 }
 
-func (e *Engine) GetConsensusStateInfo() (string, []string) {
+func (e *Angine) GetConsensusStateInfo() (string, []string) {
 	roundState := e.consensus.GetRoundState()
 	peerRoundStates := make([]string, 0, e.p2pSwitch.Peers().Size())
 	for _, p := range e.p2pSwitch.Peers().List() {
@@ -433,15 +433,15 @@ func (e *Engine) GetConsensusStateInfo() (string, []string) {
 	return roundState.String(), peerRoundStates
 }
 
-func (e *Engine) GetNumUnconfirmedTxs() int {
+func (e *Angine) GetNumUnconfirmedTxs() int {
 	return e.mempool.Size()
 }
 
-func (e *Engine) GetUnconfirmedTxs() []types.Tx {
+func (e *Angine) GetUnconfirmedTxs() []types.Tx {
 	return e.mempool.Reap(-1)
 }
 
-func (e *Engine) IsNodeValidator(pub crypto.PubKey) bool {
+func (e *Angine) IsNodeValidator(pub crypto.PubKey) bool {
 	edPub := pub.(crypto.PubKeyEd25519)
 	_, vals := e.consensus.GetValidators()
 	for _, v := range vals {
@@ -452,13 +452,13 @@ func (e *Engine) IsNodeValidator(pub crypto.PubKey) bool {
 	return false
 }
 
-func (e *Engine) GetBlacklist() []string {
+func (e *Angine) GetBlacklist() []string {
 	return e.refuseList.ListAllKey()
 }
 
 // Recover world status
 // Replay all blocks after blockHeight and ensure the result matches the current state.
-func (e *Engine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
+func (e *Angine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 	storeBlockHeight := e.blockstore.Height()
 	stateBlockHeight := e.stateMachine.LastBlockHeight
 
@@ -539,16 +539,16 @@ func (e *Engine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 	return nil
 }
 
-func (e *Engine) hookDefaults() {
-	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
+func (e *Angine) hookDefaults() {
+	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookNewRound)
 		data.ResCh <- types.NewRoundResult{}
 	})
-	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookExecute(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookExecute(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookExecute)
 		data.ResCh <- types.ExecuteResult{}
 	})
-	types.AddListenerForEvent(*e.eventSwitch, "engine", types.EventStringHookCommit(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookCommit(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookCommit)
 		data.ResCh <- types.CommitResult{}
 	})
