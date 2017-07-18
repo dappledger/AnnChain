@@ -78,8 +78,31 @@ func (conR *ConsensusReactor) OnStop() {
 // reset the state, turn off fast_sync, start the consensus-state-machine
 func (conR *ConsensusReactor) SwitchToConsensus(state *sm.State) {
 	cs := conR.conS
+
+	// Reset fields based on state.
+	validators := state.Validators
+	height := state.LastBlockHeight + 1 // Next desired block height
+
+	// RoundState fields
+	cs.updateHeight(height)
+	cs.updateRoundStep(0, RoundStepNewHeight)
+	cs.StartTime = cs.timeoutParams.Commit(time.Now())
+	cs.Validators = validators
+	cs.Proposal = nil
+	cs.ProposalBlock = nil
+	cs.ProposalBlockParts = nil
+	cs.LockedRound = 0
+	cs.LockedBlock = nil
+	cs.LockedBlockParts = nil
+	cs.Votes = NewHeightVoteSet(cs.config.GetString("chain_id"), height, validators)
+	cs.CommitRound = -1
 	cs.reconstructLastCommit(state)
-	cs.updateToState(state)
+	cs.LastValidators = state.LastValidators
+	cs.state = state
+
+	// Finally, broadcast RoundState
+	cs.newStep()
+
 	conR.fastSync = false
 	cs.Start()
 }

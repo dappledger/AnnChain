@@ -31,6 +31,8 @@ import (
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
 
+const version = "0.6.0"
+
 type (
 	// Engine is a high level abstraction of all the state, consensus, mempool blah blah...
 	Engine struct {
@@ -54,6 +56,8 @@ type (
 		genesis       *types.GenesisDoc
 
 		logger *zap.Logger
+
+		getSpecialVote func([]byte, *types.Validator) ([]byte, error)
 	}
 
 	EngineTunes struct {
@@ -184,6 +188,14 @@ func NewEngine(tune *EngineTunes) *Engine {
 	protocol, address := ProtocolAndAddress(conf.GetString("node_laddr"))
 	defaultListener := p2p.NewDefaultListener(logger, protocol, address, conf.GetBool("skip_upnp"))
 	p2psw.AddListener(defaultListener)
+	engineNodeInfo := &p2p.NodeInfo{
+		PubKey:      privKey.PubKey().(crypto.PubKeyEd25519),
+		SigndPubKey: conf.GetString("signbyCA"),
+		Moniker:     conf.GetString("moniker"),
+		ListenAddr:  defaultListener.ExternalAddress().String(),
+		Version:     version,
+	}
+	p2psw.SetNodeInfo(engineNodeInfo)
 
 	setEventSwitch(eventSwitch, bcReactor, memReactor, consensusReactor)
 	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), p2psw, &stateM.Validators, refuseList)
@@ -206,6 +218,10 @@ func NewEngine(tune *EngineTunes) *Engine {
 
 		logger: logger,
 	}
+}
+
+func (e *Engine) SetSpecialVoteRPC(f func([]byte, *types.Validator) ([]byte, error)) {
+	e.getSpecialVote = f
 }
 
 func (e *Engine) ConnectApp(app types.Application) {
@@ -332,6 +348,10 @@ func (e *Engine) Stop() bool {
 
 func (e *Engine) RegisterNodeInfo(ni *p2p.NodeInfo) {
 	e.p2pSwitch.SetNodeInfo(ni)
+}
+
+func (e *Engine) GetNodeInfo() *p2p.NodeInfo {
+	return e.p2pSwitch.NodeInfo()
 }
 
 func (e *Engine) Height() int {
