@@ -2,24 +2,24 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org9863a0b">1. What is angine?</a></li>
-<li><a href="#orgcd8adfd">2. Structure of Angine</a></li>
-<li><a href="#org274d323">3. What we have fulfilled</a></li>
-<li><a href="#org6a3dc33">4. How to use</a>
+<li><a href="#orgbe773ea">1. What is angine?</a></li>
+<li><a href="#orgf0f2108">2. Structure of Angine</a></li>
+<li><a href="#org3958c62">3. What we have fulfilled</a></li>
+<li><a href="#org5e86273">4. How to use</a>
 <ul>
-<li><a href="#org2ca9937">4.1. Initialize Angine</a>
+<li><a href="#org9a260de">4.1. Initialize Angine</a>
 <ul>
-<li><a href="#org5610bbf">4.1.1. Construct an AngineTunes.</a></li>
+<li><a href="#org19c7657">4.1.1. Construct an AngineTunes.</a></li>
 </ul>
 </li>
-<li><a href="#org32ff3eb">4.2. New an Agnine instance and start it</a></li>
+<li><a href="#orgf101d9a">4.2. New an Agnine instance and start it</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<a id="org9863a0b"></a>
+<a id="orgbe773ea"></a>
 
 # What is angine?
 
@@ -28,7 +28,7 @@ At the core, we use Tendermint BFT. It is an implementation of a Byzantine Fault
 We just wrap those many things that tendermint already offered together under a concept, "Angine". 
 
 
-<a id="orgcd8adfd"></a>
+<a id="orgf0f2108"></a>
 
 # Structure of Angine
 
@@ -125,7 +125,7 @@ This is directory structure of Angine, you can see that we have packed every mod
 4.  consensus/ takes charge of gossipping between peers, consensus algorithm related data stream
 
 
-<a id="org274d323"></a>
+<a id="org3958c62"></a>
 
 # What we have fulfilled
 
@@ -138,12 +138,12 @@ This is directory structure of Angine, you can see that we have packed every mod
 4.  Angine plugins
 
 
-<a id="org6a3dc33"></a>
+<a id="org5e86273"></a>
 
 # How to use
 
 
-<a id="org2ca9937"></a>
+<a id="org9a260de"></a>
 
 ## Initialize Angine
 
@@ -154,9 +154,14 @@ This is how you initialize an angine.
 The "angine.Initialize" will handle the generation of default configs, genesis file and private key. You must only do this once for a particular chain, otherwise, your id might be different.
 
 
-<a id="org5610bbf"></a>
+<a id="org19c7657"></a>
 
 ### Construct an AngineTunes.
+
+    type AngineTunes struct {
+        Runtime string
+        Conf    *cfg.MapConfig
+    }
 
 This struct contains 2 fields and you only have to fill one:
 
@@ -167,7 +172,7 @@ This struct contains 2 fields and you only have to fill one:
     After, you probably need to edit those files mannually to get exactly what you want. Everything in the files are straigt forward.
 
 
-<a id="org32ff3eb"></a>
+<a id="orgf101d9a"></a>
 
 ## New an Agnine instance and start it
 

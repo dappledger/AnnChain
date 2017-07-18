@@ -110,6 +110,12 @@ angine.Initialize(&angine.AngineTunes{Conf: conf})
 #+END_SRC
 The "angine.Initialize" will handle the generation of default configs, genesis file and private key. You must only do this once for a particular chain, otherwise, your id might be different.
 *** Construct an AngineTunes. 
+    #+BEGIN_SRC 
+type AngineTunes struct {
+		Runtime string
+		Conf    *cfg.MapConfig
+}
+    #+END_SRC
     This struct contains 2 fields and you only have to fill one:
 **** Runtime is a path that contains all the auto-generated files. So provided this will just generate everything under this path with random chainID and private/pub key pair.
 **** Conf contains anyconfig that you want to override the defaults. Say, you wanna use some cli args to override the default configs, this is the thing you should look into.
