@@ -2,25 +2,35 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orge8d1e56">1. What is angine?</a></li>
-<li><a href="#orgb549c00">2. Structure of Engine</a></li>
-<li><a href="#org1128696">3. What we have fulfilled</a></li>
+<li><a href="#org9863a0b">1. What is angine?</a></li>
+<li><a href="#orgcd8adfd">2. Structure of Angine</a></li>
+<li><a href="#org274d323">3. What we have fulfilled</a></li>
+<li><a href="#org6a3dc33">4. How to use</a>
+<ul>
+<li><a href="#org2ca9937">4.1. Initialize Angine</a>
+<ul>
+<li><a href="#org5610bbf">4.1.1. Construct an AngineTunes.</a></li>
+</ul>
+</li>
+<li><a href="#org32ff3eb">4.2. New an Agnine instance and start it</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
 
-<a id="orge8d1e56"></a>
+<a id="org9863a0b"></a>
 
 # What is angine?
 
 Angine is a completely self-contained blockchain consensus engine. 
 At the core, we use Tendermint BFT. It is an implementation of a Byzantine Fault Tolerant PoS consensus algorithm. So thank you Tendermint team.
-We just wrap those many things that tendermint already offered together under a concept, "Engine". 
+We just wrap those many things that tendermint already offered together under a concept, "Angine". 
 
 
-<a id="orgb549c00"></a>
+<a id="orgcd8adfd"></a>
 
-# Structure of Engine
+# Structure of Angine
 
     ├── blockchain
     │   ├── pool.go
@@ -53,8 +63,7 @@ We just wrap those many things that tendermint already offered together under a 
     │   ├── ticker.go
     │   ├── version.go
     │   └── wal.go
-    ├── engine.go
-    ├── engine_test.go
+    ├── angine.go
     ├── log.go
     ├── mempool
     │   ├── mempool.go
@@ -105,9 +114,9 @@ We just wrap those many things that tendermint already offered together under a 
         ├── vote_set_test.go
         └── vote_test.go
 
-This is directory structure of Engine, you can see that we have packed every module under its own directory. This give you a clear view of the parts making up an Engine.
+This is directory structure of Angine, you can see that we have packed every module under its own directory. This give you a clear view of the parts making up an Angine.
 
-1.  state/ is the running state of the Engine, which is driven by blockchain/, mempool/ and consensus/
+1.  state/ is the running state of the Angine, which is driven by blockchain/, mempool/ and consensus/
 
 2.  blockchain/ takes charge of syncing blocks, loading blocks, persisting blocks and anything that physically related to "block"
 
@@ -116,11 +125,63 @@ This is directory structure of Engine, you can see that we have packed every mod
 4.  consensus/ takes charge of gossipping between peers, consensus algorithm related data stream
 
 
-<a id="org1128696"></a>
+<a id="org274d323"></a>
 
 # What we have fulfilled
 
 1.  CA based on asymmetric cyrpto
 
 2.  Dynamically changing ValidatorSet of ConsensusState
+
+3.  Two kinds of transactions, normal and special, are totally isolated. Special tx will only be processed by plugins.
+
+4.  Angine plugins
+
+
+<a id="org6a3dc33"></a>
+
+# How to use
+
+
+<a id="org2ca9937"></a>
+
+## Initialize Angine
+
+This is how you initialize an angine. 
+
+    angine.Initialize(&angine.AngineTunes{Conf: conf})
+
+The "angine.Initialize" will handle the generation of default configs, genesis file and private key. You must only do this once for a particular chain, otherwise, your id might be different.
+
+
+<a id="org5610bbf"></a>
+
+### Construct an AngineTunes.
+
+This struct contains 2 fields and you only have to fill one:
+
+1.  Runtime is a path that contains all the auto-generated files. So provided this will just generate everything under this path with random chainID and private/pub key pair.
+
+2.  Conf contains anyconfig that you want to override the defaults. Say, you wanna use some cli args to override the default configs, this is the thing you should look into.
+
+    After, you probably need to edit those files mannually to get exactly what you want. Everything in the files are straigt forward.
+
+
+<a id="org32ff3eb"></a>
+
+## New an Agnine instance and start it
+
+First, you need to import angine into your project :-) then, 
+
+    import "gitlab.zhonganonline.com/ann/angine"
+    
+    ...
+    
+    mainAngine := angine.NewAngine(&angine.AngineTunes{Conf: conf})
+    
+    ...
+    
+    mainAngine.Start()
+
+That is all.
 
