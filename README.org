@@ -98,3 +98,9 @@
 
 **** CA based on asymmetric cyrpto
 **** Dynamically changing ValidatorSet of ConsensusState
+**** Two kinds of transactions, normal and special, are totally isolated. Special tx will only be processed by plugins.
+**** Angine plugins
+
+* How to use
+
+** Initialize Angine
