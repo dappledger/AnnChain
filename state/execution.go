@@ -3,6 +3,8 @@ package state
 import (
 	"errors"
 
+	"go.uber.org/zap"
+
 	"gitlab.zhonganonline.com/ann/angine/plugin"
 	"gitlab.zhonganonline.com/ann/angine/types"
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
@@ -55,9 +57,6 @@ func (s *State) ExecBlock(eventSwitch types.EventSwitch, block *types.Block, blo
 	return nil
 }
 
-// Executes block's transactions on proxyAppConn.
-// Returns a list of updates to the validator set
-// TODO: Generate a bitmap or otherwise store tx validity in state.
 func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block, round int) ([]*types.ValidatorAttr, error) {
 	// Run ExTxs of block
 	for i, tx := range block.Data.ExTxs {
@@ -76,9 +75,9 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 	}
 	for _, invalid := range res.InvalidTxs {
 		txev := types.EventDataTx{
-			Tx:   invalid.Bytes,
-			Code: types.CodeType_InvalidTx,
-			Log:  invalid.Error.Error(),
+			Tx:    invalid.Bytes,
+			Code:  types.CodeType_InvalidTx,
+			Error: invalid.Error.Error(),
 		}
 		types.FireEventTx(eventCache, txev)
 	}
@@ -87,39 +86,17 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 	if res.Error != nil {
 		return nil, res.Error
 	}
+
+	if s.logger != nil {
+		s.logger.Info("Executed block",
+			zap.Int("height", block.Height),
+			zap.Int("txs", block.NumTxs),
+			zap.Int("valid", len(res.ValidTxs)),
+			zap.Int("invalid", len(res.InvalidTxs)),
+			zap.Int("extended", len(block.Data.ExTxs)))
+	}
+
 	return nil, nil
-
-	// 	// Execute transactions and get hash
-	// 	proxyCb := func(req *abci.Request, res *abci.Response) {
-	// 		switch r := res.Value.(type) {
-	// 		case *abci.Response_DeliverTx:
-	// 			// TODO: make use of res.Log
-	// 			// TODO: make use of this info
-	// 			// Blocks may include invalid txs.
-	// 			txError := ""
-	// 			apTx := r.DeliverTx
-	// 			if apTx.Code == abci.CodeType_OK {
-	// 				validTxs++
-	// 			} else {
-	// 				logger.Debug("Invalid tx", "code", r.DeliverTx.Code, "log", r.DeliverTx.Log, "data", r.DeliverTx.Data)
-	// 				invalidTxs++
-	// 				txError = apTx.Code.String()
-	// 			}
-	// 			// NOTE: if we count we can access the tx from the block instead of
-	// 			// pulling it from the req
-	// 			event := types.EventDataTx{
-	// 				Tx:    req.GetDeliverTx().Tx,
-	// 				Data:  apTx.Data,
-	// 				Code:  apTx.Code,
-	// 				Log:   apTx.Log,
-	// 				Error: txError,
-	// 			}
-	// types.FireEventTx(eventCache, event)
-	// 		}
-	// 	}
-	// 	proxyAppConn.SetResponseCallback(proxyCb)
-
-	// logger.Info("Executed block", "height", block.Height, "txs", block.NumTxs, "valid txs", len(res.ValidTxs), "extended txs", len(block.Data.ExTxs))
 }
 
 // return a bit array of validators that signed the last commit

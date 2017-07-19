@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
+
 	"gitlab.zhonganonline.com/ann/angine/plugin"
 	"gitlab.zhonganonline.com/ann/angine/types"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
@@ -25,6 +27,7 @@ var (
 // NOTE: not goroutine-safe.
 type State struct {
 	started bool
+	logger  *zap.Logger
 
 	// mtx for writing to db
 	mtx sync.Mutex
@@ -70,9 +73,11 @@ func loadState(db dbm.DB, key []byte) *State {
 	return s
 }
 
+// logger will be copied
 func (s *State) Copy() *State {
 	return &State{
 		db:              s.db,
+		logger:          s.logger,
 		GenesisDoc:      s.GenesisDoc,
 		ChainID:         s.ChainID,
 		LastBlockHeight: s.LastBlockHeight,
@@ -157,6 +162,10 @@ func (s *State) setBlockAndValidators(
 	s.LastBlockTime = blockTime
 	s.Validators = nextValSet
 	s.LastValidators = prevValSet
+}
+
+func (s *State) SetLogger(logger *zap.Logger) {
+	s.logger = logger
 }
 
 func (s *State) GetValidators() (*types.ValidatorSet, *types.ValidatorSet) {

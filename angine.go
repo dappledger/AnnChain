@@ -86,7 +86,7 @@ func Initialize(tune *AngineTunes) {
 		PubKey:     privValidator.PubKey,
 		Amount:     100,
 		IsCA:       true,
-		RPCAddress: "tcp://0.0.0.0:46657",
+		RPCAddress: conf.GetString("rpc_laddr"),
 	}}
 
 	err := genDoc.SaveAs(conf.GetString("genesis_file"))
@@ -128,7 +128,7 @@ func NewAngine(tune *AngineTunes) *Angine {
 	logpath = path.Join(logpath, "angine-"+stateM.ChainID)
 	cmn.EnsureDir(logpath, 0700)
 	logger := InitializeLog(conf.GetString("environment"), logpath)
-
+	stateM.SetLogger(logger)
 	privValidator := types.LoadOrGenPrivValidator(logger, conf.GetString("priv_validator_file"))
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
 	eventSwitch := types.NewEventSwitch(logger)
@@ -370,19 +370,18 @@ func (e *Angine) BroadcastTx(tx []byte) error {
 }
 
 func (e *Angine) BroadcastTxCommit(tx []byte) error {
+	if err := e.mempool.CheckTx(tx); err != nil {
+		return err
+	}
 	committed := make(chan types.EventDataTx, 1)
 	eventString := types.EventStringTx(tx)
+	timer := time.NewTimer(60 * 2 * time.Second)
 	types.AddListenerForEvent(*e.eventSwitch, "angine", eventString, func(data types.TMEventData) {
 		committed <- data.(types.EventDataTx)
 	})
 	defer func() {
 		(*e.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "angine")
 	}()
-
-	if err := e.mempool.CheckTx(tx); err != nil {
-		return err
-	}
-	timer := time.NewTimer(60 * 2 * time.Second)
 	select {
 	case <-committed:
 		return nil
