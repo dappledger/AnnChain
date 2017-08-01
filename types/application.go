@@ -15,8 +15,15 @@
 package types
 
 import (
+	"bytes"
+
+	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
+	"gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
+	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
+
+var lastBlockKey = []byte("lastblock")
 
 type Application interface {
 	GetAngineHooks() Hooks
@@ -29,3 +36,28 @@ type Application interface {
 }
 
 type AppMaker func(config.Config) Application
+
+type BaseApplication struct {
+	Database db.DB
+}
+
+func (ba *BaseApplication) LoadLastBlock(t interface{}) (res interface{}) {
+	buf := ba.Database.Get(lastBlockKey)
+	if len(buf) != 0 {
+		r, n, err := bytes.NewReader(buf), new(int), new(error)
+		res = wire.ReadBinaryPtr(t, r, 0, n, err)
+		if *err != nil {
+			panic(*err)
+		}
+	}
+	return
+}
+
+func (ba *BaseApplication) SaveLastBlock(lastBlock interface{}) {
+	buf, n, err := new(bytes.Buffer), new(int), new(error)
+	wire.WriteBinary(lastBlock, buf, n, err)
+	if *err != nil {
+		cmn.PanicCrisis(*err)
+	}
+	ba.Database.SetSync(lastBlockKey, buf.Bytes())
+}
