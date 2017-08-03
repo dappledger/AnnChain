@@ -16,6 +16,7 @@ package types
 
 import (
 	"bytes"
+	"errors"
 
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
@@ -41,14 +42,16 @@ type BaseApplication struct {
 	Database db.DB
 }
 
-func (ba *BaseApplication) LoadLastBlock(t interface{}) (res interface{}) {
+func (ba *BaseApplication) LoadLastBlock(t interface{}) (res interface{}, err error) {
 	buf := ba.Database.Get(lastBlockKey)
 	if len(buf) != 0 {
 		r, n, err := bytes.NewReader(buf), new(int), new(error)
 		res = wire.ReadBinaryPtr(t, r, 0, n, err)
 		if *err != nil {
-			panic(*err)
+			return nil, *err
 		}
+	} else {
+		return nil, errors.New("empty")
 	}
 	return
 }
