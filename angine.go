@@ -50,6 +50,8 @@ const version = "0.6.0"
 type (
 	// Angine is a high level abstraction of all the state, consensus, mempool blah blah...
 	Angine struct {
+		Tune *AngineTunes
+
 		mtx     sync.Mutex
 		tune    *AngineTunes
 		hooked  bool
@@ -80,6 +82,34 @@ type (
 	}
 )
 
+func genPrivFile(path string) *types.PrivValidator {
+	privValidator := types.GenPrivValidator(nil)
+	privValidator.SetFile(path)
+	privValidator.Save()
+	return privValidator
+}
+
+func genGenesiFile(path string, gVals []types.GenesisValidator) (*types.GenesisDoc, error) {
+	genDoc := &types.GenesisDoc{
+		ChainID: cmn.Fmt("annchain-%v", cmn.RandStr(6)),
+		Plugins: "specialop",
+	}
+	genDoc.Validators = gVals
+	return genDoc, genDoc.SaveAs(path)
+}
+
+func integrityCheck(conf cfg.Config) error {
+	privFile := conf.GetString("priv_validator_file")
+	genFile := conf.GetString("genesis_file")
+	if !cmn.FileExists(privFile) {
+		return fmt.Errorf("PrivValidator file needed: %s", privFile)
+	}
+	if !cmn.FileExists(genFile) {
+		return fmt.Errorf("Genesis file needed: %s", genFile)
+	}
+	return nil
+}
+
 func Initialize(tune *AngineTunes) {
 	var conf *cfg.MapConfig
 	if tune.Conf == nil {
@@ -87,26 +117,16 @@ func Initialize(tune *AngineTunes) {
 	} else {
 		conf = tune.Conf
 	}
-
-	privValidator := types.GenPrivValidator(nil)
-	privValidator.SetFile(conf.GetString("priv_validator_file"))
-	privValidator.Save()
-
-	genDoc := types.GenesisDoc{
-		ChainID: cmn.Fmt("annchain-%v", cmn.RandStr(6)),
-		Plugins: "specialop",
-	}
-	genDoc.Validators = []types.GenesisValidator{types.GenesisValidator{
-		PubKey:     privValidator.PubKey,
+	priv := genPrivFile(conf.GetString("priv_validator_file"))
+	gvs := []types.GenesisValidator{types.GenesisValidator{
+		PubKey:     priv.PubKey,
 		Amount:     100,
 		IsCA:       true,
 		RPCAddress: conf.GetString("rpc_laddr"),
 	}}
-
-	err := genDoc.SaveAs(conf.GetString("genesis_file"))
+	genDoc, err := genGenesiFile(conf.GetString("genesis_file"), gvs)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(127)
+		cmn.PanicSanity(err)
 	}
 
 	fmt.Println("Initialized ", genDoc.ChainID, "genesis", conf.GetString("genesis_file"), "priv_validator", conf.GetString("priv_validator_file"))
@@ -120,6 +140,20 @@ func NewAngine(tune *AngineTunes) *Angine {
 		conf = ac.GetConfig(tune.Runtime)
 	} else {
 		conf = tune.Conf
+	}
+
+	if err := integrityCheck(conf); err != nil {
+		priv := genPrivFile(conf.GetString("priv_validator_file"))
+		gvs := []types.GenesisValidator{types.GenesisValidator{
+			PubKey:     priv.PubKey,
+			Amount:     100,
+			IsCA:       true,
+			RPCAddress: conf.GetString("rpc_laddr"),
+		}}
+		_, err := genGenesiFile(conf.GetString("genesis_file"), gvs)
+		if err != nil {
+			cmn.PanicSanity(err)
+		}
 	}
 
 	apphash := []byte{}
@@ -214,7 +248,15 @@ func NewAngine(tune *AngineTunes) *Angine {
 	setEventSwitch(eventSwitch, bcReactor, memReactor, consensusReactor)
 	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), p2psw, &stateM.Validators, refuseList)
 
+	if tune.Conf == nil {
+		tune.Conf = conf
+	} else if tune.Runtime == "" {
+		tune.Runtime = conf.GetString("datadir")
+	}
+
 	return &Angine{
+		Tune: tune,
+
 		statedb:       stateDB,
 		blockdb:       blockStoreDB,
 		tune:          tune,

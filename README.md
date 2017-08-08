@@ -12,7 +12,7 @@
 <li><a href="#org19c7657">4.1.1. Construct an AngineTunes.</a></li>
 </ul>
 </li>
-<li><a href="#orgf101d9a">4.2. New an Agnine instance and start it</a></li>
+<li><a href="#orgf101d9a">4.2. New an Angine instance and start it</a></li>
 </ul>
 </li>
 </ul>
@@ -174,7 +174,7 @@ This struct contains 2 fields and you only have to fill one:
 
 <a id="orgf101d9a"></a>
 
-## New an Agnine instance and start it
+## New an Angine instance and start it
 
 First, you need to import angine into your project :-) then, 
 
