@@ -116,7 +116,7 @@ COLLECT:
 					e.logger.Info("check speci vote signature error", zap.Error(err))
 				} else {
 					major23VotingPower += res.Validator.VotingPower
-					cmd.Sigs = append(cmd.Sigs, res.Result)
+					cmd.Sigs = append(cmd.Sigs, append(res.Validator.PubKey.Bytes(), res.Result...))
 				}
 			}
 			if major23VotingPower > totalVotingPower*2/3 || votedAny == totalVotingPower {
