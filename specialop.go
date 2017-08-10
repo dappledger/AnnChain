@@ -62,7 +62,7 @@ func (e *Angine) ProcessSpecialOP(tx []byte) error {
 	cmd.Sigs = append(cmd.Sigs, append(myPubKey.Bytes(), sigbytes...))
 	if len(validators) > 1 {
 		stuffedTx := wire.BinaryBytes(cmd)
-		if err := e.CollectSpecialVotes(&cmd, stuffedTx); err != nil {
+		if err := e.CollectSpecialVotes(&cmd, types.TagSpecialOPTx(stuffedTx)); err != nil {
 			return err
 		}
 	}
@@ -91,7 +91,7 @@ func (e *Angine) CollectSpecialVotes(cmd *types.SpecialOPCmd, tx []byte) error {
 					e.logger.Warn("incomplete specialop support: getSpecialVote is nil")
 					return
 				}
-				if res, err := e.getSpecialVote(tx, v); err != nil {
+				if res, err := e.getSpecialVote(data, v); err != nil {
 					e.logger.Info("get special vote error", zap.Error(err))
 					votes <- nil
 				} else {
@@ -100,7 +100,7 @@ func (e *Angine) CollectSpecialVotes(cmd *types.SpecialOPCmd, tx []byte) error {
 						Validator: v,
 					}
 				}
-			}(types.TagSpecialOPTx(tx), validator, votes)
+			}(tx, validator, votes)
 		} else {
 			votedAny += validator.VotingPower
 			major23VotingPower += validator.VotingPower
