@@ -18,9 +18,11 @@ import (
 	"bytes"
 	"errors"
 
+	"github.com/tendermint/tmlibs/db"
+
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
+	// "gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
 
