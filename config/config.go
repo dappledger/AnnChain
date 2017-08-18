@@ -133,7 +133,7 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("log_path", "")
 
 	conf.Set("db_type", "sqlite3")
-	conf.Set("db_conn_str", path.Join(root, DATADIR, "delos.db"))
+	conf.Set("db_conn_str", "") // some types of database will need this
 
 	return conf
 }
