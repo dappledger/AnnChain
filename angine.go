@@ -633,9 +633,8 @@ func refuseListFilter(refuseList *refuse_list.RefuseList) func(crypto.PubKeyEd25
 
 func authByCA(chainID string, ppValidators **types.ValidatorSet, log *zap.Logger) func(*p2p.NodeInfo) error {
 	valset := *ppValidators
-	chainIDBytes := []byte(chainID)
 	return func(peerNodeInfo *p2p.NodeInfo) error {
-		msg := append(peerNodeInfo.PubKey[:], chainIDBytes...)
+		msg := peerNodeInfo.PubKey[:]
 		for _, val := range valset.Validators {
 			if !val.IsCA {
 				continue // CA must be validator
