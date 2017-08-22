@@ -900,8 +900,8 @@ func (cs *ConsensusState) defaultDecideProposal(height, round int) {
 			part := blockParts.GetPart(i)
 			cs.sendInternalMessage(msgInfo{&BlockPartMessage{cs.Height, cs.Round, part}, ""})
 		}
-		cs.slogger.Infof("Signed proposal height %d round %d proposal %v", height, round, proposal)
-		cs.slogger.Debugf("Signed proposal block: %v", block)
+		//cs.slogger.Debugf("Signed proposal height %d round %d proposal %v", height, round, proposal)
+		//cs.slogger.Debugf("Signed proposal block: %v", block)
 	} else {
 		if !cs.replayMode {
 			cs.logger.Warn("enterPropose: Error signing proposal", zap.Int("height", height), zap.Int("round", round), zap.String("error", err.Error()))
@@ -1278,7 +1278,7 @@ func (cs *ConsensusState) finalizeCommit(height int) {
 	}
 
 	cs.slogger.Infof("Finalizing commit of block with %d txs, height %d, hash %X, root %x", block.NumTxs, block.Height, block.Hash(), block.AppHash)
-	cs.slogger.Debugf("%v", block)
+	//cs.slogger.Debugf("%v", block)
 
 	// Save to blockStore.
 	if cs.blockStore.Height() < block.Height {
@@ -1429,7 +1429,7 @@ func (cs *ConsensusState) tryAddVote(vote *types.Vote, peerKey string) error {
 //-----------------------------------------------------------------------------
 
 func (cs *ConsensusState) addVote(vote *types.Vote, peerKey string) (added bool, err error) {
-	cs.logger.Debug("addVote", zap.Int("voteHeight", vote.Height), zap.Binary("voteType", []byte{vote.Type}), zap.Int("csHeight", cs.Height))
+	//cs.logger.Debug("addVote", zap.Int("voteHeight", vote.Height), zap.Binary("voteType", []byte{vote.Type}), zap.Int("csHeight", cs.Height))
 
 	// A precommit for the previous height?
 	// These come in while we wait timeoutCommit
@@ -1465,7 +1465,7 @@ func (cs *ConsensusState) addVote(vote *types.Vote, peerKey string) (added bool,
 			switch vote.Type {
 			case types.VoteTypePrevote:
 				prevotes := cs.Votes.Prevotes(vote.Round)
-				cs.slogger.Debugw("Added to prevote", "vote", vote, "prevotes", prevotes.StringShort())
+				//cs.slogger.Debugw("Added to prevote", "vote", vote, "prevotes", prevotes.StringShort())
 				// First, unlock if prevotes is a valid POL.
 				// >> lockRound < POLRound <= unlockOrChangeLockRound (see spec)
 				// NOTE: If (lockRound < POLRound) but !(POLRound <= unlockOrChangeLockRound),
@@ -1498,7 +1498,7 @@ func (cs *ConsensusState) addVote(vote *types.Vote, peerKey string) (added bool,
 				}
 			case types.VoteTypePrecommit:
 				precommits := cs.Votes.Precommits(vote.Round)
-				cs.slogger.Debugw("Added to precommit", "vote", vote, "precommits", precommits.StringShort())
+				//cs.slogger.Debugw("Added to precommit", "vote", vote, "precommits", precommits.StringShort())
 				blockID, ok := precommits.TwoThirdsMajority()
 				if ok {
 					if len(blockID.Hash) == 0 {

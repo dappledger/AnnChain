@@ -190,7 +190,7 @@ func (conR *ConsensusReactor) RemovePeer(peer *p2p.Peer, reason interface{}) {
 // NOTE: blocks on consensus state for proposals, block parts, and votes
 func (conR *ConsensusReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 	if !conR.IsRunning() {
-		conR.slogger.Debugw("Receive", "src", src, "chId", chID, "bytes", msgBytes)
+		//conR.slogger.Debugw("Receive", "src", src, "chId", chID, "bytes", msgBytes)
 		return
 	}
 
@@ -200,7 +200,7 @@ func (conR *ConsensusReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte)
 		// TODO punish peer?
 		return
 	}
-	conR.slogger.Debugw("Receive", "src", src, "chId", chID, "msg", msg)
+	//conR.slogger.Debugw("Receive", "src", src, "chId", chID, "msg", msg)
 
 	// Get peer states
 	ps := src.Data.Get(types.PeerStateKey).(*PeerState)
@@ -552,21 +552,21 @@ OUTER_LOOP:
 			// If there are lastCommits to send...
 			if prs.Step == RoundStepNewHeight {
 				if ps.PickSendVote(rs.LastCommit) {
-					conR.logger.Debug("Picked rs.LastCommit to send")
+					//conR.logger.Debug("Picked rs.LastCommit to send")
 					continue OUTER_LOOP
 				}
 			}
 			// If there are prevotes to send...
 			if prs.Step <= RoundStepPrevote && prs.Round != -1 && prs.Round <= rs.Round {
 				if ps.PickSendVote(rs.Votes.Prevotes(prs.Round)) {
-					conR.logger.Debug("Picked rs.Prevotes(prs.Round) to send")
+					//conR.logger.Debug("Picked rs.Prevotes(prs.Round) to send")
 					continue OUTER_LOOP
 				}
 			}
 			// If there are precommits to send...
 			if prs.Step <= RoundStepPrecommit && prs.Round != -1 && prs.Round <= rs.Round {
 				if ps.PickSendVote(rs.Votes.Precommits(prs.Round)) {
-					conR.logger.Debug("Picked rs.Precommits(prs.Round) to send")
+					//conR.logger.Debug("Picked rs.Precommits(prs.Round) to send")
 					continue OUTER_LOOP
 				}
 			}
@@ -574,7 +574,7 @@ OUTER_LOOP:
 			if prs.ProposalPOLRound != -1 {
 				if polPrevotes := rs.Votes.Prevotes(prs.ProposalPOLRound); polPrevotes != nil {
 					if ps.PickSendVote(polPrevotes) {
-						conR.logger.Debug("Picked rs.Prevotes(prs.ProposalPOLRound) to send")
+						//conR.logger.Debug("Picked rs.Prevotes(prs.ProposalPOLRound) to send")
 						continue OUTER_LOOP
 					}
 				}
@@ -598,7 +598,7 @@ OUTER_LOOP:
 			commit := conR.conS.blockStore.LoadBlockCommit(prs.Height)
 			conR.slogger.Infow("Loaded BlockCommit for catch-up", "height", prs.Height, "commit", commit)
 			if ps.PickSendVote(commit) {
-				conR.logger.Debug("Picked Catchup commit to send")
+				//conR.logger.Debug("Picked Catchup commit to send")
 				continue OUTER_LOOP
 			}
 		}
@@ -606,9 +606,9 @@ OUTER_LOOP:
 		if sleeping == 0 {
 			// We sent nothing. Sleep...
 			sleeping = 1
-			conR.slogger.Debugw("No votes to send, sleeping", "peer", peer,
-				"localPV", rs.Votes.Prevotes(rs.Round).BitArray(), "peerPV", prs.Prevotes,
-				"localPC", rs.Votes.Precommits(rs.Round).BitArray(), "peerPC", prs.Precommits)
+			//conR.slogger.Debugw("No votes to send, sleeping", "peer", peer,
+			//	"localPV", rs.Votes.Prevotes(rs.Round).BitArray(), "peerPV", prs.Prevotes,
+			//	"localPC", rs.Votes.Precommits(rs.Round).BitArray(), "peerPC", prs.Precommits)
 		} else if sleeping == 2 {
 			// Continued sleep...
 			sleeping = 1
@@ -987,7 +987,7 @@ func (ps *PeerState) SetHasVote(vote *types.Vote) {
 }
 
 func (ps *PeerState) setHasVote(height int, round int, type_ byte, index int) {
-	ps.slogger.Debugw("setHasVote(LastCommit)", "lastCommit", ps.LastCommit, "index", index)
+	//ps.slogger.Debugw("setHasVote(LastCommit)", "lastCommit", ps.LastCommit, "index", index)
 
 	// NOTE: some may be nil BitArrays -> no side effects.
 	ps.getVoteBitArray(height, round, type_).SetIndex(index, true)
