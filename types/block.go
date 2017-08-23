@@ -35,6 +35,10 @@ type Block struct {
 	LastCommit *Commit `json:"last_commit"`
 }
 
+func IsExtendedTx(tx []byte) bool {
+	return IsSpecialOP(tx)
+}
+
 // TODO: version
 func MakeBlock(height int, chainID string, alltxs []Tx, commit *Commit,
 	prevBlockID BlockID, valHash, appHash, receiptsHash []byte, partSize int) (*Block, *PartSet) {
@@ -55,7 +59,7 @@ func MakeBlock(height int, chainID string, alltxs []Tx, commit *Commit,
 	extxs := []Tx{}
 	txs := []Tx{}
 	for _, tx := range alltxs {
-		if IsSpecialOP(tx) {
+		if IsExtendedTx(tx) {
 			extxs = append(extxs, tx)
 		} else {
 			txs = append(txs, tx)

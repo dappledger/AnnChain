@@ -17,16 +17,30 @@ package types
 import (
 	"bytes"
 	"errors"
+	"net"
+	"sync"
+	"time"
 
 	"github.com/tendermint/tmlibs/db"
+	"go.uber.org/zap"
 
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 	// "gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
+	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
 
 var lastBlockKey = []byte("lastblock")
+
+type Core interface {
+	GetPublicKey() (crypto.PubKeyEd25519, bool)
+	GetPrivateKey() (crypto.PrivKeyEd25519, bool)
+	GetPrivValidator() *PrivValidator
+	IsValidator() bool
+	GetValidators() (int, *ValidatorSet)
+	GetChainID() string
+}
 
 type Application interface {
 	GetAngineHooks() Hooks
@@ -36,12 +50,17 @@ type Application interface {
 	Info() ResultInfo
 	Start()
 	Stop()
+	SetCore(Core)
+	Initialized() bool
 }
 
-type AppMaker func(config.Config) Application
+type AppMaker func(*zap.Logger, config.Config) Application
+
+// -------------- BaseApplication ---------------
 
 type BaseApplication struct {
-	Database db.DB
+	Database         db.DB
+	InitializedState bool
 }
 
 func (ba *BaseApplication) LoadLastBlock(t interface{}) (res interface{}, err error) {
@@ -65,4 +84,47 @@ func (ba *BaseApplication) SaveLastBlock(lastBlock interface{}) {
 		cmn.PanicCrisis(*err)
 	}
 	ba.Database.SetSync(lastBlockKey, buf.Bytes())
+}
+
+func (ba *BaseApplication) Initialized() bool {
+	return ba.InitializedState
+}
+
+// ------------ CommApplication --------------
+
+type CommApplication struct {
+	mtx      sync.Mutex
+	Listener net.Listener
+}
+
+func (ca *CommApplication) Lock() {
+	ca.mtx.Lock()
+}
+
+func (ca *CommApplication) Unlock() {
+	ca.mtx.Unlock()
+}
+
+func (ca *CommApplication) Listen(addr string) (net.Listener, error) {
+	var tryListenSeconds = 10
+	var listener net.Listener
+	var err error
+
+	for i := 0; i < tryListenSeconds; i++ {
+		listener, err = net.Listen("tcp", addr)
+		if err == nil {
+			break
+		}
+		if i < tryListenSeconds {
+			time.Sleep(1 * time.Second)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: UPnP ?
+	ca.Listener = listener
+
+	return listener, nil
 }

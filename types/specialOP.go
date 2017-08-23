@@ -19,6 +19,10 @@ import (
 	"time"
 )
 
+var (
+	SpecialTag = []byte{'z', 'a', 0x00, 0x01}
+)
+
 type SpecialOPCmd struct {
 	CmdCode      string    `json:"cmdcode"` //code for check if im a special
 	CmdType      string    `json:"cmdtype"` //type for what kind of specialOP
@@ -45,9 +49,9 @@ const (
 )
 
 func TagSpecialOPTx(tx []byte) []byte {
-	return WrapTx([]byte("zaop"), tx)
+	return WrapTx(SpecialTag, tx)
 }
 
 func IsSpecialOP(tx []byte) bool {
-	return bytes.HasPrefix(tx, []byte("zaop"))
+	return bytes.HasPrefix(tx, SpecialTag)
 }

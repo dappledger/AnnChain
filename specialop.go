@@ -66,7 +66,7 @@ func (e *Angine) ProcessSpecialOP(tx []byte) error {
 			return err
 		}
 	}
-	sptx := append([]byte("zaop"), wire.BinaryBytes(cmd)...)
+	sptx := types.WrapTx(types.SpecialTag, wire.BinaryBytes(cmd))
 	return e.BroadcastTx(sptx)
 }
 
@@ -80,10 +80,10 @@ func (e *Angine) CollectSpecialVotes(cmd *types.SpecialOPCmd, tx []byte) error {
 	var votedAny, major23VotingPower int64
 	totalVotingPower := e.consensus.GetTotalVotingPower()
 	_, validators := e.GetValidators()
-	votes := make(chan *voteResult, len(validators))
+	votes := make(chan *voteResult, validators.Size())
 	defer close(votes)
 	pubkey := e.PrivValidator().PubKey
-	for _, validator := range validators {
+	for _, validator := range validators.Validators {
 		if !validator.PubKey.Equals(pubkey) {
 			go func(data []byte, v *types.Validator, votes chan *voteResult) {
 				if e.getSpecialVote == nil {

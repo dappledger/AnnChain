@@ -134,7 +134,7 @@ func Initialize(tune *AngineTunes) {
 }
 
 // NewAngine makes and returns a new angine, which can be used directly after being imported
-func NewAngine(tune *AngineTunes) *Angine {
+func NewAngine(lgr *zap.Logger, tune *AngineTunes) *Angine {
 	var conf *cfg.MapConfig
 	if tune.Conf == nil {
 		conf = ac.GetConfig(tune.Runtime)
@@ -152,7 +152,8 @@ func NewAngine(tune *AngineTunes) *Angine {
 		}}
 		_, err := genGenesiFile(conf.GetString("genesis_file"), gvs)
 		if err != nil {
-			cmn.PanicSanity(err)
+			lgr.Error("something wrong with genesis file", zap.Error(err))
+			return nil
 		}
 	}
 
@@ -160,29 +161,36 @@ func NewAngine(tune *AngineTunes) *Angine {
 	dbBackend := conf.GetString("db_backend")
 	dbDir := conf.GetString("db_dir")
 	stateDB := dbm.NewDB("state", dbBackend, dbDir)
+
+	genesis, err := getGenesisFileMust(conf)
+	if err != nil {
+		lgr.Error("fail to get genesis file", zap.Error(err))
+		return nil
+	}
+
 	stateM := state.GetState(conf, stateDB)
-	genesis := getGenesisFileMust(conf)
 	if stateM == nil {
 		if stateM = state.MakeGenesisState(stateDB, genesis); stateM == nil {
-			cmn.Exit(cmn.Fmt("Fail to get genesis state"))
+			lgr.Error("fail to get genesis state")
+			return nil
 		}
 	}
 	conf.Set("chain_id", stateM.ChainID)
 
-	logpath := conf.GetString("log_path")
-	if logpath == "" {
-		logpath, _ = os.Getwd()
+	logger, err := getLogger(conf, stateM)
+	if err != nil {
+		lgr.Error("fail to get logger", zap.Error(err))
+		return nil
 	}
-	logpath = path.Join(logpath, "angine-"+stateM.ChainID)
-	cmn.EnsureDir(logpath, 0700)
-	logger := InitializeLog(conf.GetString("environment"), logpath)
 	stateM.SetLogger(logger)
+
 	privValidator := types.LoadOrGenPrivValidator(logger, conf.GetString("priv_validator_file"))
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
 	eventSwitch := types.NewEventSwitch(logger)
 	fastSync := fastSyncable(conf, privValidator.GetAddress(), stateM.Validators)
 	if _, err := eventSwitch.Start(); err != nil {
-		cmn.PanicSanity(cmn.Fmt("Fail to start event switch: %v", err))
+		logger.Error("fail to start event switch", zap.Error(err))
+		return nil
 	}
 
 	blockStoreDB := dbm.NewDB("blockstore", dbBackend, dbDir)
@@ -234,8 +242,13 @@ func NewAngine(tune *AngineTunes) *Angine {
 	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
 
 	protocol, address := ProtocolAndAddress(conf.GetString("node_laddr"))
-	defaultListener := p2p.NewDefaultListener(logger, protocol, address, conf.GetBool("skip_upnp"))
+	defaultListener, err := p2p.NewDefaultListener(logger, protocol, address, conf.GetBool("skip_upnp"))
+	if err != nil {
+		logger.Error("fail to create default listener", zap.Error(err))
+		return nil
+	}
 	p2psw.AddListener(defaultListener)
+
 	angineNodeInfo := &p2p.NodeInfo{
 		PubKey:      privKey.PubKey().(crypto.PubKeyEd25519),
 		SigndPubKey: conf.GetString("signbyCA"),
@@ -276,18 +289,19 @@ func NewAngine(tune *AngineTunes) *Angine {
 	}
 }
 
-func (e *Angine) SetSpecialVoteRPC(f func([]byte, *types.Validator) ([]byte, error)) {
-	e.getSpecialVote = f
+func (ang *Angine) SetSpecialVoteRPC(f func([]byte, *types.Validator) ([]byte, error)) {
+	ang.getSpecialVote = f
 }
 
-func (e *Angine) ConnectApp(app types.Application) {
-	e.hooked = true
+func (ang *Angine) ConnectApp(app types.Application) error {
+	ang.hooked = true
 	hooks := app.GetAngineHooks()
 	if hooks.OnExecute == nil || hooks.OnCommit == nil {
-		cmn.PanicSanity("At least implement OnExecute & OnCommit, otherwise what your application is for")
+		ang.logger.Error("At least implement OnExecute & OnCommit, otherwise what your application is for?")
+		return fmt.Errorf("no hooks implemented")
 	}
 
-	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*ang.eventSwitch, "angine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookNewRound)
 		if hooks.OnNewRound == nil {
 			data.ResCh <- types.NewRoundResult{}
@@ -302,24 +316,24 @@ func (e *Angine) ConnectApp(app types.Application) {
 		}
 	})
 	if hooks.OnPropose != nil {
-		types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookPropose(), func(ed types.TMEventData) {
+		types.AddListenerForEvent(*ang.eventSwitch, "angine", types.EventStringHookPropose(), func(ed types.TMEventData) {
 			data := ed.(types.EventDataHookPropose)
 			hooks.OnPropose.Async(data.Height, data.Round, nil, nil, nil)
 		})
 	}
 	if hooks.OnPrevote != nil {
-		types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookPrevote(), func(ed types.TMEventData) {
+		types.AddListenerForEvent(*ang.eventSwitch, "angine", types.EventStringHookPrevote(), func(ed types.TMEventData) {
 			data := ed.(types.EventDataHookPrevote)
 			hooks.OnPrevote.Async(data.Height, data.Round, data.Block, nil, nil)
 		})
 	}
 	if hooks.OnPrecommit != nil {
-		types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookPrecommit(), func(ed types.TMEventData) {
+		types.AddListenerForEvent(*ang.eventSwitch, "angine", types.EventStringHookPrecommit(), func(ed types.TMEventData) {
 			data := ed.(types.EventDataHookPrecommit)
 			hooks.OnPrecommit.Async(data.Height, data.Round, data.Block, nil, nil)
 		})
 	}
-	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookExecute(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*ang.eventSwitch, "angine", types.EventStringHookExecute(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookExecute)
 		hooks.OnExecute.Sync(data.Height, data.Round, data.Block)
 		result := hooks.OnExecute.Result()
@@ -330,7 +344,7 @@ func (e *Angine) ConnectApp(app types.Application) {
 		}
 
 	})
-	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookCommit(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*ang.eventSwitch, "angine", types.EventStringHookCommit(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookCommit)
 		if hooks.OnCommit == nil {
 			data.ResCh <- types.CommitResult{}
@@ -346,97 +360,99 @@ func (e *Angine) ConnectApp(app types.Application) {
 	})
 
 	info := app.Info()
-	if err := e.RecoverFromCrash(info.LastBlockAppHash, int(info.LastBlockHeight)); err != nil {
-		cmn.PanicSanity("replay blocks on angine start failed")
+	if err := ang.RecoverFromCrash(info.LastBlockAppHash, int(info.LastBlockHeight)); err != nil {
+		return err
 	}
+
+	return nil
 }
 
-func (e *Angine) PrivValidator() *types.PrivValidator {
-	return e.privValidator
+func (ang *Angine) PrivValidator() *types.PrivValidator {
+	return ang.privValidator
 }
 
-func (e *Angine) Genesis() *types.GenesisDoc {
-	return e.genesis
+func (ang *Angine) Genesis() *types.GenesisDoc {
+	return ang.genesis
 }
 
-func (e *Angine) P2PHost() string {
-	return e.p2pHost
+func (ang *Angine) P2PHost() string {
+	return ang.p2pHost
 }
 
-func (e *Angine) P2PPort() uint16 {
-	return e.p2pPort
+func (ang *Angine) P2PPort() uint16 {
+	return ang.p2pPort
 }
 
-func (e *Angine) DialSeeds(seeds []string) {
-	e.p2pSwitch.DialSeeds(seeds)
+func (ang *Angine) DialSeeds(seeds []string) {
+	ang.p2pSwitch.DialSeeds(seeds)
 }
 
-func (e *Angine) Start() error {
-	e.mtx.Lock()
-	defer e.mtx.Unlock()
-	if e.started {
+func (ang *Angine) Start() error {
+	ang.mtx.Lock()
+	defer ang.mtx.Unlock()
+	if ang.started {
 		return errors.New("can't start angine twice")
 	}
-	if !e.hooked {
-		e.hookDefaults()
+	if !ang.hooked {
+		ang.hookDefaults()
 	}
-	if _, err := e.p2pSwitch.Start(); err == nil {
-		e.started = true
+	if _, err := ang.p2pSwitch.Start(); err == nil {
+		ang.started = true
 	} else {
 		return err
 	}
 
-	seeds := e.tune.Conf.GetString("seeds")
+	seeds := ang.tune.Conf.GetString("seeds")
 	if seeds != "" {
-		e.DialSeeds(strings.Split(seeds, ","))
+		ang.DialSeeds(strings.Split(seeds, ","))
 	}
 
 	return nil
 }
 
 // Stop just wrap around swtich.Stop, which will stop reactors, listeners,etc
-func (e *Angine) Stop() bool {
-	e.refuseList.Stop()
-	e.statedb.Close()
-	e.blockdb.Close()
-	return e.p2pSwitch.Stop()
+func (ang *Angine) Stop() bool {
+	ang.refuseList.Stop()
+	ang.statedb.Close()
+	ang.blockdb.Close()
+	return ang.p2pSwitch.Stop()
 }
 
-func (e *Angine) RegisterNodeInfo(ni *p2p.NodeInfo) {
-	e.p2pSwitch.SetNodeInfo(ni)
+func (ang *Angine) RegisterNodeInfo(ni *p2p.NodeInfo) {
+	ang.p2pSwitch.SetNodeInfo(ni)
 }
 
-func (e *Angine) GetNodeInfo() *p2p.NodeInfo {
-	return e.p2pSwitch.NodeInfo()
+func (ang *Angine) GetNodeInfo() *p2p.NodeInfo {
+	return ang.p2pSwitch.NodeInfo()
 }
 
-func (e *Angine) Height() int {
-	return e.blockstore.Height()
+func (ang *Angine) Height() int {
+	return ang.blockstore.Height()
 }
 
-func (e *Angine) GetBlock(height int) (*types.Block, *types.BlockMeta) {
+func (ang *Angine) GetBlock(height int) (*types.Block, *types.BlockMeta) {
 	if height == 0 {
 		return nil, nil
 	}
-	return e.blockstore.LoadBlock(height), e.blockstore.LoadBlockMeta(height)
+	return ang.blockstore.LoadBlock(height), ang.blockstore.LoadBlockMeta(height)
 }
 
-func (e *Angine) BroadcastTx(tx []byte) error {
-	return e.mempool.CheckTx(tx)
+func (ang *Angine) BroadcastTx(tx []byte) error {
+	return ang.mempool.CheckTx(tx)
 }
 
-func (e *Angine) BroadcastTxCommit(tx []byte) error {
-	if err := e.mempool.CheckTx(tx); err != nil {
+func (ang *Angine) BroadcastTxCommit(tx []byte) error {
+	if err := ang.mempool.CheckTx(tx); err != nil {
 		return err
 	}
 	committed := make(chan types.EventDataTx, 1)
 	eventString := types.EventStringTx(tx)
 	timer := time.NewTimer(60 * 2 * time.Second)
-	types.AddListenerForEvent(*e.eventSwitch, "angine", eventString, func(data types.TMEventData) {
+	types.AddListenerForEvent(*ang.eventSwitch, "angine", eventString, func(data types.TMEventData) {
 		committed <- data.(types.EventDataTx)
 	})
 	defer func() {
-		(*e.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "angine")
+		(*ang.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "angine")
 	}()
 	select {
 	case <-committed:
@@ -446,22 +462,22 @@ func (e *Angine) BroadcastTxCommit(tx []byte) error {
 	}
 }
 
-func (e *Angine) FlushMempool() {
-	e.mempool.Flush()
+func (ang *Angine) FlushMempool() {
+	ang.mempool.Flush()
 }
 
-func (e *Angine) GetValidators() (int, []*types.Validator) {
-	return e.stateMachine.LastBlockHeight, e.stateMachine.Validators.Validators
+func (ang *Angine) GetValidators() (int, *types.ValidatorSet) {
+	return ang.stateMachine.LastBlockHeight, ang.stateMachine.Validators
 }
 
-func (e *Angine) GetP2PNetInfo() (bool, []string, []*types.Peer) {
-	listening := e.p2pSwitch.IsListening()
+func (ang *Angine) GetP2PNetInfo() (bool, []string, []*types.Peer) {
+	listening := ang.p2pSwitch.IsListening()
 	listeners := []string{}
-	for _, l := range e.p2pSwitch.Listeners() {
+	for _, l := range ang.p2pSwitch.Listeners() {
 		listeners = append(listeners, l.String())
 	}
-	peers := make([]*types.Peer, 0, e.p2pSwitch.Peers().Size())
-	for _, p := range e.p2pSwitch.Peers().List() {
+	peers := make([]*types.Peer, 0, ang.p2pSwitch.Peers().Size())
+	for _, p := range ang.p2pSwitch.Peers().List() {
 		peers = append(peers, &types.Peer{
 			NodeInfo:         *p.NodeInfo,
 			IsOutbound:       p.IsOutbound(),
@@ -471,15 +487,15 @@ func (e *Angine) GetP2PNetInfo() (bool, []string, []*types.Peer) {
 	return listening, listeners, peers
 }
 
-func (e *Angine) GetNumPeers() int {
-	o, i, d := e.p2pSwitch.NumPeers()
+func (ang *Angine) GetNumPeers() int {
+	o, i, d := ang.p2pSwitch.NumPeers()
 	return o + i + d
 }
 
-func (e *Angine) GetConsensusStateInfo() (string, []string) {
-	roundState := e.consensus.GetRoundState()
-	peerRoundStates := make([]string, 0, e.p2pSwitch.Peers().Size())
-	for _, p := range e.p2pSwitch.Peers().List() {
+func (ang *Angine) GetConsensusStateInfo() (string, []string) {
+	roundState := ang.consensus.GetRoundState()
+	peerRoundStates := make([]string, 0, ang.p2pSwitch.Peers().Size())
+	for _, p := range ang.p2pSwitch.Peers().List() {
 		peerState := p.Data.Get(types.PeerStateKey).(*consensus.PeerState)
 		peerRoundState := peerState.GetRoundState()
 		peerRoundStateStr := p.Key + ":" + string(wire.JSONBytes(peerRoundState))
@@ -488,17 +504,17 @@ func (e *Angine) GetConsensusStateInfo() (string, []string) {
 	return roundState.String(), peerRoundStates
 }
 
-func (e *Angine) GetNumUnconfirmedTxs() int {
-	return e.mempool.Size()
+func (ang *Angine) GetNumUnconfirmedTxs() int {
+	return ang.mempool.Size()
 }
 
-func (e *Angine) GetUnconfirmedTxs() []types.Tx {
-	return e.mempool.Reap(-1)
+func (ang *Angine) GetUnconfirmedTxs() []types.Tx {
+	return ang.mempool.Reap(-1)
 }
 
-func (e *Angine) IsNodeValidator(pub crypto.PubKey) bool {
+func (ang *Angine) IsNodeValidator(pub crypto.PubKey) bool {
 	edPub := pub.(crypto.PubKeyEd25519)
-	_, vals := e.consensus.GetValidators()
+	_, vals := ang.consensus.GetValidators()
 	for _, v := range vals {
 		if edPub.KeyString() == v.PubKey.KeyString() {
 			return true
@@ -507,21 +523,21 @@ func (e *Angine) IsNodeValidator(pub crypto.PubKey) bool {
 	return false
 }
 
-func (e *Angine) GetBlacklist() []string {
-	return e.refuseList.ListAllKey()
+func (ang *Angine) GetBlacklist() []string {
+	return ang.refuseList.ListAllKey()
 }
 
 // Recover world status
 // Replay all blocks after blockHeight and ensure the result matches the current state.
-func (e *Angine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
-	storeBlockHeight := e.blockstore.Height()
-	stateBlockHeight := e.stateMachine.LastBlockHeight
+func (ang *Angine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
+	storeBlockHeight := ang.blockstore.Height()
+	stateBlockHeight := ang.stateMachine.LastBlockHeight
 
 	if storeBlockHeight == 0 {
 		return nil // no blocks to replay
 	}
 
-	e.logger.Info("Replay Blocks", zap.Int("appHeight", appBlockHeight), zap.Int("storeHeight", storeBlockHeight), zap.Int("stateHeight", stateBlockHeight))
+	ang.logger.Info("Replay Blocks", zap.Int("appHeight", appBlockHeight), zap.Int("storeHeight", storeBlockHeight), zap.Int("stateHeight", stateBlockHeight))
 
 	if storeBlockHeight < appBlockHeight {
 		// if the app is ahead, there's nothing we can do
@@ -531,18 +547,18 @@ func (e *Angine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 		// load the intermediate state and update the state.AppHash.
 		// NOTE: If ABCI allowed rollbacks, we could just replay the
 		// block even though it's been committed
-		stateAppHash := e.stateMachine.AppHash
-		lastBlockAppHash := e.blockstore.LoadBlock(storeBlockHeight).AppHash
+		stateAppHash := ang.stateMachine.AppHash
+		lastBlockAppHash := ang.blockstore.LoadBlock(storeBlockHeight).AppHash
 
 		if bytes.Equal(stateAppHash, appHash) {
 			// we're all synced up
-			e.logger.Debug("RelpayBlocks: Already synced")
+			ang.logger.Debug("RelpayBlocks: Already synced")
 		} else if bytes.Equal(stateAppHash, lastBlockAppHash) {
 			// we crashed after commit and before saving state,
 			// so load the intermediate state and update the hash
-			e.stateMachine.LoadIntermediate()
-			e.stateMachine.AppHash = appHash
-			e.logger.Debug("RelpayBlocks: Loaded intermediate state and updated state.AppHash")
+			ang.stateMachine.LoadIntermediate()
+			ang.stateMachine.AppHash = appHash
+			ang.logger.Debug("RelpayBlocks: Loaded intermediate state and updated state.AppHash")
 		} else {
 			cmn.PanicSanity(cmn.Fmt("Unexpected state.AppHash: state.AppHash %X; app.AppHash %X, lastBlock.AppHash %X", stateAppHash, appHash, lastBlockAppHash))
 		}
@@ -554,23 +570,23 @@ func (e *Angine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 		// so just replay the block
 
 		// check that the lastBlock.AppHash matches the state apphash
-		block := e.blockstore.LoadBlock(storeBlockHeight)
+		block := ang.blockstore.LoadBlock(storeBlockHeight)
 		if !bytes.Equal(block.Header.AppHash, appHash) {
 			return state.ErrLastStateMismatch{Height: storeBlockHeight, Core: block.Header.AppHash, App: appHash}
 		}
 
-		blockMeta := e.blockstore.LoadBlockMeta(storeBlockHeight)
+		blockMeta := ang.blockstore.LoadBlockMeta(storeBlockHeight)
 		// h.nBlocks++
 		// replay the latest block
-		return e.stateMachine.ApplyBlock(*e.eventSwitch, block, blockMeta.PartsHeader, MockMempool{}, 0)
+		return ang.stateMachine.ApplyBlock(*ang.eventSwitch, block, blockMeta.PartsHeader, MockMempool{}, 0)
 	} else if storeBlockHeight != stateBlockHeight {
 		// unless we failed before committing or saving state (previous 2 case),
 		// the store and state should be at the same height!
 		if storeBlockHeight == stateBlockHeight+1 {
-			e.stateMachine.AppHash = appHash
-			e.stateMachine.LastBlockHeight = storeBlockHeight
-			e.stateMachine.LastBlockID = e.blockstore.LoadBlockMeta(storeBlockHeight).Header.LastBlockID
-			e.stateMachine.LastBlockTime = e.blockstore.LoadBlockMeta(storeBlockHeight).Header.Time
+			ang.stateMachine.AppHash = appHash
+			ang.stateMachine.LastBlockHeight = storeBlockHeight
+			ang.stateMachine.LastBlockID = ang.blockstore.LoadBlockMeta(storeBlockHeight).Header.LastBlockID
+			ang.stateMachine.LastBlockTime = ang.blockstore.LoadBlockMeta(storeBlockHeight).Header.Time
 		} else {
 			cmn.PanicSanity(cmn.Fmt("Expected storeHeight (%d) and stateHeight (%d) to match.", storeBlockHeight, stateBlockHeight))
 		}
@@ -582,28 +598,28 @@ func (e *Angine) RecoverFromCrash(appHash []byte, appBlockHeight int) error {
 		// TODO: use stateBlockHeight instead and let the consensus state do the replay
 		for h := appBlockHeight + 1; h <= storeBlockHeight; h++ {
 			// h.nBlocks++
-			block := e.blockstore.LoadBlock(h)
-			blockMeta := e.blockstore.LoadBlockMeta(h)
-			e.stateMachine.ApplyBlock(*e.eventSwitch, block, blockMeta.PartsHeader, MockMempool{}, 0)
+			block := ang.blockstore.LoadBlock(h)
+			blockMeta := ang.blockstore.LoadBlockMeta(h)
+			ang.stateMachine.ApplyBlock(*ang.eventSwitch, block, blockMeta.PartsHeader, MockMempool{}, 0)
 		}
-		if !bytes.Equal(e.stateMachine.AppHash, appHash) {
-			return fmt.Errorf("Ann state.AppHash does not match AppHash after replay. Got %X, expected %X", appHash, e.stateMachine.AppHash)
+		if !bytes.Equal(ang.stateMachine.AppHash, appHash) {
+			return fmt.Errorf("Ann state.AppHash does not match AppHash after replay. Got %X, expected %X", appHash, ang.stateMachine.AppHash)
 		}
 		return nil
 	}
 	return nil
 }
 
-func (e *Angine) hookDefaults() {
-	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
+func (ang *Angine) hookDefaults() {
+	types.AddListenerForEvent(*ang.eventSwitch, "angine", types.EventStringHookNewRound(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookNewRound)
 		data.ResCh <- types.NewRoundResult{}
 	})
-	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookExecute(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*ang.eventSwitch, "angine", types.EventStringHookExecute(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookExecute)
 		data.ResCh <- types.ExecuteResult{}
 	})
-	types.AddListenerForEvent(*e.eventSwitch, "angine", types.EventStringHookCommit(), func(ed types.TMEventData) {
+	types.AddListenerForEvent(*ang.eventSwitch, "angine", types.EventStringHookCommit(), func(ed types.TMEventData) {
 		data := ed.(types.EventDataHookCommit)
 		data.ResCh <- types.CommitResult{}
 	})
@@ -680,22 +696,37 @@ func fastSyncable(conf cfg.Config, selfAddress []byte, validators *types.Validat
 	return fastSync
 }
 
-func getGenesisFileMust(conf cfg.Config) *types.GenesisDoc {
+func getGenesisFileMust(conf cfg.Config) (*types.GenesisDoc, error) {
 	genDocFile := conf.GetString("genesis_file")
 	if !cmn.FileExists(genDocFile) {
-		cmn.PanicSanity("missing genesis_file")
+		return nil, fmt.Errorf("missing genesis_file")
 	}
 	jsonBlob, err := ioutil.ReadFile(genDocFile)
 	if err != nil {
-		cmn.Exit(cmn.Fmt("Couldn't read GenesisDoc file: %v", err))
+		return nil, fmt.Errorf("Couldn't read GenesisDoc file: %v", err)
 	}
 	genDoc := types.GenesisDocFromJSON(jsonBlob)
 	if genDoc.ChainID == "" {
-		cmn.PanicSanity(cmn.Fmt("Genesis doc %v must include non-empty chain_id", genDocFile))
+		return nil, fmt.Errorf("Genesis doc %v must include non-empty chain_id", genDocFile)
 	}
 	conf.Set("chain_id", genDoc.ChainID)
 
-	return genDoc
+	return genDoc, nil
+}
+
+func getLogger(conf cfg.Config, stateM *state.State) (*zap.Logger, error) {
+	logpath := conf.GetString("log_path")
+	if logpath == "" {
+		logpath, _ = os.Getwd()
+	}
+	logpath = path.Join(logpath, "angine-"+stateM.ChainID)
+	if err := cmn.EnsureDir(logpath, 0700); err != nil {
+		return nil, err
+	}
+	if logger := InitializeLog(conf.GetString("environment"), logpath); logger != nil {
+		return logger, nil
+	}
+	return nil, errors.New("fail to build zap logger")
 }
 
 // Defaults to tcp

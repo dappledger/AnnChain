@@ -131,7 +131,7 @@ func (rs RoundStepType) String() string {
 	case RoundStepCommit:
 		return "RoundStepCommit"
 	default:
-		return "RoundStepUnknown" // Cannot panic.
+		return "RoundStepUnknown"
 	}
 }
 
