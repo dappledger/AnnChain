@@ -37,7 +37,7 @@ type ResultBlock struct {
 	Block     *Block     `json:"block"`
 }
 
-type ResultShards struct {
+type ResultOrgs struct {
 	Names []string `json:"names"`
 }
 
@@ -161,7 +161,7 @@ const (
 	ResultTypeStatus    = byte(0x20)
 	ResultTypeNetInfo   = byte(0x21)
 	ResultTypeDialSeeds = byte(0x22)
-	ResultTypeShards    = byte(0x23)
+	ResultTypeOrgs      = byte(0x23)
 
 	// 0x1  bytes are for refuseList
 	ResultTypeRefuseList = byte(0x10)
@@ -208,7 +208,7 @@ var _ = wire.RegisterInterface(
 	wire.ConcreteType{&ResultBlockchainInfo{}, ResultTypeBlockchainInfo},
 	wire.ConcreteType{&ResultBlock{}, ResultTypeBlock},
 	wire.ConcreteType{&ResultStatus{}, ResultTypeStatus},
-	wire.ConcreteType{&ResultShards{}, ResultTypeShards},
+	wire.ConcreteType{&ResultOrgs{}, ResultTypeOrgs},
 	wire.ConcreteType{&ResultNetInfo{}, ResultTypeNetInfo},
 	wire.ConcreteType{&ResultDialSeeds{}, ResultTypeDialSeeds},
 	wire.ConcreteType{&ResultValidators{}, ResultTypeValidators},

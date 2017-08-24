@@ -63,6 +63,13 @@ type BaseApplication struct {
 	InitializedState bool
 }
 
+func (ba *BaseApplication) InitBaseApplication(name string, datadir string) (err error) {
+	if ba.Database, err = db.NewGoLevelDB(name, datadir); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (ba *BaseApplication) LoadLastBlock(t interface{}) (res interface{}, err error) {
 	buf := ba.Database.Get(lastBlockKey)
 	if len(buf) != 0 {
