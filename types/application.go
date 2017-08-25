@@ -26,21 +26,10 @@ import (
 
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
-	// "gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
 
 var lastBlockKey = []byte("lastblock")
-
-type Core interface {
-	GetPublicKey() (crypto.PubKeyEd25519, bool)
-	GetPrivateKey() (crypto.PrivKeyEd25519, bool)
-	GetPrivValidator() *PrivValidator
-	IsValidator() bool
-	GetValidators() (int, *ValidatorSet)
-	GetChainID() string
-}
 
 type Application interface {
 	GetAngineHooks() Hooks
