@@ -81,16 +81,16 @@ func (memR *MempoolReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 		memR.logger.Warn("Error decoding message", zap.String("error", err.Error()))
 		return
 	}
-	memR.logger.Sugar().Debugw("Receive", "src", src, "chId", chID, "msg", msg)
+	//memR.logger.Sugar().Debugw("Receive", "src", src, "chId", chID, "msg", msg)
 
 	switch msg := msg.(type) {
 	case *TxMessage:
 		if err := memR.Mempool.CheckTx(msg.Tx); err != nil {
 			// Bad, seen, or conflicting tx.
-			memR.logger.Debug("Could not add tx", zap.ByteString("tx", msg.Tx))
+			memR.logger.Debug("Could not add tx", zap.String("err", err.Error()))
 			return
 		}
-		memR.logger.Debug("Added valid tx", zap.ByteString("tx", msg.Tx))
+		memR.logger.Debug("Added valid tx")
 		// broadcasting happens from go routines per peer
 	default:
 		memR.logger.Info(fmt.Sprintf("Unknown message type %T", msg))
