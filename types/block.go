@@ -40,7 +40,7 @@ func IsExtendedTx(tx []byte) bool {
 }
 
 // TODO: version
-func MakeBlock(height int, chainID string, alltxs []Tx, commit *Commit,
+func MakeBlock(maker []byte, height int, chainID string, alltxs []Tx, commit *Commit,
 	prevBlockID BlockID, valHash, appHash, receiptsHash []byte, partSize int) (*Block, *PartSet) {
 	block := &Block{
 		Header: &Header{
@@ -48,6 +48,7 @@ func MakeBlock(height int, chainID string, alltxs []Tx, commit *Commit,
 			Height:         height,
 			Time:           time.Now(),
 			NumTxs:         len(alltxs),
+			Maker:          maker,
 			LastBlockID:    prevBlockID,
 			ValidatorsHash: valHash,
 			AppHash:        appHash,      // state merkle root of txs from the previous block.
@@ -185,6 +186,7 @@ type Header struct {
 	Height         int       `json:"height"`
 	Time           time.Time `json:"time"`
 	NumTxs         int       `json:"num_txs"` // XXX: Can we get rid of this?
+	Maker          []byte    `json:"maker"`
 	LastBlockID    BlockID   `json:"last_block_id"`
 	LastCommitHash []byte    `json:"last_commit_hash"` // commit from validators from the last block
 	DataHash       []byte    `json:"data_hash"`        // transactions
@@ -203,6 +205,7 @@ func (h *Header) Hash() []byte {
 		"Height":      h.Height,
 		"Time":        h.Time,
 		"NumTxs":      h.NumTxs,
+		"maker":       h.Maker,
 		"LastBlockID": h.LastBlockID,
 		"LastCommit":  h.LastCommitHash,
 		"Data":        h.DataHash,
@@ -221,6 +224,7 @@ func (h *Header) StringIndented(indent string) string {
 %s  Height:         %v
 %s  Time:           %v
 %s  NumTxs:         %v
+%s  Maker:          %X
 %s  LastBlockID:    %v
 %s  LastCommit:     %X
 %s  Data:           %X
@@ -232,6 +236,7 @@ func (h *Header) StringIndented(indent string) string {
 		indent, h.Height,
 		indent, h.Time,
 		indent, h.NumTxs,
+		indent, h.Maker,
 		indent, h.LastBlockID,
 		indent, h.LastCommitHash,
 		indent, h.DataHash,

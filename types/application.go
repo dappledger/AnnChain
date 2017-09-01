@@ -26,6 +26,7 @@ import (
 
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
+	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
 
@@ -43,7 +44,7 @@ type Application interface {
 	Initialized() bool
 }
 
-type AppMaker func(*zap.Logger, config.Config) Application
+type AppMaker func(*zap.Logger, config.Config, crypto.PrivKey) Application
 
 // -------------- BaseApplication ---------------
 

@@ -32,6 +32,7 @@ import (
 	"gitlab.zhonganonline.com/ann/angine/types"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
+	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
 
@@ -946,7 +947,9 @@ func (cs *ConsensusState) createProposalBlock() (block *types.Block, blockParts 
 	// Mempool validated transactions
 	txs := cs.mempool.Reap(cs.config.GetInt("block_size"))
 
-	return types.MakeBlock(cs.Height, cs.state.ChainID, txs, commit,
+	proposerPubkey, _ := cs.Validators.Proposer().PubKey.(crypto.PubKeyEd25519)
+
+	return types.MakeBlock(proposerPubkey[:], cs.Height, cs.state.ChainID, txs, commit,
 		cs.state.LastBlockID, cs.state.Validators.Hash(), cs.state.AppHash, cs.state.ReceiptsHash, cs.config.GetInt("block_part_size"))
 }
 
