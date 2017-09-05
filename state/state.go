@@ -104,6 +104,7 @@ func (s *State) Copy() *State {
 		AppHash:         s.AppHash,
 		ReceiptsHash:    s.ReceiptsHash,
 		Plugins:         s.Plugins,
+		Tpsc:            s.Tpsc,
 	}
 }
 
