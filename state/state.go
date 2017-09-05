@@ -64,6 +64,8 @@ type State struct {
 	ReceiptsHash []byte
 
 	Plugins []IPlugin
+
+	Tpsc *TPSCalculator
 }
 
 func LoadState(db dbm.DB) *State {
@@ -102,6 +104,7 @@ func (s *State) Copy() *State {
 		AppHash:         s.AppHash,
 		ReceiptsHash:    s.ReceiptsHash,
 		Plugins:         s.Plugins,
+		Tpsc:            s.Tpsc,
 	}
 }
 
