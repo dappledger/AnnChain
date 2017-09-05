@@ -64,6 +64,8 @@ type State struct {
 	ReceiptsHash []byte
 
 	Plugins []IPlugin
+
+	Tpsc *TPSCalculator
 }
 
 func LoadState(db dbm.DB) *State {
