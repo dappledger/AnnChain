@@ -87,6 +87,10 @@ func (ba *BaseApplication) Initialized() bool {
 	return ba.InitializedState
 }
 
+func (ba *BaseApplication) Stop() {
+	ba.Database.Close()
+}
+
 // ------------ CommApplication --------------
 
 type CommApplication struct {
@@ -124,4 +128,8 @@ func (ca *CommApplication) Listen(addr string) (net.Listener, error) {
 	ca.Listener = listener
 
 	return listener, nil
+}
+
+func (ca *CommApplication) Stop() {
+	ca.Listener.Close()
 }

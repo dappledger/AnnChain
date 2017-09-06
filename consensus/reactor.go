@@ -98,6 +98,7 @@ func (conR *ConsensusReactor) SwitchToConsensus(state *sm.State) {
 	height := state.LastBlockHeight + 1 // Next desired block height
 
 	// RoundState fields
+	cs.mtx.Lock()
 	cs.updateHeight(height)
 	cs.updateRoundStep(0, RoundStepNewHeight)
 	cs.StartTime = cs.timeoutParams.Commit(time.Now())
@@ -113,7 +114,7 @@ func (conR *ConsensusReactor) SwitchToConsensus(state *sm.State) {
 	cs.reconstructLastCommit(state)
 	cs.LastValidators = state.LastValidators
 	cs.state = state
-
+	cs.mtx.Unlock()
 	// Finally, broadcast RoundState
 	cs.newStep()
 
