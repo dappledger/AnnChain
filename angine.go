@@ -210,6 +210,7 @@ func NewAngine(lgr *zap.Logger, tune *AngineTunes) *Angine {
 	consensusState := consensus.NewConsensusState(logger, conf, stateM, blockStore, mem)
 	consensusState.SetPrivValidator(privValidator)
 	consensusReactor := consensus.NewConsensusReactor(logger, consensusState, fastSync)
+	consensusState.BindReactor(consensusReactor)
 
 	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int, lc *types.Commit) error {
 		return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)

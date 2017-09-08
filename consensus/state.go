@@ -247,6 +247,8 @@ type ConsensusState struct {
 	blockStore *bc.BlockStore
 	mempool    *mempl.Mempool
 
+	conR *ConsensusReactor
+
 	privValidator PrivValidator // for signing votes
 
 	mtx sync.Mutex
@@ -321,6 +323,10 @@ func NewConsensusState(logger *zap.Logger, config cfg.Config, state *sm.State, b
 // implements events.Eventable
 func (cs *ConsensusState) SetEventSwitch(evsw types.EventSwitch) {
 	cs.evsw = evsw
+}
+
+func (cs *ConsensusState) BindReactor(r *ConsensusReactor) {
+	cs.conR = r
 }
 
 func (cs *ConsensusState) String() string {
