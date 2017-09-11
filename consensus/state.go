@@ -1256,7 +1256,7 @@ func (cs *ConsensusState) tryFinalizeCommit(height int) {
 // Increment height and goto RoundStepNewHeight
 func (cs *ConsensusState) finalizeCommit(height int) {
 	if cs.Height != height || cs.Step != RoundStepCommit {
-		cs.slogger.Debugf("finalizeCommit(%v): Invalid args. Current step: %v/%v/%v", height, cs.Height, cs.Round, cs.Step)
+		cs.slogger.Warn("finalizeCommit(%v): Invalid args. Current step: %v/%v/%v", height, cs.Height, cs.Round, cs.Step)
 		return
 	}
 	// logger.Info("ann-stopwatch consensusTime elapsed ", cs.RoundState.CommitTime.Sub(cs.RoundState.StartTime).String())
@@ -1277,7 +1277,7 @@ func (cs *ConsensusState) finalizeCommit(height int) {
 		PanicConsensus(Fmt("+2/3 committed an invalid block: %v", err))
 	}
 
-	cs.slogger.Infof("Finalizing commit of block with %d txs, height %d, hash %X, root %x", block.NumTxs, block.Height, block.Hash(), block.AppHash)
+	cs.slogger.Infof("Finalizing commit of block with %d txs, height %d, hash %X, root %X", block.NumTxs, block.Height, block.Hash(), block.AppHash)
 	//cs.slogger.Debugf("%v", block)
 
 	// Save to blockStore.

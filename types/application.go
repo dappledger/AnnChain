@@ -29,7 +29,7 @@ var lastBlockKey = []byte("lastblock")
 type Application interface {
 	GetAngineHooks() Hooks
 	CompatibleWithAngine()
-	CheckTx([]byte) error
+	CheckTx([]byte) Result
 	Query([]byte) Result
 	Info() ResultInfo
 	Start()
