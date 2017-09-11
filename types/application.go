@@ -38,7 +38,7 @@ type Application interface {
 	CheckTx([]byte) error
 	Query([]byte) Result
 	Info() ResultInfo
-	Start()
+	Start() error
 	Stop()
 	SetCore(Core)
 	Initialized() bool
