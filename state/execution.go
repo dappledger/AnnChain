@@ -25,10 +25,6 @@ import (
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 )
 
-var (
-	tpsc = NewTPSCalculator(10)
-)
-
 //--------------------------------------------------
 // Execute the block
 
@@ -105,8 +101,8 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 		return nil, res.Error
 	}
 
-	tpsc.AddRecord(uint32(len(res.ValidTxs)))
-	tps := tpsc.TPS()
+	s.Tpsc.AddRecord(uint32(len(res.ValidTxs)))
+	tps := s.Tpsc.TPS()
 
 	if s.logger != nil {
 		s.logger.Info("Executed block",
