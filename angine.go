@@ -425,9 +425,9 @@ func (e *Angine) BroadcastTx(tx []byte) error {
 	return e.mempool.CheckTx(tx)
 }
 
-func (e *Angine) BroadcastTxCommit(tx []byte) error {
+func (e *Angine) BroadcastTxCommit(tx []byte) (*types.ResultBroadcastTxCommit, error) {
 	if err := e.mempool.CheckTx(tx); err != nil {
-		return err
+		return nil, err
 	}
 	committed := make(chan types.EventDataTx, 1)
 	eventString := types.EventStringTx(tx)
@@ -439,10 +439,22 @@ func (e *Angine) BroadcastTxCommit(tx []byte) error {
 		(*e.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "angine")
 	}()
 	select {
-	case <-committed:
-		return nil
+	case c := <-committed:
+		if c.Code == types.CodeType_OK {
+			return &types.ResultBroadcastTxCommit{
+				Code: c.Code,
+				Data: c.Data,
+				Log:  c.Log,
+			}, nil
+		}
+		res := new(types.Result).FromJSON(c.Error)
+		return &types.ResultBroadcastTxCommit{
+			Code: res.Code,
+			Data: res.Data,
+			Log:  res.Log,
+		}, nil
 	case <-timer.C:
-		return fmt.Errorf("Timed out waiting for transaction to be included in a block")
+		return nil, fmt.Errorf("Timed out waiting for transaction to be included in a block")
 	}
 }
 

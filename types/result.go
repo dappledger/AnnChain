@@ -15,14 +15,14 @@
 package types
 
 import (
-	"fmt"
+	"encoding/json"
 )
 
 // CONTRACT: a zero Result is OK.
 type Result struct {
-	Code CodeType
-	Data []byte
-	Log  string // Can be non-deterministic
+	Code CodeType `json:"Code"`
+	Data []byte   `json:"Data"`
+	Log  string   `json:"Log"` // Can be non-deterministic
 }
 
 type NewRoundResult struct {
@@ -52,6 +52,22 @@ func NewResult(code CodeType, data []byte, log string) Result {
 	}
 }
 
+func (res Result) ToJSON() string {
+	j, err := json.Marshal(res)
+	if err != nil {
+		return res.Log
+	}
+	return string(j)
+}
+
+func (res *Result) FromJSON(j string) *Result {
+	err := json.Unmarshal([]byte(j), res)
+	if err != nil {
+		res.Log = j
+	}
+	return res
+}
+
 func (res Result) IsOK() bool {
 	return res.Code == CodeType_OK
 }
@@ -61,11 +77,13 @@ func (res Result) IsErr() bool {
 }
 
 func (res Result) Error() string {
-	return fmt.Sprintf("{code:%v, data:%X, log:%v}", res.Code, res.Data, res.Log)
+	// return fmt.Sprintf("{code:%v, data:%X, log:%v}", res.Code, res.Data, res.Log)
+	return res.ToJSON()
 }
 
 func (res Result) String() string {
-	return fmt.Sprintf("{code:%v, data:%X, log:%v}", res.Code, res.Data, res.Log)
+	// return fmt.Sprintf("{code:%v, data:%X, log:%v}", res.Code, res.Data, res.Log)
+	return res.ToJSON()
 }
 
 func (res Result) PrependLog(log string) Result {
