@@ -21,4 +21,5 @@ type Engine interface {
 	GetValidators() (int, *ValidatorSet)
 	PrivValidator() *PrivValidator
 	BroadcastTx([]byte) error
+	QueryTx([]byte) (*QueryTxInfo, error)
 }

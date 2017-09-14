@@ -17,6 +17,7 @@ package state
 import (
 	"errors"
 
+	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 
 	"gitlab.zhonganonline.com/ann/angine/plugin"
@@ -84,12 +85,23 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 	types.FireEventHookExecute(eventSwitch, ed) // Run Txs of block
 	res := <-ed.ResCh
 	eventCache := types.NewEventCache(eventSwitch)
+	entryset := make([]*badger.Entry, 0)
+	queryVal, _ := (&types.QueryTxInfo{
+		Height:        block.Height,
+		BlockHash:     block.Hash(),
+		BlockTime:     block.Time,
+		ValidatorHash: block.ValidatorsHash,
+	}).ToBytes()
 	for _, tx := range res.ValidTxs {
 		txev := types.EventDataTx{
 			Tx:   tx,
 			Code: types.CodeType_OK,
 		}
 		types.FireEventTx(eventCache, txev)
+		entryset = badger.EntriesSet(entryset, tx, queryVal)
+	}
+	if err := s.querydb.BatchSet(entryset); err != nil {
+		s.logger.Error("querydb BatchSet error", zap.Error(err))
 	}
 	for _, invalid := range res.InvalidTxs {
 		txev := types.EventDataTx{

@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 
 	"gitlab.zhonganonline.com/ann/angine/blockchain"
@@ -59,6 +60,7 @@ type (
 
 		statedb       dbm.DB
 		blockdb       dbm.DB
+		querydb       *badger.KV
 		privValidator *types.PrivValidator
 		blockstore    *blockchain.BlockStore
 		mempool       *mempool.Mempool
@@ -162,6 +164,21 @@ func NewAngine(lgr *zap.Logger, tune *AngineTunes) *Angine {
 	dbDir := conf.GetString("db_dir")
 	stateDB := dbm.NewDB("state", dbBackend, dbDir)
 
+	if err := cmn.EnsureDir(path.Join(dbDir, "query_badger"), 0775); err != nil {
+		lgr.Error("fail to ensure query db", zap.Error(err))
+		fmt.Println(err)
+		return nil
+	}
+
+	queryOpt := badger.DefaultOptions
+	queryOpt.Dir = path.Join(dbDir, "query_badger")
+	queryOpt.ValueDir = queryOpt.Dir
+	querydb, err := badger.NewKV(&queryOpt)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
 	genesis, err := getGenesisFileMust(conf)
 	if err != nil {
 		lgr.Error("fail to get genesis file", zap.Error(err))
@@ -175,6 +192,7 @@ func NewAngine(lgr *zap.Logger, tune *AngineTunes) *Angine {
 			return nil
 		}
 	}
+	stateM.SetQueryDB(querydb)
 	conf.Set("chain_id", stateM.ChainID)
 
 	logger, err := getLogger(conf, stateM)
@@ -285,6 +303,7 @@ func NewAngine(lgr *zap.Logger, tune *AngineTunes) *Angine {
 		p2pHost:       defaultListener.ExternalAddress().IP.String(),
 		p2pPort:       defaultListener.ExternalAddress().Port,
 		genesis:       genesis,
+		querydb:       querydb,
 
 		logger: logger,
 	}
@@ -529,6 +548,29 @@ func (ang *Angine) IsNodeValidator(pub crypto.PubKey) bool {
 
 func (ang *Angine) GetBlacklist() []string {
 	return ang.refuseList.ListAllKey()
+}
+
+func (ang *Angine) QueryTx(txHash []byte) (*types.QueryTxInfo, error) {
+	item := &badger.KVItem{}
+	if err := ang.querydb.Get(txHash, item); err != nil {
+		return nil, err
+	}
+
+	var val []byte
+	var consumer = func(v []byte) error {
+		val = make([]byte, len(v))
+		copy(val, v)
+		return nil
+	}
+	if err := item.Value(consumer); err != nil {
+		return nil, err
+	}
+
+	info := &types.QueryTxInfo{}
+	if err := info.FromBytes(val); err != nil {
+		return nil, err
+	}
+	return info, nil
 }
 
 // Recover world status

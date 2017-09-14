@@ -21,6 +21,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 
 	"gitlab.zhonganonline.com/ann/angine/plugin"
@@ -46,6 +47,8 @@ type State struct {
 	// mtx for writing to db
 	mtx sync.Mutex
 	db  dbm.DB
+
+	querydb *badger.KV
 
 	// should not change
 	GenesisDoc *types.GenesisDoc
@@ -91,6 +94,7 @@ func loadState(db dbm.DB, key []byte) *State {
 func (s *State) Copy() *State {
 	return &State{
 		db:              s.db,
+		querydb:         s.querydb,
 		logger:          s.logger,
 		GenesisDoc:      s.GenesisDoc,
 		ChainID:         s.ChainID,
@@ -180,6 +184,10 @@ func (s *State) setBlockAndValidators(
 
 func (s *State) SetLogger(logger *zap.Logger) {
 	s.logger = logger
+}
+
+func (s *State) SetQueryDB(db *badger.KV) {
+	s.querydb = db
 }
 
 func (s *State) GetValidators() (*types.ValidatorSet, *types.ValidatorSet) {
