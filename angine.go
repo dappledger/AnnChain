@@ -435,6 +435,9 @@ func (ang *Angine) Stop() bool {
 	ang.refuseList.Stop()
 	ang.statedb.Close()
 	ang.blockdb.Close()
+	if err := ang.querydb.Close(); err != nil {
+		ang.logger.Error("error on closing query db", zap.Error(err))
+	}
 	return ang.p2pSwitch.Stop()
 }
 
