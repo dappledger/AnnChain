@@ -4,6 +4,10 @@ import (
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 )
 
+type Superior interface {
+	BroadcastTx([]byte) error
+}
+
 type Core interface {
 	IsValidator() bool
 	GetPublicKey() (crypto.PubKeyEd25519, bool)

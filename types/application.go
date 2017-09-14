@@ -44,7 +44,7 @@ type Application interface {
 	Initialized() bool
 }
 
-type AppMaker func(*zap.Logger, config.Config, crypto.PrivKey) Application
+type AppMaker func(*zap.Logger, config.Config, crypto.PrivKey, Superior) Application
 
 // -------------- BaseApplication ---------------
 
