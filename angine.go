@@ -456,8 +456,11 @@ func (ang *Angine) BroadcastTxCommit(tx []byte) error {
 		(*ang.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "angine")
 	}()
 	select {
-	case <-committed:
-		return nil
+	case res := <-committed:
+		if res.Code == types.CodeType_OK {
+			return nil
+		}
+		return fmt.Errorf(res.Error)
 	case <-timer.C:
 		return fmt.Errorf("Timed out waiting for transaction to be included in a block")
 	}
