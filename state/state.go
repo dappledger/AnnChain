@@ -21,7 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 
 	"gitlab.zhonganonline.com/ann/angine/plugin"
@@ -48,7 +47,7 @@ type State struct {
 	mtx sync.Mutex
 	db  dbm.DB
 
-	querydb *badger.KV
+	querydb dbm.DB
 
 	// should not change
 	GenesisDoc *types.GenesisDoc
@@ -186,7 +185,7 @@ func (s *State) SetLogger(logger *zap.Logger) {
 	s.logger = logger
 }
 
-func (s *State) SetQueryDB(db *badger.KV) {
+func (s *State) SetQueryDB(db dbm.DB) {
 	s.querydb = db
 }
 

@@ -17,17 +17,12 @@ package state
 import (
 	"errors"
 
-	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 
 	"gitlab.zhonganonline.com/ann/angine/plugin"
 	"gitlab.zhonganonline.com/ann/angine/types"
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
-)
-
-var (
-	tpsc = NewTPSCalculator(10)
 )
 
 //--------------------------------------------------
@@ -85,8 +80,9 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 	types.FireEventHookExecute(eventSwitch, ed) // Run Txs of block
 	res := <-ed.ResCh
 	eventCache := types.NewEventCache(eventSwitch)
-	entryset := make([]*badger.Entry, 0)
-	queryVal, _ := (&types.QueryTxInfo{
+
+	batch := s.querydb.NewBatch()
+	queryBlockInfo, _ := (&types.TxExecutionResult{
 		Height:        block.Height,
 		BlockHash:     block.Hash(),
 		BlockTime:     block.Time,
@@ -98,11 +94,10 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 			Code: types.CodeType_OK,
 		}
 		types.FireEventTx(eventCache, txev)
-		entryset = badger.EntriesSet(entryset, tx, queryVal)
+		batch.Set(tx, queryBlockInfo)
 	}
-	if err := s.querydb.BatchSet(entryset); err != nil {
-		s.logger.Error("querydb BatchSet error", zap.Error(err))
-	}
+	batch.Write()
+
 	for _, invalid := range res.InvalidTxs {
 		txev := types.EventDataTx{
 			Tx:    invalid.Bytes,
@@ -117,17 +112,13 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 		return nil, res.Error
 	}
 
-	tpsc.AddRecord(uint32(len(res.ValidTxs)))
-	tps := tpsc.TPS()
-
 	if s.logger != nil {
 		s.logger.Info("Executed block",
 			zap.Int("height", block.Height),
 			zap.Int("txs", block.NumTxs),
 			zap.Int("valid", len(res.ValidTxs)),
 			zap.Int("invalid", len(res.InvalidTxs)),
-			zap.Int("extended", len(block.Data.ExTxs)),
-			zap.Int("tps", tps))
+			zap.Int("extended", len(block.Data.ExTxs)))
 	}
 
 	return nil, nil

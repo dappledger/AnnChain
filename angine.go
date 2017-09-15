@@ -25,7 +25,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dgraph-io/badger"
 	"go.uber.org/zap"
 
 	"gitlab.zhonganonline.com/ann/angine/blockchain"
@@ -60,7 +59,7 @@ type (
 
 		statedb       dbm.DB
 		blockdb       dbm.DB
-		querydb       *badger.KV
+		querydb       dbm.DB
 		privValidator *types.PrivValidator
 		blockstore    *blockchain.BlockStore
 		mempool       *mempool.Mempool
@@ -164,17 +163,15 @@ func NewAngine(lgr *zap.Logger, tune *AngineTunes) *Angine {
 	dbDir := conf.GetString("db_dir")
 	stateDB := dbm.NewDB("state", dbBackend, dbDir)
 
-	if err := cmn.EnsureDir(path.Join(dbDir, "query_badger"), 0775); err != nil {
-		lgr.Error("fail to ensure query db", zap.Error(err))
+	if err := cmn.EnsureDir(path.Join(dbDir, "query_cache"), 0775); err != nil {
+		lgr.Error("fail to ensure tx_execution_result", zap.Error(err))
 		fmt.Println(err)
 		return nil
 	}
 
-	queryOpt := badger.DefaultOptions
-	queryOpt.Dir = path.Join(dbDir, "query_badger")
-	queryOpt.ValueDir = queryOpt.Dir
-	querydb, err := badger.NewKV(&queryOpt)
+	querydb, err := dbm.NewGoLevelDB("tx_execution_result", path.Join(dbDir, "query_cache"))
 	if err != nil {
+		lgr.Error("fail to open tx_execution_result", zap.Error(err))
 		fmt.Println(err)
 		return nil
 	}
@@ -192,7 +189,7 @@ func NewAngine(lgr *zap.Logger, tune *AngineTunes) *Angine {
 			return nil
 		}
 	}
-	stateM.SetQueryDB(querydb)
+
 	conf.Set("chain_id", stateM.ChainID)
 
 	logger, err := getLogger(conf, stateM)
@@ -201,6 +198,7 @@ func NewAngine(lgr *zap.Logger, tune *AngineTunes) *Angine {
 		return nil
 	}
 	stateM.SetLogger(logger)
+	stateM.SetQueryDB(querydb)
 
 	privValidator := types.LoadOrGenPrivValidator(logger, conf.GetString("priv_validator_file"))
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
@@ -435,9 +433,7 @@ func (ang *Angine) Stop() bool {
 	ang.refuseList.Stop()
 	ang.statedb.Close()
 	ang.blockdb.Close()
-	if err := ang.querydb.Close(); err != nil {
-		ang.logger.Error("error on closing query db", zap.Error(err))
-	}
+	ang.querydb.Close()
 	return ang.p2pSwitch.Stop()
 }
 
@@ -553,24 +549,17 @@ func (ang *Angine) GetBlacklist() []string {
 	return ang.refuseList.ListAllKey()
 }
 
-func (ang *Angine) QueryTx(txHash []byte) (*types.QueryTxInfo, error) {
-	item := &badger.KVItem{}
-	if err := ang.querydb.Get(txHash, item); err != nil {
-		return nil, err
-	}
+func (ang *Angine) Query(queryType byte, load []byte) (interface{}, error) {
+	return ang.QueryExecutionResult(load)
+}
 
-	var val []byte
-	var consumer = func(v []byte) error {
-		val = make([]byte, len(v))
-		copy(val, v)
-		return nil
+func (ang *Angine) QueryExecutionResult(txHash []byte) (*types.TxExecutionResult, error) {
+	item := ang.querydb.Get(txHash)
+	if len(item) == 0 {
+		return nil, fmt.Errorf("no execution result for %v", txHash)
 	}
-	if err := item.Value(consumer); err != nil {
-		return nil, err
-	}
-
-	info := &types.QueryTxInfo{}
-	if err := info.FromBytes(val); err != nil {
+	info := &types.TxExecutionResult{}
+	if err := info.FromBytes(item); err != nil {
 		return nil, err
 	}
 	return info, nil
