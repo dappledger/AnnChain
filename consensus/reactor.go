@@ -201,7 +201,6 @@ func (conR *ConsensusReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte)
 		// TODO punish peer?
 		return
 	}
-	conR.slogger.Debugw("Receive", "src", src, "chId", chID, "msg", msg)
 
 	// Get peer states
 	ps := src.Data.Get(types.PeerStateKey).(*PeerState)
