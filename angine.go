@@ -50,10 +50,10 @@ const version = "0.6.0"
 type (
 	// Angine is a high level abstraction of all the state, consensus, mempool blah blah...
 	Angine struct {
-		Tune *AngineTunes
+		Tune *Tunes
 
 		mtx     sync.Mutex
-		tune    *AngineTunes
+		tune    *Tunes
 		hooked  bool
 		started bool
 
@@ -77,7 +77,8 @@ type (
 		getSpecialVote func([]byte, *types.Validator) ([]byte, error)
 	}
 
-	AngineTunes struct {
+	// Tunes wraps two different kinds of configurations for angine
+	Tunes struct {
 		Runtime string
 		Conf    *cfg.MapConfig
 	}
@@ -111,7 +112,9 @@ func integrityCheck(conf cfg.Config) error {
 	return nil
 }
 
-func Initialize(tune *AngineTunes) {
+// Initialize generates genesis.json and priv_validator.json automatically.
+// It is usually used with commands like "init" before user put the node into running.
+func Initialize(tune *Tunes) {
 	var conf *cfg.MapConfig
 	if tune.Conf == nil {
 		conf = ac.GetConfig(tune.Runtime)
@@ -135,7 +138,7 @@ func Initialize(tune *AngineTunes) {
 }
 
 // NewAngine makes and returns a new angine, which can be used directly after being imported
-func NewAngine(lgr *zap.Logger, tune *AngineTunes) *Angine {
+func NewAngine(lgr *zap.Logger, tune *Tunes) *Angine {
 	var conf *cfg.MapConfig
 	if tune.Conf == nil {
 		conf = ac.GetConfig(tune.Runtime)
