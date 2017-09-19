@@ -16,7 +16,6 @@ package angine
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -25,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"gitlab.zhonganonline.com/ann/angine/blockchain"
@@ -84,32 +84,14 @@ type (
 	}
 )
 
-func genPrivFile(path string) *types.PrivValidator {
-	privValidator := types.GenPrivValidator(nil)
-	privValidator.SetFile(path)
-	privValidator.Save()
-	return privValidator
-}
-
-func genGenesiFile(path string, gVals []types.GenesisValidator) (*types.GenesisDoc, error) {
-	genDoc := &types.GenesisDoc{
-		ChainID: cmn.Fmt("annchain-%v", cmn.RandStr(6)),
-		Plugins: "specialop",
+// Defaults to tcp
+func ProtocolAndAddress(listenAddr string) (string, string) {
+	protocol, address := "tcp", listenAddr
+	parts := strings.SplitN(address, "://", 2)
+	if len(parts) == 2 {
+		protocol, address = parts[0], parts[1]
 	}
-	genDoc.Validators = gVals
-	return genDoc, genDoc.SaveAs(path)
-}
-
-func integrityCheck(conf cfg.Config) error {
-	privFile := conf.GetString("priv_validator_file")
-	genFile := conf.GetString("genesis_file")
-	if !cmn.FileExists(privFile) {
-		return fmt.Errorf("PrivValidator file needed: %s", privFile)
-	}
-	if !cmn.FileExists(genFile) {
-		return fmt.Errorf("Genesis file needed: %s", genFile)
-	}
-	return nil
+	return protocol, address
 }
 
 // Initialize generates genesis.json and priv_validator.json automatically.
@@ -146,168 +128,95 @@ func NewAngine(lgr *zap.Logger, tune *Tunes) *Angine {
 		conf = tune.Conf
 	}
 
-	if err := integrityCheck(conf); err != nil {
-		priv := genPrivFile(conf.GetString("priv_validator_file"))
-		gvs := []types.GenesisValidator{types.GenesisValidator{
-			PubKey:     priv.PubKey,
-			Amount:     100,
-			IsCA:       true,
-			RPCAddress: conf.GetString("rpc_laddr"),
-		}}
-		_, err := genGenesiFile(conf.GetString("genesis_file"), gvs)
-		if err != nil {
-			lgr.Error("something wrong with genesis file", zap.Error(err))
-			return nil
-		}
-	}
-
-	apphash := []byte{}
 	dbBackend := conf.GetString("db_backend")
 	dbDir := conf.GetString("db_dir")
 	stateDB := dbm.NewDB("state", dbBackend, dbDir)
-
-	if err := cmn.EnsureDir(path.Join(dbDir, "query_cache"), 0775); err != nil {
-		lgr.Error("fail to ensure tx_execution_result", zap.Error(err))
-		fmt.Println(err)
-		return nil
-	}
-
-	querydb, err := dbm.NewGoLevelDB("tx_execution_result", path.Join(dbDir, "query_cache"))
+	blockStoreDB := dbm.NewDB("blockstore", dbBackend, dbDir)
+	querydb, err := ensureQueryDB(dbDir)
 	if err != nil {
-		lgr.Error("fail to open tx_execution_result", zap.Error(err))
+		lgr.Error("angine error", zap.Error(err))
 		fmt.Println(err)
-		return nil
 	}
-
-	genesis, err := getGenesisFileMust(conf)
+	gotGenesis := true
+	genesis, err := getGenesisFile(conf) // ignore any error
 	if err != nil {
-		lgr.Error("fail to get genesis file", zap.Error(err))
+		gotGenesis = false
+	}
+	stateM, err := getOrMakeState(conf, stateDB, genesis)
+	if err != nil {
+		lgr.Error("angine error", zap.Error(err))
 		return nil
 	}
 
-	stateM := state.GetState(conf, stateDB)
-	if stateM == nil {
-		if stateM = state.MakeGenesisState(stateDB, genesis); stateM == nil {
-			lgr.Error("fail to get genesis state")
-			return nil
-		}
+	if gotGenesis {
+		conf.Set("chain_id", genesis.ChainID)
 	}
+	chainID := conf.GetString("chain_id")
 
-	conf.Set("chain_id", stateM.ChainID)
-
-	logger, err := getLogger(conf, stateM)
+	logger, err := getLogger(conf, chainID)
 	if err != nil {
 		lgr.Error("fail to get logger", zap.Error(err))
 		return nil
 	}
-	stateM.SetLogger(logger)
-	stateM.SetQueryDB(querydb)
 
 	privValidator := types.LoadOrGenPrivValidator(logger, conf.GetString("priv_validator_file"))
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)
 	eventSwitch := types.NewEventSwitch(logger)
-	fastSync := fastSyncable(conf, privValidator.GetAddress(), stateM.Validators)
 	if _, err := eventSwitch.Start(); err != nil {
 		logger.Error("fail to start event switch", zap.Error(err))
 		return nil
 	}
 
-	blockStoreDB := dbm.NewDB("blockstore", dbBackend, dbDir)
-	blockStore := blockchain.NewBlockStore(blockStoreDB)
-	if block := blockStore.LoadBlock(blockStore.Height()); block != nil {
-		apphash = block.AppHash
+	gb := make([]byte, 0)
+	if gotGenesis {
+		gb = wire.JSONBytes(genesis)
 	}
-	_ = apphash // just bypass golint
-	_, stateLastHeight, _ := stateM.GetLastBlockInfo()
-	bcReactor := blockchain.NewBlockchainReactor(logger, conf, stateLastHeight, blockStore, fastSync)
-	mem := mempool.NewMempool(logger, conf)
-	for _, p := range stateM.Plugins {
-		mem.RegisterFilter(NewMempoolFilter(p.CheckTx))
-	}
-	memReactor := mempool.NewMempoolReactor(logger, conf, mem)
-
-	consensusState := consensus.NewConsensusState(logger, conf, stateM, blockStore, mem)
-	consensusState.SetPrivValidator(privValidator)
-	consensusReactor := consensus.NewConsensusReactor(logger, consensusState, fastSync)
-	consensusState.BindReactor(consensusReactor)
-
-	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int, lc *types.Commit) error {
-		return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)
-	})
-	bcReactor.SetBlockExecuter(func(blk *types.Block, pst *types.PartSet, c *types.Commit) error {
-		blockStore.SaveBlock(blk, pst, c)
-		if err := stateM.ApplyBlock(eventSwitch, blk, pst.Header(), MockMempool{}, -1); err != nil {
-			return err
-		}
-		stateM.Save()
-		return nil
-	})
-
-	privKey := privValidator.GetPrivateKey()
-	p2psw := p2p.NewSwitch(logger, conf.GetConfig("p2p"))
-	p2psw.AddReactor("MEMPOOL", memReactor)
-	p2psw.AddReactor("BLOCKCHAIN", bcReactor)
-	p2psw.AddReactor("CONSENSUS", consensusReactor)
-
-	if conf.GetBool("pex_reactor") {
-		addrBook := p2p.NewAddrBook(logger, conf.GetString("addrbook_file"), conf.GetBool("addrbook_strict"))
-		addrBook.Start()
-		pexReactor := p2p.NewPEXReactor(logger, addrBook)
-		p2psw.AddReactor("PEX", pexReactor)
-	}
-
-	p2psw.SetNodePrivKey(privKey.(crypto.PrivKeyEd25519))
-	p2psw.SetAuthByCA(authByCA(stateM.ChainID, &stateM.Validators, logger))
-	p2psw.SetAddToRefuselist(addToRefuselist(refuseList))
-	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
-
-	protocol, address := ProtocolAndAddress(conf.GetString("node_laddr"))
-	defaultListener, err := p2p.NewDefaultListener(logger, protocol, address, conf.GetBool("skip_upnp"))
-	if err != nil {
-		logger.Error("fail to create default listener", zap.Error(err))
-		return nil
-	}
-	p2psw.AddListener(defaultListener)
-
-	angineNodeInfo := &p2p.NodeInfo{
-		PubKey:      privKey.PubKey().(crypto.PubKeyEd25519),
-		SigndPubKey: conf.GetString("signbyCA"),
-		Moniker:     conf.GetString("moniker"),
-		ListenAddr:  defaultListener.ExternalAddress().String(),
-		Version:     version,
-	}
-	p2psw.SetNodeInfo(angineNodeInfo)
-
-	setEventSwitch(eventSwitch, bcReactor, memReactor, consensusReactor)
-	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), p2psw, &stateM.Validators, refuseList)
+	p2psw, err := prepareP2P(logger, conf, gb, privValidator, refuseList)
+	p2pListener := p2psw.Listeners()[0]
 
 	if tune.Conf == nil {
 		tune.Conf = conf
 	} else if tune.Runtime == "" {
 		tune.Runtime = conf.GetString("datadir")
 	}
-
-	return &Angine{
+	angine := &Angine{
 		Tune: tune,
 
-		statedb:       stateDB,
-		blockdb:       blockStoreDB,
-		tune:          tune,
-		stateMachine:  stateM,
+		statedb: stateDB,
+		blockdb: blockStoreDB,
+		querydb: querydb,
+		tune:    tune,
+
 		p2pSwitch:     p2psw,
 		eventSwitch:   &eventSwitch,
 		refuseList:    refuseList,
 		privValidator: privValidator,
-		blockstore:    blockStore,
-		mempool:       mem,
-		consensus:     consensusState,
-		p2pHost:       defaultListener.ExternalAddress().IP.String(),
-		p2pPort:       defaultListener.ExternalAddress().Port,
+		p2pHost:       p2pListener.ExternalAddress().IP.String(),
+		p2pPort:       p2pListener.ExternalAddress().Port,
 		genesis:       genesis,
-		querydb:       querydb,
 
 		logger: logger,
 	}
+
+	if gotGenesis {
+		assembleStateMachine(angine, stateM)
+	} else {
+		p2psw.SetGenesisUnmarshal(func(b []byte) error {
+			g := types.GenesisDocFromJSON(b)
+			if g.ChainID != chainID {
+				return fmt.Errorf("wrong chain id from genesis, expect %v, got %v", chainID, g.ChainID)
+			}
+			if err := g.SaveAs(conf.GetString("genesis_file")); err != nil {
+				return err
+			}
+			angine.genesis = g
+			assembleStateMachine(angine, state.MakeGenesisState(stateDB, g))
+
+			return nil
+		})
+	}
+
+	return angine
 }
 
 func (ang *Angine) SetSpecialVoteRPC(f func([]byte, *types.Validator) ([]byte, error)) {
@@ -380,6 +289,10 @@ func (ang *Angine) ConnectApp(app types.Application) error {
 		}
 	})
 
+	if ang.genesis == nil {
+		return nil
+	}
+
 	info := app.Info()
 	if err := ang.RecoverFromCrash(info.LastBlockAppHash, int(info.LastBlockHeight)); err != nil {
 		return err
@@ -412,7 +325,7 @@ func (ang *Angine) Start() error {
 	ang.mtx.Lock()
 	defer ang.mtx.Unlock()
 	if ang.started {
-		return errors.New("can't start angine twice")
+		return fmt.Errorf("can't start angine twice")
 	}
 	if !ang.hooked {
 		ang.hookDefaults()
@@ -737,7 +650,7 @@ func fastSyncable(conf cfg.Config, selfAddress []byte, validators *types.Validat
 	return fastSync
 }
 
-func getGenesisFileMust(conf cfg.Config) (*types.GenesisDoc, error) {
+func getGenesisFile(conf cfg.Config) (*types.GenesisDoc, error) {
 	genDocFile := conf.GetString("genesis_file")
 	if !cmn.FileExists(genDocFile) {
 		return nil, fmt.Errorf("missing genesis_file")
@@ -755,30 +668,156 @@ func getGenesisFileMust(conf cfg.Config) (*types.GenesisDoc, error) {
 	return genDoc, nil
 }
 
-func getLogger(conf cfg.Config, stateM *state.State) (*zap.Logger, error) {
+func getLogger(conf cfg.Config, chainID string) (*zap.Logger, error) {
 	logpath := conf.GetString("log_path")
 	if logpath == "" {
 		logpath, _ = os.Getwd()
 	}
-	logpath = path.Join(logpath, "angine-"+stateM.ChainID)
+	logpath = path.Join(logpath, "angine-"+chainID)
 	if err := cmn.EnsureDir(logpath, 0700); err != nil {
 		return nil, err
 	}
 	if logger := InitializeLog(conf.GetString("environment"), logpath); logger != nil {
 		return logger, nil
 	}
-	return nil, errors.New("fail to build zap logger")
+	return nil, fmt.Errorf("fail to build zap logger")
 }
 
-// Defaults to tcp
-func ProtocolAndAddress(listenAddr string) (string, string) {
-	protocol, address := "tcp", listenAddr
-	parts := strings.SplitN(address, "://", 2)
-	if len(parts) == 2 {
-		protocol, address = parts[0], parts[1]
-	}
-	return protocol, address
+func genPrivFile(path string) *types.PrivValidator {
+	privValidator := types.GenPrivValidator(nil)
+	privValidator.SetFile(path)
+	privValidator.Save()
+	return privValidator
 }
+
+func genGenesiFile(path string, gVals []types.GenesisValidator) (*types.GenesisDoc, error) {
+	genDoc := &types.GenesisDoc{
+		ChainID: cmn.Fmt("annchain-%v", cmn.RandStr(6)),
+		Plugins: "specialop",
+	}
+	genDoc.Validators = gVals
+	return genDoc, genDoc.SaveAs(path)
+}
+
+func checkPrivValidatorFile(conf cfg.Config) error {
+	if privFile := conf.GetString("priv_validator_file"); !cmn.FileExists(privFile) {
+		return fmt.Errorf("PrivValidator file needed: %s", privFile)
+	}
+	return nil
+}
+
+func checkGenesisFile(conf cfg.Config) error {
+	if genFile := conf.GetString("genesis_file"); !cmn.FileExists(genFile) {
+		return fmt.Errorf("Genesis file needed: %s", genFile)
+	}
+	return nil
+}
+
+func ensureQueryDB(dbDir string) (*dbm.GoLevelDB, error) {
+	if err := cmn.EnsureDir(path.Join(dbDir, "query_cache"), 0775); err != nil {
+		return nil, fmt.Errorf("fail to ensure tx_execution_result")
+	}
+	querydb, err := dbm.NewGoLevelDB("tx_execution_result", path.Join(dbDir, "query_cache"))
+	if err != nil {
+		return nil, fmt.Errorf("fail to open tx_execution_result")
+	}
+	return querydb, nil
+}
+
+func getOrMakeState(conf cfg.Config, stateDB dbm.DB, genesis *types.GenesisDoc) (*state.State, error) {
+	stateM := state.GetState(conf, stateDB)
+	if stateM == nil {
+		if genesis != nil {
+			if stateM = state.MakeGenesisState(stateDB, genesis); stateM == nil {
+				return nil, fmt.Errorf("fail to get genesis state")
+			}
+		}
+	}
+	return stateM, nil
+}
+
+func prepareP2P(logger *zap.Logger, conf cfg.Config, genesisBytes []byte, privValidator *types.PrivValidator, refuseList *refuse_list.RefuseList) (*p2p.Switch, error) {
+	p2psw := p2p.NewSwitch(logger, conf.GetConfig("p2p"), genesisBytes)
+	protocol, address := ProtocolAndAddress(conf.GetString("node_laddr"))
+	defaultListener, err := p2p.NewDefaultListener(logger, protocol, address, conf.GetBool("skip_upnp"))
+	if err != nil {
+		return nil, errors.Wrap(err, "prepareP2P")
+	}
+	nodeInfo := &p2p.NodeInfo{
+		PubKey:      privValidator.PubKey.(crypto.PubKeyEd25519),
+		SigndPubKey: conf.GetString("signbyCA"),
+		Moniker:     conf.GetString("moniker"),
+		ListenAddr:  defaultListener.ExternalAddress().String(),
+		Version:     version,
+	}
+	privKey := privValidator.PrivKey
+	p2psw.AddListener(defaultListener)
+	p2psw.SetNodeInfo(nodeInfo)
+	p2psw.SetNodePrivKey(privKey.(crypto.PrivKeyEd25519))
+	p2psw.SetAddToRefuselist(addToRefuselist(refuseList))
+	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
+
+	return p2psw, nil
+}
+
+func assembleStateMachine(angine *Angine, stateM *state.State) {
+	conf := angine.tune.Conf
+
+	fastSync := fastSyncable(conf, angine.privValidator.GetAddress(), stateM.Validators)
+	stateM.SetLogger(angine.logger)
+	stateM.SetQueryDB(angine.querydb)
+
+	blockStore := blockchain.NewBlockStore(angine.blockdb)
+	_, stateLastHeight, _ := stateM.GetLastBlockInfo()
+	bcReactor := blockchain.NewBlockchainReactor(angine.logger, conf, stateLastHeight, blockStore, fastSync)
+	mem := mempool.NewMempool(angine.logger, conf)
+	for _, p := range stateM.Plugins {
+		mem.RegisterFilter(NewMempoolFilter(p.CheckTx))
+	}
+	memReactor := mempool.NewMempoolReactor(angine.logger, conf, mem)
+
+	consensusState := consensus.NewConsensusState(angine.logger, conf, stateM, blockStore, mem)
+	consensusState.SetPrivValidator(angine.privValidator)
+	consensusReactor := consensus.NewConsensusReactor(angine.logger, consensusState, fastSync)
+	consensusState.BindReactor(consensusReactor)
+
+	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int, lc *types.Commit) error {
+		return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)
+	})
+	bcReactor.SetBlockExecuter(func(blk *types.Block, pst *types.PartSet, c *types.Commit) error {
+		blockStore.SaveBlock(blk, pst, c)
+		if err := stateM.ApplyBlock(*angine.eventSwitch, blk, pst.Header(), MockMempool{}, -1); err != nil {
+			return err
+		}
+		stateM.Save()
+		return nil
+	})
+
+	privKey := angine.privValidator.GetPrivateKey()
+
+	angine.p2pSwitch.AddReactor("MEMPOOL", memReactor)
+	angine.p2pSwitch.AddReactor("BLOCKCHAIN", bcReactor)
+	angine.p2pSwitch.AddReactor("CONSENSUS", consensusReactor)
+
+	if conf.GetBool("pex_reactor") {
+		addrBook := p2p.NewAddrBook(angine.logger, conf.GetString("addrbook_file"), conf.GetBool("addrbook_strict"))
+		addrBook.Start()
+		pexReactor := p2p.NewPEXReactor(angine.logger, addrBook)
+		angine.p2pSwitch.AddReactor("PEX", pexReactor)
+	}
+
+	angine.p2pSwitch.SetAuthByCA(authByCA(stateM.ChainID, &stateM.Validators, angine.logger))
+
+	setEventSwitch(*angine.eventSwitch, bcReactor, memReactor, consensusReactor)
+	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), angine.p2pSwitch, &stateM.Validators, angine.refuseList)
+
+	angine.blockstore = blockStore
+	angine.consensus = consensusState
+	angine.mempool = mem
+	angine.stateMachine = stateM
+}
+
+// --------------------------------------------------------------------------------
 
 // Updates to the mempool need to be synchronized with committing a block
 // so apps can reset their transient state on Commit
@@ -799,6 +838,7 @@ type MempoolFilter struct {
 func (m MempoolFilter) CheckTx(tx types.Tx) (bool, error) {
 	return m.cb(tx)
 }
+
 func NewMempoolFilter(f func([]byte) (bool, error)) MempoolFilter {
 	return MempoolFilter{cb: f}
 }

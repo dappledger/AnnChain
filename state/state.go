@@ -279,3 +279,21 @@ func MakeGenesisState(db dbm.DB, genDoc *types.GenesisDoc) *State {
 		Plugins:         plugins,
 	}
 }
+
+func MakeState(db dbm.DB) *State {
+	validatorSet := types.NewValidatorSet(nil)
+	lastValidatorSet := types.NewValidatorSet(nil)
+
+	return &State{
+		db:              db,
+		GenesisDoc:      nil,
+		ChainID:         "",
+		LastBlockHeight: 0,
+		LastBlockID:     types.BlockID{},
+		LastBlockTime:   time.Now(),
+		Validators:      validatorSet,
+		LastValidators:  lastValidatorSet,
+		AppHash:         nil,
+		Plugins:         nil,
+	}
+}
