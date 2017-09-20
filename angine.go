@@ -134,6 +134,7 @@ func NewAngine(lgr *zap.Logger, tune *Tunes) *Angine {
 	blockStoreDB := dbm.NewDB("blockstore", dbBackend, dbDir)
 	querydb, err := ensureQueryDB(dbDir)
 	if err != nil {
+		// querydb failure is something that we can bear with
 		lgr.Error("angine error", zap.Error(err))
 		fmt.Println(err)
 	}
@@ -199,7 +200,7 @@ func NewAngine(lgr *zap.Logger, tune *Tunes) *Angine {
 	}
 
 	if gotGenesis {
-		assembleStateMachine(angine, stateM)
+		angine.assembleStateMachine(stateM)
 	} else {
 		p2psw.SetGenesisUnmarshal(func(b []byte) error {
 			g := types.GenesisDocFromJSON(b)
@@ -210,13 +211,76 @@ func NewAngine(lgr *zap.Logger, tune *Tunes) *Angine {
 				return err
 			}
 			angine.genesis = g
-			assembleStateMachine(angine, state.MakeGenesisState(stateDB, g))
+			angine.assembleStateMachine(state.MakeGenesisState(stateDB, g))
+			// here we defer the Start of reactors when we really have them
+			for _, r := range angine.p2pSwitch.Reactors() {
+				if _, err := r.Start(); err != nil {
+					return err
+				}
+			}
 
 			return nil
 		})
 	}
 
 	return angine
+}
+
+func (ang *Angine) assembleStateMachine(stateM *state.State) {
+	conf := ang.tune.Conf
+
+	fastSync := fastSyncable(conf, ang.privValidator.GetAddress(), stateM.Validators)
+	stateM.SetLogger(ang.logger)
+	stateM.SetQueryDB(ang.querydb)
+
+	blockStore := blockchain.NewBlockStore(ang.blockdb)
+	_, stateLastHeight, _ := stateM.GetLastBlockInfo()
+	bcReactor := blockchain.NewBlockchainReactor(ang.logger, conf, stateLastHeight, blockStore, fastSync)
+	mem := mempool.NewMempool(ang.logger, conf)
+	for _, p := range stateM.Plugins {
+		mem.RegisterFilter(NewMempoolFilter(p.CheckTx))
+	}
+	memReactor := mempool.NewMempoolReactor(ang.logger, conf, mem)
+
+	consensusState := consensus.NewConsensusState(ang.logger, conf, stateM, blockStore, mem)
+	consensusState.SetPrivValidator(ang.privValidator)
+	consensusReactor := consensus.NewConsensusReactor(ang.logger, consensusState, fastSync)
+	consensusState.BindReactor(consensusReactor)
+
+	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int, lc *types.Commit) error {
+		return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)
+	})
+	bcReactor.SetBlockExecuter(func(blk *types.Block, pst *types.PartSet, c *types.Commit) error {
+		blockStore.SaveBlock(blk, pst, c)
+		if err := stateM.ApplyBlock(*ang.eventSwitch, blk, pst.Header(), MockMempool{}, -1); err != nil {
+			return err
+		}
+		stateM.Save()
+		return nil
+	})
+
+	privKey := ang.privValidator.GetPrivateKey()
+
+	ang.p2pSwitch.AddReactor("MEMPOOL", memReactor)
+	ang.p2pSwitch.AddReactor("BLOCKCHAIN", bcReactor)
+	ang.p2pSwitch.AddReactor("CONSENSUS", consensusReactor)
+
+	if conf.GetBool("pex_reactor") {
+		addrBook := p2p.NewAddrBook(ang.logger, conf.GetString("addrbook_file"), conf.GetBool("addrbook_strict"))
+		addrBook.Start()
+		pexReactor := p2p.NewPEXReactor(ang.logger, addrBook)
+		ang.p2pSwitch.AddReactor("PEX", pexReactor)
+	}
+
+	ang.p2pSwitch.SetAuthByCA(authByCA(stateM.ChainID, &stateM.Validators, ang.logger))
+
+	setEventSwitch(*ang.eventSwitch, bcReactor, memReactor, consensusReactor)
+	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), ang.p2pSwitch, &stateM.Validators, ang.refuseList)
+
+	ang.blockstore = blockStore
+	ang.consensus = consensusState
+	ang.mempool = mem
+	ang.stateMachine = stateM
 }
 
 func (ang *Angine) SetSpecialVoteRPC(f func([]byte, *types.Validator) ([]byte, error)) {
@@ -758,63 +822,6 @@ func prepareP2P(logger *zap.Logger, conf cfg.Config, genesisBytes []byte, privVa
 	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
 
 	return p2psw, nil
-}
-
-func assembleStateMachine(angine *Angine, stateM *state.State) {
-	conf := angine.tune.Conf
-
-	fastSync := fastSyncable(conf, angine.privValidator.GetAddress(), stateM.Validators)
-	stateM.SetLogger(angine.logger)
-	stateM.SetQueryDB(angine.querydb)
-
-	blockStore := blockchain.NewBlockStore(angine.blockdb)
-	_, stateLastHeight, _ := stateM.GetLastBlockInfo()
-	bcReactor := blockchain.NewBlockchainReactor(angine.logger, conf, stateLastHeight, blockStore, fastSync)
-	mem := mempool.NewMempool(angine.logger, conf)
-	for _, p := range stateM.Plugins {
-		mem.RegisterFilter(NewMempoolFilter(p.CheckTx))
-	}
-	memReactor := mempool.NewMempoolReactor(angine.logger, conf, mem)
-
-	consensusState := consensus.NewConsensusState(angine.logger, conf, stateM, blockStore, mem)
-	consensusState.SetPrivValidator(angine.privValidator)
-	consensusReactor := consensus.NewConsensusReactor(angine.logger, consensusState, fastSync)
-	consensusState.BindReactor(consensusReactor)
-
-	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int, lc *types.Commit) error {
-		return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)
-	})
-	bcReactor.SetBlockExecuter(func(blk *types.Block, pst *types.PartSet, c *types.Commit) error {
-		blockStore.SaveBlock(blk, pst, c)
-		if err := stateM.ApplyBlock(*angine.eventSwitch, blk, pst.Header(), MockMempool{}, -1); err != nil {
-			return err
-		}
-		stateM.Save()
-		return nil
-	})
-
-	privKey := angine.privValidator.GetPrivateKey()
-
-	angine.p2pSwitch.AddReactor("MEMPOOL", memReactor)
-	angine.p2pSwitch.AddReactor("BLOCKCHAIN", bcReactor)
-	angine.p2pSwitch.AddReactor("CONSENSUS", consensusReactor)
-
-	if conf.GetBool("pex_reactor") {
-		addrBook := p2p.NewAddrBook(angine.logger, conf.GetString("addrbook_file"), conf.GetBool("addrbook_strict"))
-		addrBook.Start()
-		pexReactor := p2p.NewPEXReactor(angine.logger, addrBook)
-		angine.p2pSwitch.AddReactor("PEX", pexReactor)
-	}
-
-	angine.p2pSwitch.SetAuthByCA(authByCA(stateM.ChainID, &stateM.Validators, angine.logger))
-
-	setEventSwitch(*angine.eventSwitch, bcReactor, memReactor, consensusReactor)
-	initCorePlugins(stateM, privKey.(crypto.PrivKeyEd25519), angine.p2pSwitch, &stateM.Validators, angine.refuseList)
-
-	angine.blockstore = blockStore
-	angine.consensus = consensusState
-	angine.mempool = mem
-	angine.stateMachine = stateM
 }
 
 // --------------------------------------------------------------------------------
