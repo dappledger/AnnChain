@@ -40,11 +40,17 @@ type GenesisValidator struct {
 }
 
 type GenesisDoc struct {
-	GenesisTime time.Time          `json:"genesis_time"`
-	ChainID     string             `json:"chain_id"`
-	Validators  []GenesisValidator `json:"validators"`
-	AppHash     []byte             `json:"app_hash"`
-	Plugins     string             `json:"plugins"`
+	GenesisTime  time.Time          `json:"genesis_time"`
+	ChainID      string             `json:"chain_id"`
+	Validators   []GenesisValidator `json:"validators"`
+	AppHash      []byte             `json:"app_hash"`
+	Plugins      string             `json:"plugins"`
+	InitAccounts []InitInfo         `json:"init_accounts"`
+}
+
+type InitInfo struct {
+	StartingBalance string `json:"startingbalance"`
+	Address         string `json:"address"`
 }
 
 // Utility method for saving GenensisDoc as JSON file.

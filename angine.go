@@ -93,6 +93,12 @@ func genGenesiFile(path string, gVals []types.GenesisValidator) (*types.GenesisD
 	genDoc := &types.GenesisDoc{
 		ChainID: cmn.Fmt("annchain-%v", cmn.RandStr(6)),
 		Plugins: "specialop",
+		InitAccounts: []types.InitInfo{
+			types.InitInfo{
+				StartingBalance: "100000000000000",
+				Address:         "0x7752b42608a0f1943c19fc5802cb027e60b4c911",
+			},
+		},
 	}
 	genDoc.Validators = gVals
 	return genDoc, genDoc.SaveAs(path)
