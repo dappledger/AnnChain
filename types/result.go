@@ -63,6 +63,7 @@ func (res Result) ToJSON() string {
 func (res *Result) FromJSON(j string) *Result {
 	err := json.Unmarshal([]byte(j), res)
 	if err != nil {
+		res.Code = CodeType_InternalError
 		res.Log = j
 	}
 	return res
