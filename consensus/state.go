@@ -32,6 +32,7 @@ import (
 	"gitlab.zhonganonline.com/ann/angine/types"
 	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
+	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
 )
 
@@ -131,7 +132,7 @@ func (rs RoundStepType) String() string {
 	case RoundStepCommit:
 		return "RoundStepCommit"
 	default:
-		return "RoundStepUnknown" // Cannot panic.
+		return "RoundStepUnknown"
 	}
 }
 
@@ -246,6 +247,8 @@ type ConsensusState struct {
 	blockStore *bc.BlockStore
 	mempool    *mempl.Mempool
 
+	conR *ConsensusReactor
+
 	privValidator PrivValidator // for signing votes
 
 	mtx sync.Mutex
@@ -321,6 +324,10 @@ func NewConsensusState(logger *zap.Logger, config cfg.Config, state *sm.State, b
 // implements events.Eventable
 func (cs *ConsensusState) SetEventSwitch(evsw types.EventSwitch) {
 	cs.evsw = evsw
+}
+
+func (cs *ConsensusState) BindReactor(r *ConsensusReactor) {
+	cs.conR = r
 }
 
 func (cs *ConsensusState) String() string {
@@ -947,7 +954,9 @@ func (cs *ConsensusState) createProposalBlock() (block *types.Block, blockParts 
 	// Mempool validated transactions
 	txs := cs.mempool.Reap(cs.config.GetInt("block_size"))
 
-	return types.MakeBlock(cs.Height, cs.state.ChainID, txs, commit,
+	proposerPubkey, _ := cs.Validators.Proposer().PubKey.(crypto.PubKeyEd25519)
+
+	return types.MakeBlock(proposerPubkey[:], cs.Height, cs.state.ChainID, txs, commit,
 		cs.state.LastBlockID, cs.state.Validators.Hash(), cs.state.AppHash, cs.state.ReceiptsHash, cs.config.GetInt("block_part_size"))
 }
 

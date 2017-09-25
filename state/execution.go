@@ -80,13 +80,24 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 	types.FireEventHookExecute(eventSwitch, ed) // Run Txs of block
 	res := <-ed.ResCh
 	eventCache := types.NewEventCache(eventSwitch)
+
+	batch := s.querydb.NewBatch()
+	queryBlockInfo, _ := (&types.TxExecutionResult{
+		Height:        block.Height,
+		BlockHash:     block.Hash(),
+		BlockTime:     block.Time,
+		ValidatorHash: block.ValidatorsHash,
+	}).ToBytes()
 	for _, tx := range res.ValidTxs {
 		txev := types.EventDataTx{
 			Tx:   tx,
 			Code: types.CodeType_OK,
 		}
 		types.FireEventTx(eventCache, txev)
+		batch.Set(tx, queryBlockInfo)
 	}
+	batch.Write()
+
 	for _, invalid := range res.InvalidTxs {
 		txev := types.EventDataTx{
 			Tx:    invalid.Bytes,

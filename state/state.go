@@ -47,6 +47,8 @@ type State struct {
 	mtx sync.Mutex
 	db  dbm.DB
 
+	querydb dbm.DB
+
 	// should not change
 	GenesisDoc *types.GenesisDoc
 	ChainID    string
@@ -93,6 +95,7 @@ func loadState(db dbm.DB, key []byte) *State {
 func (s *State) Copy() *State {
 	return &State{
 		db:              s.db,
+		querydb:         s.querydb,
 		logger:          s.logger,
 		GenesisDoc:      s.GenesisDoc,
 		ChainID:         s.ChainID,
@@ -185,6 +188,10 @@ func (s *State) SetLogger(logger *zap.Logger) {
 	s.logger = logger
 }
 
+func (s *State) SetQueryDB(db dbm.DB) {
+	s.querydb = db
+}
+
 func (s *State) GetValidators() (*types.ValidatorSet, *types.ValidatorSet) {
 	return s.LastValidators, s.Validators
 }
@@ -273,5 +280,23 @@ func MakeGenesisState(db dbm.DB, genDoc *types.GenesisDoc) *State {
 		LastValidators:  lastValidatorSet,
 		AppHash:         genDoc.AppHash,
 		Plugins:         plugins,
+	}
+}
+
+func MakeState(db dbm.DB) *State {
+	validatorSet := types.NewValidatorSet(nil)
+	lastValidatorSet := types.NewValidatorSet(nil)
+
+	return &State{
+		db:              db,
+		GenesisDoc:      nil,
+		ChainID:         "",
+		LastBlockHeight: 0,
+		LastBlockID:     types.BlockID{},
+		LastBlockTime:   time.Now(),
+		Validators:      validatorSet,
+		LastValidators:  lastValidatorSet,
+		AppHash:         nil,
+		Plugins:         nil,
 	}
 }

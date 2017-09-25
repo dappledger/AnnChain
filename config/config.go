@@ -66,7 +66,6 @@ func GetConfig(root string) (conf *config.MapConfig) {
 		common.Exit(common.Fmt("Could not read config: %v", err))
 	}
 
-	// Set defaults or panic
 	if conf.IsSet("chain_id") {
 		common.Exit("Cannot set 'chain_id' via config.toml")
 	}
