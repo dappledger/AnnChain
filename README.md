@@ -9,7 +9,7 @@
 <ul>
 <li><a href="#org9a260de">4.1. Initialize Angine</a>
 <ul>
-<li><a href="#org19c7657">4.1.1. Construct an AngineTunes.</a></li>
+<li><a href="#org19c7657">4.1.1. Construct an Tunes.</a></li>
 </ul>
 </li>
 <li><a href="#orgf101d9a">4.2. New an Angine instance and start it</a></li>
@@ -133,9 +133,11 @@ This is directory structure of Angine, you can see that we have packed every mod
 
 2.  Dynamically changing ValidatorSet of ConsensusState
 
-3.  Two kinds of transactions, normal and special, are totally isolated. Special tx will only be processed by plugins.
+3.  Two kinds of transactions, normal and special, are totally isolated. Special tx will only be processed by plugins by default.
 
 4.  Angine plugins
+
+5.  Node joining will automatically download genesisfile from the first seed listed in config file
 
 
 <a id="org5e86273"></a>
@@ -149,16 +151,16 @@ This is directory structure of Angine, you can see that we have packed every mod
 
 This is how you initialize an angine. 
 
-    angine.Initialize(&angine.AngineTunes{Conf: conf})
+    angine.Initialize(&angine.Tunes{Conf: conf})
 
-The "angine.Initialize" will handle the generation of default configs, genesis file and private key. You must only do this once for a particular chain, otherwise, your id might be different.
+The "angine.Initialize" will handle the generation of default configs, genesis file and private key. You must only do this once for a particular chain, otherwise, your chain id will be different for sure.
 
 
 <a id="org19c7657"></a>
 
-### Construct an AngineTunes.
+### Construct an Tunes.
 
-    type AngineTunes struct {
+    type Tunes struct {
         Runtime string
         Conf    *cfg.MapConfig
     }
@@ -178,14 +180,15 @@ This struct contains 2 fields and you only have to fill one:
 
 First, you need to import angine into your project :-) then, 
 
-    import "gitlab.zhonganonline.com/ann/angine"
-    
+    // this line should be changed to github path accordingly
+    import "gitlab.zhonganonline.com/ann/angine" 
+
     ...
-    
-    mainAngine := angine.NewAngine(&angine.AngineTunes{Conf: conf})
-    
+
+    mainAngine := angine.NewAngine(&angine.Tunes{Conf: conf})
+
     ...
-    
+
     mainAngine.Start()
 
 That is all.
