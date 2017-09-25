@@ -297,6 +297,7 @@ func NewConsensusState(logger *zap.Logger, config cfg.Config, state *sm.State, b
 	cs.setProposal = cs.defaultSetProposal
 
 	cs.updateToState(state)
+	cs.state.Tpsc = sm.NewTPSCalculator(10)
 	// Don't call scheduleRound0 yet.
 	// We do that upon Start().
 	cs.reconstructLastCommit(state)

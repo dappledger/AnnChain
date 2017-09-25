@@ -112,13 +112,17 @@ func (s *State) execBlockOnApp(eventSwitch types.EventSwitch, block *types.Block
 		return nil, res.Error
 	}
 
+	s.Tpsc.AddRecord(uint32(len(res.ValidTxs)))
+	tps := s.Tpsc.TPS()
+
 	if s.logger != nil {
 		s.logger.Info("Executed block",
 			zap.Int("height", block.Height),
 			zap.Int("txs", block.NumTxs),
 			zap.Int("valid", len(res.ValidTxs)),
 			zap.Int("invalid", len(res.InvalidTxs)),
-			zap.Int("extended", len(block.Data.ExTxs)))
+			zap.Int("extended", len(block.Data.ExTxs)),
+			zap.Int("tps", tps))
 	}
 
 	return nil, nil
