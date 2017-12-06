@@ -20,6 +20,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"encoding/json"
 	"gitlab.zhonganonline.com/ann/angine/plugin"
 	"gitlab.zhonganonline.com/ann/angine/types"
 	"gitlab.zhonganonline.com/ann/ann-module/lib/ed25519"
@@ -32,7 +33,11 @@ func (e *Angine) ProcessSpecialOP(tx []byte) error {
 		return fmt.Errorf("tx is not a specialop: %v", tx)
 	}
 	var cmd types.SpecialOPCmd
-	err := wire.ReadBinaryBytes(types.UnwrapTx(tx), &cmd)
+	//err := wire.ReadBinaryBytes(types.UnwrapTx(tx), &cmd)
+	//if err != nil {
+	//	return err
+	//}
+	err := json.Unmarshal(types.UnwrapTx(tx), &cmd)
 	if err != nil {
 		return err
 	}
@@ -66,7 +71,8 @@ func (e *Angine) ProcessSpecialOP(tx []byte) error {
 			return err
 		}
 	}
-	sptx := append([]byte("zaop"), wire.BinaryBytes(cmd)...)
+	cmdbyte, _ := json.Marshal(cmd)
+	sptx := append([]byte("zaop"), cmdbyte...)
 	return e.BroadcastTx(sptx)
 }
 
