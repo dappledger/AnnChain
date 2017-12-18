@@ -35,7 +35,6 @@ import (
 	"gitlab.zhonganonline.com/ann/angine/refuse_list"
 	"gitlab.zhonganonline.com/ann/angine/state"
 	"gitlab.zhonganonline.com/ann/angine/types"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/ed25519"
 	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
 	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
 	crypto "gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
@@ -650,26 +649,31 @@ func refuseListFilter(refuseList *refuse_list.RefuseList) func(crypto.PubKeyEd25
 }
 
 func authByCA(chainID string, ppValidators **types.ValidatorSet, log *zap.Logger) func(*p2p.NodeInfo) error {
-	valset := *ppValidators
+	// valset := *ppValidators
 	return func(peerNodeInfo *p2p.NodeInfo) error {
-		msg := peerNodeInfo.PubKey[:]
-		for _, val := range valset.Validators {
-			if !val.IsCA {
-				continue // CA must be validator
-			}
-			valPk := [32]byte(val.PubKey.(crypto.PubKeyEd25519))
-			signedPkByte64, err := types.StringTo64byte(peerNodeInfo.SigndPubKey)
-			if err != nil {
-				return err
-			}
-			if ed25519.Verify(&valPk, msg, &signedPkByte64) {
-				log.Sugar().Infow("Peer handshake", "peerNodeInfo", peerNodeInfo)
-				return nil
-			}
+		{
+			log.Sugar().Infow("Peer handshake without CA check", "peerNodeInfo", peerNodeInfo)
+			return nil
 		}
-		err := fmt.Errorf("Reject Peer, has no CA sig")
-		log.Warn(err.Error())
-		return err
+
+		// msg := peerNodeInfo.PubKey[:]
+		// for _, val := range valset.Validators {
+		// 	if !val.IsCA {
+		// 		continue // CA must be validator
+		// 	}
+		// 	valPk := [32]byte(val.PubKey.(crypto.PubKeyEd25519))
+		// 	signedPkByte64, err := types.StringTo64byte(peerNodeInfo.SigndPubKey)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// 	if ed25519.Verify(&valPk, msg, &signedPkByte64) {
+		// 		log.Sugar().Infow("Peer handshake", "peerNodeInfo", peerNodeInfo)
+		// 		return nil
+		// 	}
+		// }
+		// err := fmt.Errorf("Reject Peer, has no CA sig")
+		// log.Warn(err.Error())
+		// return err
 	}
 }
 
