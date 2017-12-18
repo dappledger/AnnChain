@@ -185,7 +185,7 @@ func (s *State) ApplyBlock(eventSwitch types.EventSwitch, block *types.Block, pa
 // because state is typically reset on Commit and old txs must be replayed
 // against committed state before new txs are run in the mempool, lest they be invalid
 func (s *State) CommitStateUpdateMempool(eventSwitch types.EventSwitch, block *types.Block, mempool types.IMempool, round int) error {
-	mempool.Update(int64(block.Height), block.Txs)
+	mempool.Update(int64(block.Height), append(block.Txs, block.ExTxs...))
 	ed := types.NewEventDataHookCommit(block.Height, round, block)
 	types.FireEventHookCommit(eventSwitch, ed)
 	res := <-ed.ResCh

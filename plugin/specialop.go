@@ -16,6 +16,7 @@ package plugin
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -67,7 +68,7 @@ func (s *Specialop) CheckTx(tx []byte) (bool, error) {
 		return true, nil
 	}
 	var cmd types.SpecialOPCmd
-	err := wire.ReadBinaryBytes(types.UnwrapTx(tx), &cmd)
+	err := json.Unmarshal(types.UnwrapTx(tx), &cmd)
 	if err != nil || cmd.CmdCode != types.SpecialOP {
 		return true, err
 	}
@@ -79,7 +80,8 @@ func (s *Specialop) DeliverTx(tx []byte, i int) (bool, error) {
 		return true, nil
 	}
 	var cmd types.SpecialOPCmd
-	err := wire.ReadBinaryBytes(types.UnwrapTx(tx), &cmd)
+	//err := wire.ReadBinaryBytes(types.UnwrapTx(tx), &cmd)
+	err := json.Unmarshal(types.UnwrapTx(tx), &cmd)
 	if err != nil || cmd.CmdCode != types.SpecialOP {
 		return true, err
 	}
