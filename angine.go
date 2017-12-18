@@ -181,7 +181,7 @@ func NewAngine(tune *AngineTunes) *Angine {
 	}
 	logpath = path.Join(logpath, "angine-"+stateM.ChainID)
 	cmn.EnsureDir(logpath, 0700)
-	logger := InitializeLog(conf.GetString("environment"), logpath)
+	logger := InitializeLog(conf.GetString("log_mode"), conf.GetString("environment"), logpath)
 	stateM.SetLogger(logger)
 	privValidator := types.LoadOrGenPrivValidator(logger, conf.GetString("priv_validator_file"))
 	refuseList := refuse_list.NewRefuseList(dbBackend, dbDir)

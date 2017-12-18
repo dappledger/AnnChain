@@ -84,6 +84,7 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetRequired("environment")
 
 	conf.SetDefault("environment", "development")
+	conf.SetDefault("log_mode", "")
 	conf.SetDefault("datadir", root)
 	conf.SetDefault("genesis_file", path.Join(root, "genesis.json"))
 	conf.SetDefault("moniker", "anonymous")

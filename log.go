@@ -15,27 +15,81 @@
 package angine
 
 import (
-	"path"
+	"os"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-func InitializeLog(env, logpath string) *zap.Logger {
-	var zapConf zap.Config
-	var err error
+type (
+	infoOnly      struct{}
+	infoWithDebug struct{}
+	aboveWarn     struct{}
+)
 
-	if env == "production" {
-		zapConf = zap.NewProductionConfig()
+func (l infoOnly) Enabled(lv zapcore.Level) bool {
+	return lv == zapcore.InfoLevel
+}
+func (l infoWithDebug) Enabled(lv zapcore.Level) bool {
+	return lv == zapcore.InfoLevel || lv == zapcore.DebugLevel
+}
+func (l aboveWarn) Enabled(lv zapcore.Level) bool {
+	return lv >= zapcore.WarnLevel
+}
+
+func makeInfoFilter(env string) zapcore.LevelEnabler {
+	switch env {
+	case "production":
+		return infoOnly{}
+	default:
+		return infoWithDebug{}
+	}
+}
+
+func makeErrorFilter() zapcore.LevelEnabler {
+	return aboveWarn{}
+}
+
+func InitializeLog(mode, env, logpath string) *zap.Logger {
+	var logI *zap.Logger
+
+	if mode == "file" {
+		var zapConf zap.Config
+		var err error
+
+		if env == "production" {
+			zapConf = zap.NewProductionConfig()
+		} else {
+			zapConf = zap.NewDevelopmentConfig()
+		}
+
+		zapConf.OutputPaths = []string{"output.log"}
+		zapConf.ErrorOutputPaths = []string{"err.output.log"}
+		logI, err = zapConf.Build()
+		if err != nil {
+			panic(err.Error())
+		}
 	} else {
-		zapConf = zap.NewDevelopmentConfig()
+		var encoderCfg zapcore.EncoderConfig
+		if env == "production" {
+			encoderCfg = zap.NewProductionEncoderConfig()
+		} else {
+			encoderCfg = zap.NewDevelopmentEncoderConfig()
+		}
+
+		coreInfo := zapcore.NewCore(
+			zapcore.NewJSONEncoder(encoderCfg),
+			zapcore.NewMultiWriteSyncer(os.Stdout),
+			makeInfoFilter(env),
+		)
+		coreError := zapcore.NewCore(
+			zapcore.NewJSONEncoder(encoderCfg),
+			zapcore.NewMultiWriteSyncer(os.Stderr),
+			makeErrorFilter(),
+		)
+
+		logI = zap.New(zapcore.NewTee(coreInfo, coreError))
 	}
 
-	zapConf.OutputPaths = []string{path.Join(logpath, "output.log")}
-	zapConf.ErrorOutputPaths = []string{path.Join(logpath, "err.output.log")}
-	logger, err := zapConf.Build()
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return logger
+	return logI
 }
