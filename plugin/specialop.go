@@ -157,24 +157,24 @@ func (s *Specialop) CheckSpecialOP(cmd *types.SpecialOPCmd) (res error, sig cryp
 	}
 
 	// verify all the signatures from cmd.sigs, return error if anything fails
-	for _, sig := range cmd.Sigs {
-		pk, err := crypto.PubKeyFromBytes(sig[:33])
-		if err != nil {
-			err := errors.New("fail to get pubkey from sigs")
-			return err, s.privkey.Sign([]byte(err.Error()))
-		}
-		pk32 := [32]byte(pk.(crypto.PubKeyEd25519))
-		signature, err := crypto.SignatureFromBytes(sig[33:])
-		if err != nil {
-			err := errors.New("fail to get signature from sigs")
-			return err, s.privkey.Sign([]byte(err.Error()))
-		}
-		sig64 := [64]byte(signature.(crypto.SignatureEd25519))
-		if !ed25519.Verify(&pk32, cmd.ExCmd, &sig64) {
-			err := errors.New("signature verification failed")
-			return err, s.privkey.Sign([]byte(err.Error()))
-		}
-	}
+	// for _, sig := range cmd.Sigs {
+	// 	pk, err := crypto.PubKeyFromBytes(sig[:33])
+	// 	if err != nil {
+	// 		err := errors.New("fail to get pubkey from sigs")
+	// 		return err, s.privkey.Sign([]byte(err.Error()))
+	// 	}
+	// 	pk32 := [32]byte(pk.(crypto.PubKeyEd25519))
+	// 	signature, err := crypto.SignatureFromBytes(sig[33:])
+	// 	if err != nil {
+	// 		err := errors.New("fail to get signature from sigs")
+	// 		return err, s.privkey.Sign([]byte(err.Error()))
+	// 	}
+	// 	sig64 := [64]byte(signature.(crypto.SignatureEd25519))
+	// 	if !ed25519.Verify(&pk32, cmd.ExCmd, &sig64) {
+	// 		err := errors.New("signature verification failed")
+	// 		return err, s.privkey.Sign([]byte(err.Error()))
+	// 	}
+	// }
 
 	switch cmd.CmdType {
 	case types.SpecialOP_ChangeValidator:
@@ -201,9 +201,10 @@ func (s *Specialop) ProcessSpecialOP(cmd *types.SpecialOPCmd) error {
 	if !s.isValidatorPubKey(nodePubKey) {
 		return errors.New("[ProcessSpecialOP] only validators can issue special op")
 	}
-	if !s.CheckMajor23(cmd) {
-		return errors.New("need more than 2/3 total voting power")
-	}
+
+	// TODO
+	// Check nonce of nodePubKey
+
 	switch cmd.CmdType {
 	case types.SpecialOP_ChangeValidator:
 		validator, err := s.ParseValidator(cmd.Msg)
@@ -213,8 +214,17 @@ func (s *Specialop) ProcessSpecialOP(cmd *types.SpecialOPCmd) error {
 		if validator == nil {
 			return errors.New("change validator nil")
 		}
+
+		if err := s.ValidateChangeValidator(cmd, validator); err != nil {
+			return err
+		}
+
 		s.ChangedValidators = append(s.ChangedValidators, validator)
 	case types.SpecialOP_Disconnect:
+		if !s.CheckMajor23(cmd) {
+			return errors.New("need more than 2/3 total voting power")
+		}
+
 		sw := *(s.sw)
 		peers := sw.Peers().List()
 		msgPubKey, err := crypto.PubKeyFromBytes(cmd.Msg)
@@ -234,12 +244,20 @@ func (s *Specialop) ProcessSpecialOP(cmd *types.SpecialOPCmd) error {
 		s.AddRefuseKeys = append(s.AddRefuseKeys, msgPubKey.(crypto.PubKeyEd25519))
 		return nil
 	case types.SpecialOP_AddRefuseKey:
+		if !s.CheckMajor23(cmd) {
+			return errors.New("need more than 2/3 total voting power")
+		}
+
 		msgPubKey, err := crypto.PubKeyFromBytes(cmd.Msg)
 		if err != nil {
 			return errors.New("invalid peer pubkey")
 		}
 		s.AddRefuseKeys = append(s.AddRefuseKeys, msgPubKey.(crypto.PubKeyEd25519))
 	case types.SpecialOP_DeleteRefuseKey:
+		if !s.CheckMajor23(cmd) {
+			return errors.New("need more than 2/3 total voting power")
+		}
+
 		msgPubKey, err := crypto.PubKeyFromBytes(cmd.Msg)
 		if err != nil {
 			return errors.New("invalid peer pubkey")
@@ -250,6 +268,32 @@ func (s *Specialop) ProcessSpecialOP(cmd *types.SpecialOPCmd) error {
 	}
 
 	return nil
+}
+
+func (s *Specialop) ValidateChangeValidator(cmd *types.SpecialOPCmd, toAdd *types.ValidatorAttr) error {
+	var major23 int64
+	pubToAdd, err := crypto.PubKeyFromBytes(toAdd.PubKey)
+	if err != nil {
+		return err
+	}
+	pubToAddEd := pubToAdd.(crypto.PubKeyEd25519)
+
+	for _, v := range (*s.validators).Validators {
+		for _, s := range cmd.Sigs {
+			sig, err := crypto.SignatureFromBytes(s)
+			if err != nil {
+				continue
+			}
+			if v.PubKey.VerifyBytes(pubToAddEd[:], sig) {
+				major23 += v.VotingPower
+
+				// We need only one signature of all validators
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("ChangeValidator tx failed of insufficient auth")
 }
 
 func (s *Specialop) CheckMajor23(cmd *types.SpecialOPCmd) bool {
