@@ -1,0 +1,6 @@
+seeds = "0.0.0.0:50001,0.0.0.0:50002,0.0.0.0:50003"
+appname = "noop"
+p2p_laddr = "0.0.0.0:50004"
+log_path = "/home/kyli/Downloads/noop1/4"
+signbyCA = "5af307fba7666e7aaccff05ceec0f9f519d24fd86629a949a9cae8bf61d1b96cdb9e091d85ab3c2fdda6a9f30ad70ab5b51e765e98750b190a83fe4656452c07"
+cosi_laddr = "0.0.0.0:55004"

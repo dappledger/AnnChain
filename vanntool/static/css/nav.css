@@ -1,0 +1,94 @@
+@charset "utf-8";
+
+.nav {
+    width: 14.29rem;
+    height: 150%;
+    background: #121a2c;
+    transition: all .3s;
+    float: left;
+}
+
+.nav a {
+    display: block;
+    overflow: hidden;
+    transition: all .3s;
+    padding-left: 1.7rem;
+    line-height: 3.86rem;
+    max-height: 3.86rem;
+    font-size: 0.86rem;
+    transition: all .3s;
+    color: #c0ccda;
+}
+
+.item {
+    margin-left: 1.7rem;
+    line-height: 1rem;
+    letter-spacing: 0;
+}
+
+.item-child {
+    margin-left: 2.86rem;
+    line-height: 1rem;
+    letter-spacing: 0;
+}
+
+.nav-item {
+    position: relative;
+}
+
+.nav-item.nav-show {
+    border-bottom: none;
+}
+
+.nav-item ul {
+    display: none;
+}
+
+.nav-item.nav-show ul {
+    display: block;
+}
+
+.nav .nav-icon {
+    font-size: 1.21rem;
+    position: absolute;
+    margin-left: -1px;
+}
+
+.nav .nav-icon-s {
+    font-size: 0.90rem;
+    position: absolute;
+    margin-left: -1px;
+}
+
+.nav .nav-icon-dot {
+    font-size: 0.16rem;
+    position: absolute;
+    padding-left: 1.7rem;
+    margin-left: -1px;
+}
+
+.nav-more {
+    float: right;
+    margin-right: 1.07rem;
+    font-size: 0.43rem;
+    transition: transform .3s;
+}
+
+.nav-show .nav-more {
+    transform: rotate(90deg);
+}
+
+.nav-show,
+.nav-item>a:hover {
+    color: #ffffff;
+    background: #121a2c;
+}
+
+.nav-show>a:before,
+.nav-item>a:hover:before {
+    opacity: 1;
+}
+
+.nav-item li:hover a {
+    color: #ffffff;
+}

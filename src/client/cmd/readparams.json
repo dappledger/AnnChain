@@ -1,0 +1,8 @@
+{
+  "privkey": "a8971729fbc199fb3459529cebcd8704791fc699d88ac89284f23ff8e7fca7d6",
+  "contract": "341efb295051fa28c5fc31a4aea21a53128cd496",
+  "function":"getString",
+  "params":[
+    "name"
+  ]
+}

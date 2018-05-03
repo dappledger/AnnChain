@@ -1,0 +1,17 @@
+{
+	  "app_hash": "",
+	  "chain_id": "ikhofi1",
+	  "genesis_time": "0001-01-01T00:00:00.000Z",
+	  "plugins": "specialop",
+	  "validators": [
+		    {
+			      "amount": 100,
+			      "is_ca": true,
+			      "name": "node1",
+			      "pub_key": [
+				        1,
+				        "0FC4E216FB4B40781CEFAECB6C359BA6549069475B7DD678AECF1DF4AC5FCB4E"
+			      ]
+		    }
+	  ]
+}

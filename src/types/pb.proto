@@ -1,0 +1,11 @@
+syntax = "proto3";        
+
+package types;         
+
+message RemoteAccountData{      
+	uint64 Nonce = 1; 
+	bytes Blcbys = 2; 
+	string ID = 3;
+	bytes StorageRoot = 4;
+}                         
+

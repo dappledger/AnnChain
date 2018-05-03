@@ -1,0 +1,17 @@
+{
+	  "app_hash": "",
+	  "chain_id": "evm2",
+	  "genesis_time": "0001-01-01T00:00:00.000Z",
+	  "plugins": "specialop,querycache",
+	  "validators": [
+		    {
+			      "amount": 100,
+			      "is_ca": true,
+			      "name": "node1",
+			      "pub_key": [
+				        1,
+				        "8B5DD03EBDDA54B270E9CB1E7883104704890C3EE2FAEAE7C07F233B131A341A"
+			      ]
+		    }
+	  ]
+}

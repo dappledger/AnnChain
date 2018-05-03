@@ -1,0 +1,6 @@
+seeds = "127.0.0.1:50001,0.0.0.0:50002,0.0.0.0:50003"
+appname = "evm"
+p2p_laddr = "0.0.0.0:50004"
+log_path = "/home/kyli/Downloads/evm1/4"
+signbyCA = "40e4ccb14a6fab8bc2c2fcf04c646a86072899140725f42dff76e952f6b117443d391a7d9869c948fb7bc52475696ffd8563b27ae0142c51dafc4fd5a5f0c90b"
+cosi_laddr = "0.0.0.0:55004"

@@ -1,0 +1,6 @@
+seeds = "127.0.0.1:50001,0.0.0.0:50002,0.0.0.0:50003"
+appname = "ikhofi"
+p2p_laddr = "0.0.0.0:50004"
+log_path = "/home/kyli/Downloads/ikhofi/4"
+signbyCA = "c2cd1bc5313d5f027411be553fda364669071e607b5adfb5e412f645d18b29985008f38d27785d29fe60aaf06401b21f0812daa7813912eec843823b63c57a0d"
+cosi_laddr = "0.0.0.0:55004"

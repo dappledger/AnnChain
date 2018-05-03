@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package mempool;
+
+enum MsgType{
+	None = 0;
+	Tx = 1;
+}
+
+message TxMessage {
+	bytes Tx = 1;
+} 
+
+message MempoolMessage{
+	MsgType Type = 1;
+	bytes Data = 2;
+}

@@ -1,0 +1,10 @@
+*.log
+conf/*
+vanntool
+*.swp
+data.db
+logs/
+bin/*
+build/*
+*.log
+data/

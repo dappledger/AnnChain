@@ -1,0 +1,17 @@
+*.swp
+*.swo
+.bak
+*.bak
+.DS_Store
+build/*
+.debora
+remote_dump
+.revision
+.vagrant
+*.exe
+nohup.out
+operate.sh
+.idea/
+vendor/
+logs/
+*.log

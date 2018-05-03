@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package trace;
+
+enum MsgType{
+	None = 0;
+	Request = 1;
+	Responce = 2;
+}
+
+message TraceRequest{
+	bytes Data = 1;
+}
+
+message TraceResponse{
+	bytes RequestHash = 1;
+	bytes Resp = 2;
+}
+
+message TraceMessage{
+	MsgType Type = 1;
+	bytes Data = 2;
+}

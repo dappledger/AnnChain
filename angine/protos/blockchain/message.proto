@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package blockchain;
+
+import "github.com/dappledger/AnnChain/angine/protos/types/types.proto";
+
+enum MsgType{
+	None = 0;
+	BlockReq = 1;
+	BlockRsp = 2;
+	StatusReq = 3;
+	StatusRsp = 4;
+	HeaderReq = 5;
+	HeaderRsp = 6;
+}
+
+message BlockRequestMessage{
+	int64 Height = 1;
+}
+
+message BlockResponseMessage{
+	types.Block Block = 1;	
+}
+
+message StatusRequestMessage{
+	int64 Height = 1;
+}
+
+message StatusResponseMessage{
+	int64 Height = 1;
+}
+
+message BlockHeaderRequestMessage{
+	int64 Height = 1;
+}
+
+message BlockHeaderResponseMessage{
+	types.Header Header = 1;
+}
+
+message BlockMessage {
+	MsgType Type = 1;
+	bytes Data = 2;
+}
+
