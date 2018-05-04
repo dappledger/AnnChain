@@ -36,12 +36,6 @@ import "github.com/spf13/viper"
 //fast_sync = true
 //skip_upnp = true
 //
-//# archive , if threshold_blocks > 0
-//threshold_blocks = 900
-//ti_endpoint = "http://11382-zis-other-ti-capsule-anlinkapiserver.test.za-tech.net"
-//ti_key = "ZWViMTYyNWJlMTNmNDg5NDg2MTA1Mzhl"
-//ti_secret = "MjJkZWMzMDUyMjM5NDc3YTkxYzZlNjkxMjA5NGQ2YTQ4Mzc3YzlmMmQ1ZDc0MDdj"
-//
 //log_path = ""
 //#log_level:
 //	# -1 DebugLevel logs are typically voluminous, and are usually disabled in production.
@@ -71,11 +65,6 @@ func DefaultConfig() (conf *viper.Viper) {
 	conf.Set("log_path", "")
 	conf.Set("fast_sync", "true")
 	conf.Set("skip_upnp", "true")
-
-	conf.Set("threshold_blocks", 0)
-	conf.Set("ti_endpoint", "api.anlink.com/ticapsule")
-	conf.Set("ti_key", "ZWViMTYyNWJlMTNmNDg5NDg2MTA1Mzhl")
-	conf.Set("ti_secret", "MjJkZWMzMDUyMjM5NDc3YTkxYzZlNjkxMjA5NGQ2YTQ4Mzc3YzlmMmQ1ZDc0MDdj")
 
 	return conf
 }

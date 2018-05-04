@@ -36,7 +36,6 @@ import (
 	"github.com/dappledger/AnnChain/module/lib/go-db"
 	"github.com/dappledger/AnnChain/module/lib/go-p2p"
 	"github.com/dappledger/AnnChain/module/xlib/def"
-	"github.com/dappledger/AnnChain/go-sdk/ti"
 )
 
 const (
@@ -245,14 +244,9 @@ func (bcR *BlockchainReactor) loadArchiveBlock(height def.INT) (block *agtypes.B
 
 	fileHash := string(bcR.archive.QueryFileHash(height))
 	archiveDir := bcR.config.GetString("db_archive_dir")
-	tiClient := ti.NewTiCapsuleClient(
-		bcR.config.GetString("ti_endpoint"),
-		bcR.config.GetString("ti_key"),
-		bcR.config.GetString("ti_secret"),
-	)
 	_, err = os.Stat(filepath.Join(archiveDir, fileHash+".zip"))
 	if err != nil {
-		err = tiClient.DownloadFile(fileHash, filepath.Join(archiveDir, fileHash+".zip"))
+		err = bcR.archive.Client.DownloadFile(fileHash, filepath.Join(archiveDir, fileHash+".zip"))
 		if err != nil {
 			return
 		} else {
@@ -392,13 +386,8 @@ LOOP:
 					os.Remove(storeDir + ".zip")
 					continue
 				}
-				tiClient := ti.NewTiCapsuleClient(
-					bcR.config.GetString("ti_endpoint"),
-					bcR.config.GetString("ti_key"),
-					bcR.config.GetString("ti_secret"),
-				)
 
-				result, err := tiClient.Save(storeDir + ".zip")
+				fileHash, err := bcR.archive.Client.UploadFile(storeDir + ".zip")
 				if err != nil {
 					bcR.logger.Warn("tiClient.Save failed", zap.String("error", err.Error()))
 					os.Remove(storeDir + ".zip")
@@ -407,7 +396,7 @@ LOOP:
 					bcR.logger.Info("tiClient.Save success")
 				}
 				key := strconv.FormatInt(originHeight+1, 10) + "_" + strconv.FormatInt(originHeight+bcR.archive.Threshold, 10)
-				bcR.archive.AddItem(key, result.Hash)
+				bcR.archive.AddItem(key, fileHash)
 				bcR.store.SetOriginHeight(originHeight + bcR.archive.Threshold)
 				for i := originHeight + 1; i <= bcR.store.OriginHeight(); i++ {
 					err = bcR.store.DeleteBlock(i)
