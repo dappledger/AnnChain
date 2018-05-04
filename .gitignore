@@ -12,5 +12,4 @@ remote_dump
 nohup.out
 operate.sh
 .idea/
-logs/
 *.log
