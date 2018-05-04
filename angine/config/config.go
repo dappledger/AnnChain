@@ -75,6 +75,9 @@ func InitRuntime(root string, chainId string, setConf *viper.Viper) error {
 	fmt.Println("Using config file:", configFilePath)
 
 	wconf := newWriteConfig(setConf)
+	if setConf == nil {
+		setConf = wconf
+	}
 	err = wconf.WriteConfigAs(configFilePath)
 	if err != nil {
 		return err

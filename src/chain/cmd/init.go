@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package cmd
 
 import (
@@ -61,7 +60,7 @@ var initCmd = &cobra.Command{
 
 func init() {
 
-	initCmd.Flags().String("chainid", "", "name of the chain")
+	initCmd.Flags().String("chain_id", "", "name of the chain")
 	initCmd.Flags().Bool("visual", false, "whether init node visually")
 	initCmd.Flags().String("vport", ":8080", "port under visual mode")
 	RootCmd.AddCommand(initCmd)
