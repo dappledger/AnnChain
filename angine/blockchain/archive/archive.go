@@ -24,13 +24,22 @@ import (
 type Archive struct {
 	db        dbm.DB
 	Threshold def.INT
+	Client    ArchiveClient
+}
+
+type ArchiveClient interface {
+	UploadFile(filepath string) (fileHash string, err error)
+	DownloadFile(fileHash, filepath string) (err error)
 }
 
 var dbName = "archive"
 
 func NewArchive(dbBackend, dbDir string, threshold def.INT) *Archive {
 	archiveDB := dbm.NewDB(dbName, dbBackend, dbDir)
-	return &Archive{archiveDB, threshold}
+	return &Archive{
+		db:        archiveDB,
+		Threshold: threshold,
+	}
 }
 
 func (ar *Archive) QueryFileHash(height def.INT) (ret []byte) {

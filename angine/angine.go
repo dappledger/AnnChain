@@ -42,7 +42,6 @@ import (
 	"github.com/dappledger/AnnChain/angine/trace"
 	agtypes "github.com/dappledger/AnnChain/angine/types"
 	"github.com/dappledger/AnnChain/angine/utils/zip"
-	"github.com/dappledger/AnnChain/go-sdk/ti"
 	"github.com/dappledger/AnnChain/module/lib/ed25519"
 	cmn "github.com/dappledger/AnnChain/module/lib/go-common"
 	crypto "github.com/dappledger/AnnChain/module/lib/go-crypto"
@@ -548,14 +547,9 @@ func (ang *Angine) GetBlock(height def.INT) (block *agtypes.BlockCache, meta *pb
 func (ang *Angine) newArchiveDB(height def.INT) (archiveDB dbm.DB, err error) {
 	fileHash := string(ang.dataArchive.QueryFileHash(height))
 	archiveDir := ang.conf.GetString("db_archive_dir")
-	tiClient := ti.NewTiCapsuleClient(
-		ang.conf.GetString("ti_endpoint"),
-		ang.conf.GetString("ti_key"),
-		ang.conf.GetString("ti_secret"),
-	)
 	_, err = os.Stat(filepath.Join(archiveDir, fileHash+".zip"))
 	if err != nil {
-		err = tiClient.DownloadFile(fileHash, filepath.Join(archiveDir, fileHash+".zip"))
+		err = ang.dataArchive.Client.DownloadFile(fileHash, filepath.Join(archiveDir, fileHash+".zip"))
 		if err != nil {
 			return
 		}

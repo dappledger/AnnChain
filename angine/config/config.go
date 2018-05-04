@@ -200,7 +200,6 @@ func SetDefaults(runtime string, conf *viper.Viper) *viper.Viper {
 
 	conf.SetDefault("signbyCA", "") // auth signature from CA
 	conf.SetDefault("log_path", "")
-	conf.SetDefault("threshold_blocks", 900)
 
 	conf.SetDefault("enable_incentive", false)
 	setMempoolDefaults(conf)
