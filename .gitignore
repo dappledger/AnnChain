@@ -12,6 +12,5 @@ remote_dump
 nohup.out
 operate.sh
 .idea/
-vendor/
 logs/
 *.log
