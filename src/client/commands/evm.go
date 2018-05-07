@@ -181,7 +181,6 @@ func readContract(ctx *cli.Context) error {
 		}
 
 		res := (*tmResult).(*types.ResultQuery)
-		hex := common.Bytes2Hex(res.Result.Data)
 		parseResult, _ := unpackResult(function, *aabbii, string(res.Result.Data))
 		fmt.Println("parse result:", reflect.TypeOf(parseResult), parseResult)
 	}
