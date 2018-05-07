@@ -1,6 +1,0 @@
-seeds = ""
-appname = "evm"
-p2p_laddr = "0.0.0.0:50001"
-log_path = "/home/kyli/Downloads/evm1/1"
-signbyCA = "8adfedffe32cf449a85658bad20e1cbda8ddb2564e65473bee2eef5f7a74fd74f30ec0c1981ca929d5b202a2b0b01d42e218c415101692fe8516bbb15fa10a0b"
-cosi_laddr = "0.0.0.0:55001"

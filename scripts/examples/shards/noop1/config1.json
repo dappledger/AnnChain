@@ -1,6 +1,0 @@
-seeds = ""
-appname = "noop"
-p2p_laddr = "0.0.0.0:50001"
-log_path = "/home/kyli/Downloads/noop1/1"
-signbyCA = "cb3f36e15dcde5319d0d95b8087331d1b358082b70f2f6195947772a4ea3e0d04a684813c90493094a3327b3229b8c14a36ab3a44282719fac83f9ec61204e01"
-cosi_laddr = "0.0.0.0:55001"
