@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package node
 
 import (
@@ -250,3 +249,21 @@ func (n *Node) GetConf() *viper.Viper {
 // 	n.logger.Error("vote_special_op", zap.String("resultlog", res.Log))
 // 	return nil, fmt.Errorf(res.Log)
 // }
+
+func CheckConfNeedInApp(appName string, conf map[string]interface{}) error {
+	switch appName {
+	case "evm":
+		if _, ok := conf["cosi_laddr"]; !ok {
+			return fmt.Errorf("cosi_laddr is missing,given available for gaining multisignature on event tx")
+		}
+		if _, ok := conf["event_laddr"]; !ok {
+			return fmt.Errorf("event_laddr is missing,given available for dealing event tx")
+		}
+	case "ikhofi":
+		if _, ok := conf["ikhofi_addr"]; !ok {
+			return fmt.Errorf("ikhofi_addr is missing,given available for communicating with ikhofi server")
+		}
+
+	}
+	return nil
+}
