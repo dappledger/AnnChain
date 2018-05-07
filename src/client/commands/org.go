@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package commands
 
 import (
@@ -202,6 +201,7 @@ func (o *orgActions) joinOrCreate(ctx *cli.Context, tx *civil.OrgTx) error {
 	} else if tx.App, ok = conf["appname"].(string); !ok {
 		return cli.NewExitError("app name should be a string", 127)
 	}
+	civil.CheckConfNeedInApp(tx.App, conf)
 	tx.Config = conf
 
 	tx.Signature, _ = cvtools.TxSign(tx, privKeyPtr)
