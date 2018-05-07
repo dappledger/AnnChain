@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package commands
 
 import (
@@ -183,7 +182,6 @@ func readContract(ctx *cli.Context) error {
 
 		res := (*tmResult).(*types.ResultQuery)
 		hex := common.Bytes2Hex(res.Result.Data)
-		fmt.Println("query result:", hex)
 		parseResult, _ := unpackResult(function, *aabbii, string(res.Result.Data))
 		fmt.Println("parse result:", reflect.TypeOf(parseResult), parseResult)
 	}
@@ -274,8 +272,6 @@ func executeContract(ctx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 110)
 	}
-
-	fmt.Println("call data:", common.Bytes2Hex(data))
 
 	privkey := ctx.String("privkey")
 	if privkey == "" {
