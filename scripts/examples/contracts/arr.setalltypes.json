@@ -1,6 +1,0 @@
-{
-    "privkey": "a8971729fbc199fb3459529cebcd8704791fc699d88ac89284f23ff8e7fca7d6",
-    "contract": "0x1404c76afad5b2310c67fc0d3c9f3b5b0d945927",
-    "function": "buyChicken",
-    "params": [12345]
-}

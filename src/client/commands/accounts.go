@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package commands
 
 import (
@@ -33,13 +32,6 @@ var (
 		Usage:    "operations for account",
 		Category: "Account",
 		Subcommands: []cli.Command{
-			{
-				Name:     "add",
-				Action:   addAccount,
-				Usage:    "create a new account",
-				Category: "Account",
-				Flags:    []cli.Flag{anntoolFlags.pwd},
-			},
 			{
 				Name:     "generate",
 				Action:   generatePrivPubAddr,

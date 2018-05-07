@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package main
 
 import (
@@ -36,7 +35,7 @@ func main() {
 		commands.InitSubCommands,
 
 		commands.EVMCommands,
-		// commands.AccountCommands,
+		commands.AccountCommands,
 		commands.QueryCommands,
 		commands.TxCommands,
 		commands.SpecialCommands,

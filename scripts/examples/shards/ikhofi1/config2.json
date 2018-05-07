@@ -1,6 +1,0 @@
-seeds = "0.0.0.0:50001"
-appname = "ikhofi"
-p2p_laddr = "0.0.0.0:50002"
-log_path = "/home/kyli/Downloads/ikhofi/2"
-signbyCA = "48a0f306b8e16a8009a9970bd1abeeedbd17bfb5d249468323a69d8951ba41b283a7b71db84a4965cb4a3138e687f50b5ac0e627c41c0bccee957eaa4fb2d60b"
-cosi_laddr = "0.0.0.0:55002"

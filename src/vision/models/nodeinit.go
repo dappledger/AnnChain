@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package models
 
 import (
@@ -27,13 +26,13 @@ import (
 	"time"
 
 	"github.com/astaxie/beego"
-	"github.com/spf13/viper"
 	"github.com/dappledger/AnnChain/angine"
 	agconf "github.com/dappledger/AnnChain/angine/config"
 	agtypes "github.com/dappledger/AnnChain/angine/types"
 	crypto "github.com/dappledger/AnnChain/module/lib/go-crypto"
 	"github.com/dappledger/AnnChain/module/xlib"
 	"github.com/dappledger/AnnChain/src/chain/node"
+	"github.com/spf13/viper"
 )
 
 type KeyInfo struct {
@@ -91,7 +90,7 @@ func (n *NodeInit) CheckData() error {
 		}
 	}
 	if len(n.EventPort) == 0 {
-		n.RpcPort = "46650"
+		n.EventPort = "46650"
 	} else {
 		if !xlib.CheckNumber(n.RpcPort) {
 			return errors.New("event port should be a number")
@@ -216,5 +215,12 @@ func RunNode(c *beego.Controller) {
 }
 
 func CloseServer(c *beego.Controller) {
-	beego.BeeApp.Server.Close()
+	timer := time.NewTimer(time.Second)
+	go func() {
+		select {
+		case <-timer.C:
+			beego.BeeApp.Server.Close()
+		}
+	}()
+	c.Data["json"] = "Server will be closed after 1 second,then you can close this page."
 }
