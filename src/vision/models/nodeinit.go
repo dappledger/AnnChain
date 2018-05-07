@@ -215,5 +215,12 @@ func RunNode(c *beego.Controller) {
 }
 
 func CloseServer(c *beego.Controller) {
-	beego.BeeApp.Server.Close()
+	timer := time.NewTimer(time.Second)
+	go func() {
+		select {
+		case <-timer.C:
+			beego.BeeApp.Server.Close()
+		}
+	}()
+	c.Data["json"] = "Server will be closed after 1 second,then you can close this page."
 }
