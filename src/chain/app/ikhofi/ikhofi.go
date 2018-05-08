@@ -15,15 +15,17 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package ikhofi
 
 import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 
@@ -179,6 +181,19 @@ func (app *IKHOFIApp) ExecuteTx(height def.INT, block *agtypes.BlockCache, bs []
 	if err != nil {
 		return
 	}
+
+	executeRes := &Result{}
+	err = proto.Unmarshal(result, executeRes)
+	if err != nil {
+		return
+	}
+
+	if executeRes.Code != 0 {
+		err = fmt.Errorf("execute error:" + strconv.Itoa(int(executeRes.Code)))
+		app.logger.Error("ikhofi execute tx error", zap.Error(err))
+		return
+	}
+
 	return result, nil
 }
 
@@ -198,8 +213,17 @@ func (app *IKHOFIApp) Start() (err error) {
 	}
 	trieRoot = common.Bytes2Hex(lastBlock.AppHash)
 
+	path := app.Config.GetString("ikhofi_config")
+	if path[0:1] != "/" {
+		execpath, err := os.Executable()
+		if err != nil {
+			return err
+		}
+		path = filepath.Join(filepath.Dir(execpath), path)
+	}
+
 	startParams := StartParams{
-		app.Config.GetString("ikhofi_config"),
+		path,
 		trieRoot,
 	}
 
@@ -236,7 +260,7 @@ func (app *IKHOFIApp) CompatibleWithAngine() {}
 func (app *IKHOFIApp) SupportCoSiTx() {}
 
 func (app *IKHOFIApp) CheckTx(bs []byte) error {
-	/*txpb := &TransactionPb{}
+	txpb := &TransactionPb{}
 	if err := proto.Unmarshal(bs, txpb); err != nil {
 		return agtypes.NewError(pbtypes.CodeType_BaseInvalidInput, err.Error())
 	}
@@ -250,7 +274,7 @@ func (app *IKHOFIApp) CheckTx(bs []byte) error {
 	// check whether calculate address is equal to tx.to
 	if from != tx.From {
 		return fmt.Errorf("address from signed tx is not same to tx from address")
-	}*/
+	}
 
 	return nil
 }
