@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package ikhofi
 
 import (
@@ -26,6 +25,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/dappledger/AnnChain/module/lib/go-common"
+	"path/filepath"
 )
 
 const (
@@ -48,6 +48,10 @@ type IkhofiConfig struct {
 
 func runtimeDir(root string) string {
 	if root != "" {
+		if root[0:1] != "/" {
+			pwd, _ := os.Getwd()
+			root = filepath.Join(pwd, root)
+		}
 		return root
 	}
 	if runtimePath, exists := os.LookupEnv(RUNTIME_ENV); exists {

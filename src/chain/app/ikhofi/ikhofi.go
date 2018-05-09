@@ -215,11 +215,8 @@ func (app *IKHOFIApp) Start() (err error) {
 
 	path := app.Config.GetString("ikhofi_config")
 	if path[0:1] != "/" {
-		execpath, err := os.Executable()
-		if err != nil {
-			return err
-		}
-		path = filepath.Join(filepath.Dir(execpath), path)
+		pwd, _ := os.Getwd()
+		path = filepath.Join(pwd, path)
 	}
 
 	startParams := StartParams{
