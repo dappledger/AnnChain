@@ -260,6 +260,9 @@ func CheckConfNeedInApp(appName string, conf map[string]interface{}) error {
 			return fmt.Errorf("event_laddr is missing,given available for dealing event tx")
 		}
 	case "ikhofi":
+		if _, ok := conf["cosi_laddr"]; !ok {
+			return fmt.Errorf("cosi_laddr is missing,given available for gaining multisignature on event tx")
+		}
 		if _, ok := conf["ikhofi_addr"]; !ok {
 			return fmt.Errorf("ikhofi_addr is missing,given available for communicating with ikhofi server")
 		}
