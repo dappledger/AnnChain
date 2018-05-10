@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package commands
 
 import (
@@ -246,7 +245,7 @@ func ContractExecute(param *ContractParam) (txhash []byte, err error) {
 func contractExecute(param *ContractParam) (err error) {
 	var txHash []byte
 	txHash, err = ContractExecute(param)
-	fmt.Println("txHash:%X", txHash)
+	fmt.Printf("txHash:%x\n", txHash)
 	return
 }
 
