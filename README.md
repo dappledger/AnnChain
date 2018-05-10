@@ -14,7 +14,7 @@
 ## 简介
 安链(AnnChain)主要的目标是要能够以区块链技术为基础,承载众安科技的众多产品,快速开发部署联盟链。安链采用三层架构:协议层、扩展层和应用层,分别用以存储不可篡改的原始数据、实现各种功能(例如,智能合约)和运行各种应用(例如,银行的移动应用)。每个区块链节点可以部署多个子链,子链承载不同应用。目前,我们支持的应用有以太坊合约引擎和JVM合约引擎。
 
-安链的开源协议为GPL3.0,详情参⻅[LICENSES](https://github.com/dappledger/AnnChain/blob/master/LICENSE)。
+安链的开源协议为GPL3.0，详情参⻅[LICENSES](https://github.com/dappledger/AnnChain/blob/master/LICENSE)。
 ## 安装配置
 OS : Linux/Mac OS
 ## 源码方式
