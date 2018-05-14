@@ -26,14 +26,14 @@ import (
 
 	"go.uber.org/zap"
 
-	bc "gitlab.zhonganonline.com/ann/angine/blockchain"
-	mempl "gitlab.zhonganonline.com/ann/angine/mempool"
-	sm "gitlab.zhonganonline.com/ann/angine/state"
-	"gitlab.zhonganonline.com/ann/angine/types"
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	cfg "gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	bc "gitlab.zhonganinfo.com/tech_bighealth/angine/blockchain"
+	mempl "gitlab.zhonganinfo.com/tech_bighealth/angine/mempool"
+	sm "gitlab.zhonganinfo.com/tech_bighealth/angine/state"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/types"
+	. "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	cfg "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-config"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-crypto"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 //-----------------------------------------------------------------------------

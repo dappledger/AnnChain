@@ -19,10 +19,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"gitlab.zhonganonline.com/ann/angine/types"
-	auto "gitlab.zhonganonline.com/ann/ann-module/lib/go-autofile"
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/types"
+	auto "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-autofile"
+	. "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 //--------------------------------------------------------

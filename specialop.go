@@ -20,11 +20,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"gitlab.zhonganonline.com/ann/angine/plugin"
-	"gitlab.zhonganonline.com/ann/angine/types"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/ed25519"
-	crypto "gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/plugin"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/types"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/ed25519"
+	crypto "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-crypto"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 func (e *Angine) ProcessSpecialOP(tx []byte) error {

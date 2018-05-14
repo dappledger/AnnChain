@@ -1,7 +1,7 @@
 package types
 
 import (
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-crypto"
 )
 
 type Superior interface {

@@ -23,11 +23,11 @@ import (
 
 	"go.uber.org/zap"
 
-	sm "gitlab.zhonganonline.com/ann/angine/state"
-	"gitlab.zhonganonline.com/ann/angine/types"
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-p2p"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	sm "gitlab.zhonganinfo.com/tech_bighealth/angine/state"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/types"
+	. "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-p2p"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 const (

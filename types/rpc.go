@@ -17,10 +17,10 @@ package types
 import (
 	"time"
 
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-p2p"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-rpc/types"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-crypto"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-p2p"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-rpc/types"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 type ResultBlockchainInfo struct {

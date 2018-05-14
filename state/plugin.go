@@ -15,8 +15,8 @@
 package state
 
 import (
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
-	"gitlab.zhonganonline.com/ann/angine/plugin"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/plugin"
 )
 
 type (

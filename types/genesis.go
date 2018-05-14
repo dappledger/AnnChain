@@ -18,9 +18,9 @@ import (
 	"time"
 
 	"encoding/json"
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-crypto"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	. "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-crypto"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 //------------------------------------------------------------

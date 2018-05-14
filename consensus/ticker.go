@@ -19,7 +19,7 @@ import (
 
 	"go.uber.org/zap"
 
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
+	. "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
 )
 
 var (
