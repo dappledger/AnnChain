@@ -178,7 +178,7 @@ This struct contains 2 fields and you only have to fill one:
 
 First, you need to import angine into your project :-) then, 
 
-    import "gitlab.zhonganonline.com/ann/angine"
+    import "gitlab.zhonganinfo.com/tech_bighealth/angine"
     
     ...
     

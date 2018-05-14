@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gitlab.zhonganonline.com/ann/angine/plugin"
-	"gitlab.zhonganonline.com/ann/angine/types"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/plugin"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/types"
 )
 
 func (e *Angine) ProcessSpecialOP(tx []byte) error {
