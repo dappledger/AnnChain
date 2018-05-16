@@ -231,4 +231,12 @@ query result code: 0
 query result value: world
 query result message: 
 ```
+### 区块链浏览器 block_broswer
+
+[browser.darwin-amd64.zip](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/browser.darwin-amd64.zip)
+
+- 解压 browser.darwin-amd64.zip
+- 编辑conf/app.conf (api_addr  和 ~/.angine/config.toml rpc_laddr 一致 ,chain_id  和 ~/.angine/genesis.json chain_id 一致)
+- 运行./block-browser
+
 
