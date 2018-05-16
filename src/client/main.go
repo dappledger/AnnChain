@@ -26,6 +26,7 @@ import (
 )
 
 func main() {
+	commands.InitLog()
 	app := cli.NewApp()
 	app.Name = "anntool"
 	app.Version = "0.2"
