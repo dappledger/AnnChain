@@ -15,7 +15,6 @@
  * along with The www.annchain.io.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package commands
 
 import (
@@ -27,7 +26,7 @@ import (
 
 var logger *zap.Logger
 
-func init() {
+func InitLog() {
 	var err error
 	pwd, err := os.Getwd()
 	if err != nil {
