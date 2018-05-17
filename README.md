@@ -3,14 +3,15 @@
     - [简介](#简介)
     - [安装配置](#安装配置)
     - [源码方式](#源码方式)
-        - [编译环境](#编译环境) 
+        - [编译环境](#编译环境)
         - [build](#build)
-    - [直接获取可执行文件](#直接获取可执行文件) 
+    - [直接获取可执行文件](#直接获取可执行文件)
     - [初始化和运行](#初始化和运行)
     - [创建子应用](#创建子应用)
-        - [evm子应用](#evm子应用) 
+        - [evm子应用](#evm子应用)
         - [ikhofi(jvm)子应用](#ikhofi(jvm)子应用)
-	
+    - [区块浏览器block_browser](#区块浏览器block_browser)
+
 ## 简介
 安链(AnnChain)主要的目标是要能够以区块链技术为基础,承载众安科技的众多产品,快速开发部署联盟链。安链采用三层架构:协议层、扩展层和应用层,分别用以存储不可篡改的原始数据、实现各种功能(例如,智能合约)和运行各种应用(例如,银行的移动应用)。每个区块链节点可以部署多个子链,子链承载不同应用。目前,我们支持的应用有以太坊合约引擎和JVM合约引擎。
 
@@ -96,7 +97,7 @@ address: 2a55964ff12f02bf00db5b513948d224d09716c1
 
 - 向主链添加子链,链id为`annchain-evm`:
 ```shell
-$cat tmp/genesis.json 
+$cat tmp/genesis.json
 {
 	"genesis_time": "0001-01-01T00:00:00Z",
 		"chain_id": "annchain-evm",
@@ -173,7 +174,7 @@ java -jar target/ikhofi-server-0.6.5.jar --server.port=46671
 
 - 向主链添加子链，链id为`annchain-ikh`：
 ```shell
-$cat tmp/genesis.json 
+$cat tmp/genesis.json
 {
        "genesis_time": "0001-01-01T00:00:00Z",
        "chain_id": "annchain-ikh",
@@ -191,7 +192,7 @@ $cat tmp/genesis.json
        "app_hash": "",
        "plugins": "specialop,querycache"
 }
-$cat tmp/config.toml 
+$cat tmp/config.toml
 auth_by_ca = false
 appname = "ikhofi"
 db_backend = "leveldb"
@@ -199,7 +200,7 @@ environment = "development"
 fast_sync = "true"
 log_path = "./logs/log2"
 moniker = "anonymous"
-non_validator_auth_by_ca = false 
+non_validator_auth_by_ca = false
 p2p_laddr = "tcp://0.0.0.0:46676"
 rpc_laddr = "tcp://0.0.0.0:46677"
 cosi_laddr = "tcp://0.0.0.0:46670"
@@ -229,14 +230,12 @@ txHash:022c3ae922d3ecf2a05658bd933707f16135490f7f79b82408074d639b203076
 $./build/anntool --target="annchain-ikh" --backend="tcp://127.0.0.1:46657" ikhofi query -contractid SampleContract -method "get('hello')" -privkey b00d886c8b115e08065ba130c52ed9953783c74ffe4a681e731aeaaf04142e0e
 query result code: 0
 query result value: world
-query result message: 
+query result message:
 ```
-### 区块链浏览器 block_broswer
+### 区块链浏览器block_browser
 
-[browser.darwin-amd64.zip](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/browser.darwin-amd64.zip)
+[browser-all.zip](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/browser-all.zip)
 
-- 解压 browser.darwin-amd64.zip
+- 解压 browser-all.zip
 - 编辑conf/app.conf (api_addr  和 ~/.angine/config.toml rpc_laddr 一致 ,chain_id  和 ~/.angine/genesis.json chain_id 一致)
 - 运行./block-browser
-
-
