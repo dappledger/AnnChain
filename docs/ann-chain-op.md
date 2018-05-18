@@ -1070,9 +1070,9 @@ POST用法和参数 与 /v1/contract/call 相同
 区块链浏览器服务于安链，提供基本的搜索功能，允许用户查找和确认在安链上发生的交易。浏览器的任务是使得链上的操作更加透明，可以通过很便捷的方式搜索每一个块信息和每一个交易信息。此外浏览器还提供API服务供使用者查询链上信息。
 ### 4.1 部署
 - 浏览器可以选择使用mongodb或者sqlite3，如果使用mongodb，则需先安装mongodb。
-- 解压`block-browser.tar.gz`：
+- 解压`browser-all.zip`：
 ```shell
-tar -xzvf block-browser.tar.gz
+unzip  browser-all.zip
 ```
 - 修改配置文件`conf/app.conf`：
 `appname`是服务名称。`httpport`是服务端口。`runmode`是程序运行模式(`dev`/`prod`)。`mogo_addr`是mongo服务的地址，如果不填，则默认使用sqlite3。`api_addr`是区块链节点对外的api服务地址。`chain_id`是浏览器展示的区块链链名称。
