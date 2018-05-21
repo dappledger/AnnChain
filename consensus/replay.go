@@ -27,11 +27,11 @@ import (
 
 	"go.uber.org/zap"
 
-	sm "gitlab.zhonganonline.com/ann/angine/state"
-	"gitlab.zhonganonline.com/ann/angine/types"
-	auto "gitlab.zhonganonline.com/ann/ann-module/lib/go-autofile"
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	sm "gitlab.zhonganinfo.com/tech_bighealth/angine/state"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/types"
+	auto "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-autofile"
+	. "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 // Unmarshal and apply a single message to the consensus state

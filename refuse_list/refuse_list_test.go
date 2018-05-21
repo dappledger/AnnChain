@@ -18,7 +18,7 @@ import (
 	"os"
 	"testing"
 
-	"gitlab.zhonganonline.com/ann/angine/types"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/go-db"

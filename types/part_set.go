@@ -23,9 +23,9 @@ import (
 
 	"golang.org/x/crypto/ripemd160"
 
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-merkle"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	. "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-merkle"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 var (

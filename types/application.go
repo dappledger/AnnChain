@@ -18,10 +18,10 @@ import (
 	"bytes"
 	"errors"
 
-	cmn "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	cmn "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-config"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-db"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 var lastBlockKey = []byte("lastblock")

@@ -21,10 +21,10 @@ import (
 	"io"
 	"sync"
 
-	"gitlab.zhonganonline.com/ann/angine/types"
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	dbm "gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	"gitlab.zhonganinfo.com/tech_bighealth/angine/types"
+	. "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	dbm "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-db"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 /*

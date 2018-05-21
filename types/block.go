@@ -22,9 +22,9 @@ import (
 	"strings"
 	"time"
 
-	. "gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-merkle"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-wire"
+	. "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-merkle"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-wire"
 )
 
 const MaxBlockSize = 22020096 // 21MB TODO make it configurable

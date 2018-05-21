@@ -19,7 +19,7 @@ import (
 	"errors"
 	"strings"
 
-	dbm "gitlab.zhonganonline.com/ann/ann-module/lib/go-db"
+	dbm "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-db"
 )
 
 type RefuseList struct {

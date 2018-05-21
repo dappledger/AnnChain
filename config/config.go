@@ -19,8 +19,8 @@ import (
 	"path"
 	"strings"
 
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-common"
-	"gitlab.zhonganonline.com/ann/ann-module/lib/go-config"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-config"
 )
 
 const (
