@@ -106,16 +106,16 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("cs_wal_light", false)
 	conf.SetDefault("filter_peers", false)
 
-	conf.SetDefault("block_size", 3000)       // max number of txs
+	conf.SetDefault("block_size", 5000)       // max number of txs
 	conf.SetDefault("block_part_size", 65536) // part size 64K
 	conf.SetDefault("disable_data_hash", false)
-	conf.SetDefault("timeout_propose", 3000)
-	conf.SetDefault("timeout_propose_delta", 500)
-	conf.SetDefault("timeout_prevote", 1000)
-	conf.SetDefault("timeout_prevote_delta", 500)
-	conf.SetDefault("timeout_precommit", 1000)
-	conf.SetDefault("timeout_precommit_delta", 500)
-	conf.SetDefault("timeout_commit", 1000)
+	conf.SetDefault("timeout_propose", 4000)
+	conf.SetDefault("timeout_propose_delta", 1000)
+	conf.SetDefault("timeout_prevote", 2000)
+	conf.SetDefault("timeout_prevote_delta", 1000)
+	conf.SetDefault("timeout_precommit", 2000)
+	conf.SetDefault("timeout_precommit_delta", 1000)
+	conf.SetDefault("timeout_commit", 2000)
 	conf.SetDefault("skip_timeout_commit", false)
 
 	conf.SetDefault("mempool_recheck", true)

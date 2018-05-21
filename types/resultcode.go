@@ -42,6 +42,7 @@ const (
 	CodeType_BaseUnknownPlugin        CodeType = 113
 	CodeType_WrongRLP                 CodeType = 114
 	CodeType_SaveFailed               CodeType = 115
+	CodeType_WrongJSON                CodeType = 116
 	// Reserved for governance, 200 ~ 299
 	CodeType_GovUnknownEntity      CodeType = 201
 	CodeType_GovUnknownGroup       CodeType = 202
@@ -53,6 +54,8 @@ const (
 	CodeType_GovInvalidMember      CodeType = 208
 	CodeType_GovInvalidVote        CodeType = 209
 	CodeType_GovInvalidVotingPower CodeType = 210
+	// Reserved for governance, 300 ~ 399
+	CodeType_ErrorParam CodeType = 301
 )
 
 var CodeType_name = map[int32]string{
@@ -88,6 +91,7 @@ var CodeType_name = map[int32]string{
 	208: "GovInvalidMember",
 	209: "GovInvalidVote",
 	210: "GovInvalidVotingPower",
+	301: "ParamsError",
 }
 var CodeType_value = map[string]int32{
 	"OK":                       0,
@@ -122,6 +126,7 @@ var CodeType_value = map[string]int32{
 	"GovInvalidMember":         208,
 	"GovInvalidVote":           209,
 	"GovInvalidVotingPower":    210,
+	"ParamsError":              301,
 }
 
 func (x CodeType) String() string {
