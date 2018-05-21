@@ -232,10 +232,3 @@ query result code: 0
 query result value: world
 query result message:
 ```
-### 区块链浏览器block_browser
-
-[browser-all.zip](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/browser-all.zip)
-
-- 解压 browser-all.zip
-- 编辑conf/app.conf (api_addr  和 ~/.angine/config.toml rpc_laddr 一致 ,chain_id  和 ~/.angine/genesis.json chain_id 一致)
-- 运行./block-browser
