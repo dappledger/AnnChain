@@ -199,7 +199,7 @@ config.toml文件(参考主链的config.toml配置)
     seeds = ""
     appname = "ikhofi"
     p2p_laddr = "0.0.0.0:50011"
-    log_path = "/Users/shilei/ann/jvm/"
+    log_path = "./logs"
     auth_by_ca = false
     signbyCA = ""
     cosi_laddr = "0.0.0.0:55011"
@@ -627,9 +627,9 @@ __jvm合约相关__
 `AnntoolPath`是`anntool`二进制包的路径。`DataPath`是vanntool存储数据的文件路径。`JvmFilePath`是临时存储ikhofi合约的地址，创建合约后会由vanntool删除。
 ```json
 	{
-        "AnntoolPath":"$GOPATH/src/gitlab.zhonganonline.com/ann/civilyear/build/anntool",
-        "DataPath":"$GOPATH/src/gitlab.zhonganonline.com/ann/vanntool/data/data.db",
-        "JvmFilePath":"$GOPATH/src/gitlab.zhonganonline.com/ann/vanntool/data/contractfiles/"
+        "AnntoolPath":"$GOPATH/src/github.com/dappledger/AnnChain/build/anntool",
+        "DataPath":"./data/data.db",
+        "JvmFilePath":"./data/contractfiles/"
 	}
 ```
 - 修改conf目录下的服务配置app.conf：
