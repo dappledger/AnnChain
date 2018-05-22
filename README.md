@@ -32,9 +32,9 @@ $make
 ## 直接获取可执行文件
 [所有发布的可执行包](https://github.com/dappledger/AnnChain/releases)
 
-Linux:[ann](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/ann1.0.1.linux-amd64.tar.gz)，[anntool](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/anntool1.0.1.linux-amd64.tar.gz)
+Linux : [ann](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/ann1.0.1.linux-amd64.tar.gz), [anntool](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/anntool1.0.1.linux-amd64.tar.gz)
 
-Mac:[ann](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/ann1.0.1.darwin-amd64.zip)，[anntool](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/anntool1.0.1.darwin-amd64.zip)
+Mac : [ann](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/ann1.0.1.darwin-amd64.zip), [anntool](https://github.com/dappledger/AnnChain/releases/download/v1.0.1/anntool1.0.1.darwin-amd64.zip)
 ## 初始化和运行
 - 命令行方式
 ```shell
@@ -52,7 +52,7 @@ $./build/ann init --visual="true" --vport=":8888"
 
 浏览器打开`http://127.0.0.1:8888`:
 ![ann_init](./docs/pic/init1.png)
-`config_path`是配置和数据文件生成的目录。`chainid`链名字。`peer_privkey`是节点私钥,可以通过下方`生成公私钥`按钮随机生成。`p2p_port`是节点的p2p监听端口,默认46656。`rpc_port`是节点对外提供rpc/restful服务的监听端口,默认46657。`event_port`是节点间处理事件类型交易签名的端口,默认46650。`peers`是配置多节点环境时,用以告知其余参与p2p连接的节点坚挺地址。`auth_privkey`是要加入链p2p网络中CA认证节点的私钥。`log_path`是日志目录。`genesispath`是初始网络的节点信息配置,单节点可不填。模板为:
+`config_path`是配置和数据文件生成的目录。`chainid`链名字。`peer_privkey`是节点私钥,可以通过下方`生成公私钥`按钮随机生成。`p2p_port`是节点的p2p监听端口,默认46656。`rpc_port`是节点对外提供rpc/restful服务的监听端口,默认46657。`event_port`是节点间处理事件类型交易签名的端口,默认46650。`peers`是配置多节点环境时,用以告知其余参与p2p连接的节点监听地址。`auth_privkey`是要加入链p2p网络中CA认证节点的私钥。`log_path`是日志目录。`genesispath`是初始网络的节点信息配置,单节点可不填。模板为:
 ```json
 {
 	"genesis_time": "0001-01-01T00:00:00Z",
@@ -167,8 +167,8 @@ parse result: string world
 
 - 准备ikhofi运行环境
 ```shell
-cp -rf ikhofi-all-0.6.5-jar-with-dependencies.jar $JAVA_HOME/jre/lib/ext/
-java -jar target/ikhofi-server-0.6.5.jar --server.port=46671
+$cp -rf ikhofi-all-0.6.5-jar-with-dependencies.jar $JAVA_HOME/jre/lib/ext/
+$java -jar target/ikhofi-server-0.6.5.jar --server.port=46671
 ```
 
 - 向主链添加子链，链id为`annchain-ikh`：
