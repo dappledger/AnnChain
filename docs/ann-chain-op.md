@@ -575,11 +575,11 @@ __组织相关__
 ```
   - 加入组织：
 ```shell
-     anntool  --backend <节点IP地址> --target <主链名字> organization join [--genesisfile <新组织的genesisfile文件路径>] --configfile <新组织的配置文件路径> --privkey <将要加入组织的节点私钥>
+     anntool  --backend <节点IP地址> --target <主链名字> organization join [--genesisfile <新组织的genesisfile文件路径>] --configfile <新组织的配置文件路径> --privkey <将要加入组织的节点私钥> --orgid <要加入的链名字>
 ```
   - 离开组织：
 ```shell
-     anntool  --backend <节点IP地址> --target <主链名字> organization leave --privkey <将要离开组织的节点私钥>
+     anntool  --backend <节点IP地址> --target <主链名字> organization leave --privkey <将要离开组织的节点私钥> --orgid <要退出的链名字>
 ```
 __evm合约相关__
 
