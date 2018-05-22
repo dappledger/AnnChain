@@ -25,7 +25,7 @@ OS : Linux/Mac OS
 ### build
 ```shell
 $git clone https://github.com/dappledger/AnnChain.git $GOPATH/src/github.com/dappledger/AnnChain
-$cd $PATH/src/github.com/dappledger/AnnChain
+$cd $GOPATH/src/github.com/dappledger/AnnChain
 $make
 ```
 编译后的文件(`ann`,`anntool`)在项目的`build`目录下。
