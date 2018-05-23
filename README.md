@@ -115,20 +115,19 @@ $cat tmp/genesis.json
 		"plugins": "specialop,querycache"
 }
 $cat tmp/config.toml
-auth_by_ca = true
-appname = "evm"
+auth_by_ca = false
+appname = "evm"				// 指定子链负载的app类型，可选项有evm/ikhofi
 db_backend = "leveldb"
 environment = "development"
 fast_sync = "true"
 log_path = "./logs/log1"
 moniker = "anonymous"
 non_validator_auth_by_ca = false
-p2p_laddr = "tcp://0.0.0.0:46666"
-rpc_laddr = "tcp://0.0.0.0:46667"
-event_laddr = "tcp://0.0.0.0:46660"
-cosi_laddr = "tcp://0.0.0.0:46661"
-seeds = ""
-signbyca = ""
+p2p_laddr = "tcp://0.0.0.0:46666"	// 节点p2p连接对外的监听地址，不可重用
+event_laddr = "tcp://0.0.0.0:46660"	// 节点事件交易的服务监听地址，不可重用
+cosi_laddr = "tcp://0.0.0.0:46661"	// 节点事件交易多签的监听地址，不可重用
+seeds = ""				// 其余节点的p2p监听地址，用于发起连接
+signbyca = ""				// 当auth_by_ca为true时，内容为ca节点对本节点公钥+链名的签名，用于加入网络的身份验证
 skip_upnp = "true"
 $./build/anntool --callmode="commit" --backend="tcp://127.0.0.1:46657" --target="hello-annchain" organization create --genesisfile ./tmp/genesis.json --conf
 igfile ./tmp/config.toml --privkey A4A1AA02DF9BEF3E09D77D549A52A9D335471284199936DAB6341E3FCB139E517AE8E25A622BD0E63C3575718420F5D4841E6B531B6BF23CAE0B686BD
@@ -193,19 +192,18 @@ $cat tmp/genesis.json
 }
 $cat tmp/config.toml
 auth_by_ca = false
-appname = "ikhofi"
+appname = "ikhofi"			// 指定子链负载的app类型，可选项有evm/ikhofi
 db_backend = "leveldb"
 environment = "development"
 fast_sync = "true"
 log_path = "./logs/log2"
 moniker = "anonymous"
 non_validator_auth_by_ca = false
-p2p_laddr = "tcp://0.0.0.0:46676"
-rpc_laddr = "tcp://0.0.0.0:46677"
-cosi_laddr = "tcp://0.0.0.0:46670"
-ikhofi_addr = "http://0.0.0.0:46671"
-seeds = ""
-signbyca = ""
+p2p_laddr = "tcp://0.0.0.0:46676"	// 节点p2p连接对外的监听地址，不可重用
+cosi_laddr = "tcp://0.0.0.0:46670"	// 节点事件交易多签的监听地址，不可重用
+ikhofi_addr = "http://0.0.0.0:46671"	// ikhofi-server启动时指定的监听地址
+seeds = ""				// 其余节点的p2p监听地址，用于发起连接
+signbyca = ""				// 当auth_by_ca为true时，内容为ca节点对本节点公钥+链名的签名，用于加入网络的身份验证
 skip_upnp = "true"
 $./build/anntool --callmode="commit" --backend="tcp://127.0.0.1:46657" --target="hello-annchain" organization create --genesisfile ./tmp/genesis.json --configfile ./tmp/config.toml --privkey A4A1AA02DF9BEF3E09D77D549A52A9D335471284199936DAB6341E3FCB139E517AE8E25A622BD0E63C3575718420F5D4841E6B531B6BF23CAE0B686BD47D2B08
 ```
