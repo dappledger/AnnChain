@@ -122,7 +122,7 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("mempool_recheck", true)
 	conf.SetDefault("mempool_recheck_empty", true)
 	conf.SetDefault("mempool_broadcast", true)
-	conf.SetDefault("mempool_wal_dir", path.Join(root, DATADIR, "mempool.wal")) //
+	conf.SetDefault("mempool_wal_dir", path.Join(root, DATADIR, "mempool.wal"))
 	conf.SetDefault("mempool_enable_txs_limits", false)
 
 	conf.SetDefault("signbyCA", "")
