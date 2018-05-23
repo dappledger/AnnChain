@@ -43,8 +43,8 @@ func RuntimeDir(root string) string {
 	if runtimePath, exists := os.LookupEnv(RUNTIME_ENV); exists {
 		return runtimePath
 	}
-	// return path.Join(os.Getenv("HOME"), DEFAULT_RUNTIME)
-	return path.Join("/alidata1/", DEFAULT_RUNTIME)
+	return path.Join(os.Getenv("HOME"), DEFAULT_RUNTIME)
+	// return path.Join("/alidata1/", DEFAULT_RUNTIME)
 }
 
 func InitRuntime(root string) {
@@ -107,7 +107,7 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("cs_wal_light", false)
 	conf.SetDefault("filter_peers", false)
 
-	conf.SetDefault("block_size", 5000)       // max number of txs
+	conf.SetDefault("block_size", 3000)       // max number of txs
 	conf.SetDefault("block_part_size", 65536) // part size 64K
 	conf.SetDefault("disable_data_hash", false)
 	conf.SetDefault("timeout_propose", 3000)
@@ -122,7 +122,7 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("mempool_recheck", true)
 	conf.SetDefault("mempool_recheck_empty", true)
 	conf.SetDefault("mempool_broadcast", true)
-	conf.SetDefault("mempool_wal_dir", "") // path.Join(root, DATADIR, "mempool.wal")
+	conf.SetDefault("mempool_wal_dir", path.Join(root, DATADIR, "mempool.wal")) //
 	conf.SetDefault("mempool_enable_txs_limits", false)
 
 	conf.SetDefault("signbyCA", "")
