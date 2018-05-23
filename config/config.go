@@ -43,8 +43,8 @@ func RuntimeDir(root string) string {
 	if runtimePath, exists := os.LookupEnv(RUNTIME_ENV); exists {
 		return runtimePath
 	}
-	// return path.Join(os.Getenv("HOME"), DEFAULT_RUNTIME)
-	return path.Join("/alidata1/", DEFAULT_RUNTIME)
+	return path.Join(os.Getenv("HOME"), DEFAULT_RUNTIME)
+	// return path.Join("/alidata1/", DEFAULT_RUNTIME)
 }
 
 func InitRuntime(root string) {
