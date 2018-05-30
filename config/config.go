@@ -109,16 +109,16 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 
 	cfg := c.LoadConfigFile("./config.json")
 
-	conf.SetDefault("block_size", cfg.GetFloat("block_size"))           // max number of txs
-	conf.SetDefault("block_part_size", cfg.GetFloat("block_part_size")) // part size 64K
+	conf.SetDefault("block_size", cfg.GetInt("block_size"))           // max number of txs
+	conf.SetDefault("block_part_size", cfg.GetInt("block_part_size")) // part size 64K
 	conf.SetDefault("disable_data_hash", cfg.GetBool("disable_data_hash"))
-	conf.SetDefault("timeout_propose", cfg.GetFloat("timeout_propose"))
-	conf.SetDefault("timeout_propose_delta", cfg.GetFloat("timeout_propose_delta"))
-	conf.SetDefault("timeout_prevote", cfg.GetFloat("timeout_prevote"))
-	conf.SetDefault("timeout_prevote_delta", cfg.GetFloat("timeout_prevote_delta"))
-	conf.SetDefault("timeout_precommit", cfg.GetFloat("timeout_precommit"))
-	conf.SetDefault("timeout_precommit_delta", cfg.GetFloat("timeout_precommit_delta"))
-	conf.SetDefault("timeout_commit", cfg.GetFloat("timeout_commit"))
+	conf.SetDefault("timeout_propose", cfg.GetInt("timeout_propose"))
+	conf.SetDefault("timeout_propose_delta", cfg.GetInt("timeout_propose_delta"))
+	conf.SetDefault("timeout_prevote", cfg.GetInt("timeout_prevote"))
+	conf.SetDefault("timeout_prevote_delta", cfg.GetInt("timeout_prevote_delta"))
+	conf.SetDefault("timeout_precommit", cfg.GetInt("timeout_precommit"))
+	conf.SetDefault("timeout_precommit_delta", cfg.GetInt("timeout_precommit_delta"))
+	conf.SetDefault("timeout_commit", cfg.GetInt("timeout_commit"))
 	conf.SetDefault("skip_timeout_commit", cfg.GetBool("skip_timeout_commit"))
 
 	conf.SetDefault("mempool_recheck", true)
