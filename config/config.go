@@ -59,7 +59,7 @@ func InitRuntime(root string) {
 	// 生成默认的config.json
 	myConfigFilePath := path.Join(root, MYCONFIGFILE)
 	if !common.FileExists(myConfigFilePath) {
-		common.MustWriteFile(configFilePath, []byte(MYCONFIGTPL), 0644)
+		common.MustWriteFile(myConfigFilePath, []byte(MYCONFIGTPL), 0644)
 	}
 }
 
