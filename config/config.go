@@ -29,6 +29,7 @@ const (
 	DEFAULT_RUNTIME = ".ann_runtime"
 	DATADIR         = "data"
 	CONFIGFILE      = "config.toml"
+	MYCONFIGFILE    = "config.json" // 设置手续费等配置信息
 )
 
 func parseConfigTpl(moniker string, root string) (conf string) {
@@ -51,8 +52,14 @@ func InitRuntime(root string) {
 	common.EnsureDir(root, 0700)
 	common.EnsureDir(path.Join(root, DATADIR), 0700)
 	configFilePath := path.Join(root, CONFIGFILE)
+	// 生成默认的config.toml
 	if !common.FileExists(configFilePath) {
 		common.MustWriteFile(configFilePath, []byte(parseConfigTpl("anonymous", root)), 0644)
+	}
+	// 生成默认的config.json
+	myConfigFilePath := path.Join(root, MYCONFIGFILE)
+	if !common.FileExists(myConfigFilePath) {
+		common.MustWriteFile(configFilePath, []byte(MYCONFIGTPL), 0644)
 	}
 }
 
@@ -107,7 +114,7 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("cs_wal_light", false)
 	conf.SetDefault("filter_peers", false)
 
-	cfg := c.LoadConfigFile("./config.json")
+	cfg := c.LoadConfigFile(path.Join(root, MYCONFIGFILE))
 
 	conf.SetDefault("block_size", cfg.GetInt("block_size"))           // max number of txs
 	conf.SetDefault("block_part_size", cfg.GetInt("block_part_size")) // part size 64K
