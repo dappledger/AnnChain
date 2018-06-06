@@ -21,7 +21,7 @@ import (
 
 	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
 	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-config"
-	c "gitlab.zhonganinfo.com/tech_bighealth/za-delos/midware/util/config"
+	c "gitlab.zhonganinfo.com/tech_bighealth/za-delos/tools/config"
 )
 
 const (
