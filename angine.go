@@ -459,7 +459,12 @@ func (e *Angine) BroadcastTxCommit(tx []byte) (*types.ResultBroadcastTxCommit, e
 			Log:  res.Log,
 		}, nil
 	case <-timer.C:
-		return nil, fmt.Errorf("Timed out waiting for transaction to be included in a block")
+		// 如果交易超时了，需要将交易哈希和交易对象返回给上层
+		return &types.ResultBroadcastTxCommit{
+			Code: types.CodeType_Timeout,
+			Log:  "Timed out waiting for transaction to be included in a block",
+		}, nil
+		// return nil, fmt.Errorf("Timed out waiting for transaction to be included in a block")
 	}
 }
 

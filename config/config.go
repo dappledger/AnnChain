@@ -21,6 +21,7 @@ import (
 
 	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
 	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-config"
+	c "gitlab.zhonganinfo.com/tech_bighealth/za-delos/tools/config"
 )
 
 const (
@@ -28,6 +29,7 @@ const (
 	DEFAULT_RUNTIME = ".ann_runtime"
 	DATADIR         = "data"
 	CONFIGFILE      = "config.toml"
+	MYCONFIGFILE    = "config.json" // 设置手续费等配置信息
 )
 
 func parseConfigTpl(moniker string, root string) (conf string) {
@@ -50,8 +52,14 @@ func InitRuntime(root string) {
 	common.EnsureDir(root, 0700)
 	common.EnsureDir(path.Join(root, DATADIR), 0700)
 	configFilePath := path.Join(root, CONFIGFILE)
+	// 生成默认的config.toml
 	if !common.FileExists(configFilePath) {
 		common.MustWriteFile(configFilePath, []byte(parseConfigTpl("anonymous", root)), 0644)
+	}
+	// 生成默认的config.json
+	myConfigFilePath := path.Join(root, MYCONFIGFILE)
+	if !common.FileExists(myConfigFilePath) {
+		common.MustWriteFile(myConfigFilePath, []byte(MYCONFIGTPL), 0644)
 	}
 }
 
@@ -106,17 +114,19 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("cs_wal_light", false)
 	conf.SetDefault("filter_peers", false)
 
-	conf.SetDefault("block_size", 5000)       // max number of txs
-	conf.SetDefault("block_part_size", 65536) // part size 64K
-	conf.SetDefault("disable_data_hash", false)
-	conf.SetDefault("timeout_propose", 4000)
-	conf.SetDefault("timeout_propose_delta", 1000)
-	conf.SetDefault("timeout_prevote", 2000)
-	conf.SetDefault("timeout_prevote_delta", 1000)
-	conf.SetDefault("timeout_precommit", 2000)
-	conf.SetDefault("timeout_precommit_delta", 1000)
-	conf.SetDefault("timeout_commit", 2000)
-	conf.SetDefault("skip_timeout_commit", false)
+	cfg := c.LoadConfigFile(path.Join(root, MYCONFIGFILE))
+
+	conf.SetDefault("block_size", cfg.GetInt("block_size"))           // max number of txs
+	conf.SetDefault("block_part_size", cfg.GetInt("block_part_size")) // part size 64K
+	conf.SetDefault("disable_data_hash", cfg.GetBool("disable_data_hash"))
+	conf.SetDefault("timeout_propose", cfg.GetInt("timeout_propose"))
+	conf.SetDefault("timeout_propose_delta", cfg.GetInt("timeout_propose_delta"))
+	conf.SetDefault("timeout_prevote", cfg.GetInt("timeout_prevote"))
+	conf.SetDefault("timeout_prevote_delta", cfg.GetInt("timeout_prevote_delta"))
+	conf.SetDefault("timeout_precommit", cfg.GetInt("timeout_precommit"))
+	conf.SetDefault("timeout_precommit_delta", cfg.GetInt("timeout_precommit_delta"))
+	conf.SetDefault("timeout_commit", cfg.GetInt("timeout_commit"))
+	conf.SetDefault("skip_timeout_commit", cfg.GetBool("skip_timeout_commit"))
 
 	conf.SetDefault("mempool_recheck", true)
 	conf.SetDefault("mempool_recheck_empty", true)

@@ -27,3 +27,23 @@ seeds = ""
 signbyCA = ""
 
 `
+
+const MYCONFIGTPL = `
+{
+	"base_fee":0,
+	"base_reserve":0,
+	"max_txset_size":5000,
+
+	"block_size":5000,
+	"block_part_size":65536,
+	"disable_data_hash":false,
+	"timeout_propose":3000,
+	"timeout_propose_delta":500,
+	"timeout_prevote":1500,
+	"timeout_prevote_delta":500,
+	"timeout_precommit":2000,
+	"timeout_precommit_delta":500,
+	"timeout_commit":2000,
+	"skip_timeout_commit":false
+}
+`
