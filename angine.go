@@ -35,6 +35,7 @@ import (
 	"gitlab.zhonganinfo.com/tech_bighealth/angine/refuse_list"
 	"gitlab.zhonganinfo.com/tech_bighealth/angine/state"
 	"gitlab.zhonganinfo.com/tech_bighealth/angine/types"
+	"gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/ed25519"
 	cmn "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-common"
 	cfg "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-config"
 	crypto "gitlab.zhonganinfo.com/tech_bighealth/ann-module/lib/go-crypto"
@@ -235,6 +236,7 @@ func NewAngine(tune *AngineTunes) *Angine {
 
 	p2psw.SetNodePrivKey(privKey.(crypto.PrivKeyEd25519))
 	p2psw.SetAuthByCA(authByCA(stateM.ChainID, &stateM.Validators, logger))
+	p2psw.SetAuthByCA_Local(authByCA_Local(stateM.ChainID, &stateM.Validators, logger))
 	p2psw.SetAddToRefuselist(addToRefuselist(refuseList))
 	p2psw.SetRefuseListFilter(refuseListFilter(refuseList))
 
@@ -653,32 +655,56 @@ func refuseListFilter(refuseList *refuse_list.RefuseList) func(crypto.PubKeyEd25
 	}
 }
 
+func authByCA_Local(chainID string, ppValidators **types.ValidatorSet, log *zap.Logger) func(*p2p.NodeInfo) error {
+	valset := *ppValidators
+	return func(peerNodeInfo *p2p.NodeInfo) error {
+		msg := peerNodeInfo.PubKey[:]
+		for _, val := range valset.Validators {
+			if !val.IsCA {
+				continue // CA must be validator
+			}
+			valPk := [32]byte(val.PubKey.(crypto.PubKeyEd25519))
+			signedPkByte64, err := types.StringTo64byte(peerNodeInfo.SigndPubKey)
+			if err != nil {
+				return err
+			}
+			if ed25519.Verify(&valPk, msg, &signedPkByte64) {
+				log.Sugar().Infow("Peer handshake", "peerNodeInfo", peerNodeInfo)
+				return nil
+			}
+		}
+		err := fmt.Errorf("Reject Peer, has no CA sig")
+		log.Warn(err.Error())
+		return err
+	}
+}
+
 func authByCA(chainID string, ppValidators **types.ValidatorSet, log *zap.Logger) func(*p2p.NodeInfo) error {
-	// valset := *ppValidators
+	//valset := *ppValidators
 	return func(peerNodeInfo *p2p.NodeInfo) error {
 		{
 			log.Sugar().Infow("Peer handshake without CA check", "peerNodeInfo", peerNodeInfo)
 			return nil
 		}
 
-		// msg := peerNodeInfo.PubKey[:]
-		// for _, val := range valset.Validators {
-		// 	if !val.IsCA {
-		// 		continue // CA must be validator
-		// 	}
-		// 	valPk := [32]byte(val.PubKey.(crypto.PubKeyEd25519))
-		// 	signedPkByte64, err := types.StringTo64byte(peerNodeInfo.SigndPubKey)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// 	if ed25519.Verify(&valPk, msg, &signedPkByte64) {
-		// 		log.Sugar().Infow("Peer handshake", "peerNodeInfo", peerNodeInfo)
-		// 		return nil
-		// 	}
-		// }
-		// err := fmt.Errorf("Reject Peer, has no CA sig")
-		// log.Warn(err.Error())
-		// return err
+		//		msg := peerNodeInfo.PubKey[:]
+		//		for _, val := range valset.Validators {
+		//			if !val.IsCA {
+		//				continue // CA must be validator
+		//			}
+		//			valPk := [32]byte(val.PubKey.(crypto.PubKeyEd25519))
+		//			signedPkByte64, err := types.StringTo64byte(peerNodeInfo.SigndPubKey)
+		//			if err != nil {
+		//				return err
+		//			}
+		//			if ed25519.Verify(&valPk, msg, &signedPkByte64) {
+		//				log.Sugar().Infow("Peer handshake", "peerNodeInfo", peerNodeInfo)
+		//				return nil
+		//			}
+		//		}
+		//		err := fmt.Errorf("Reject Peer, has no CA sig")
+		//		log.Warn(err.Error())
+		//		return err
 	}
 }
 
