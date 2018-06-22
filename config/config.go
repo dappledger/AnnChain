@@ -98,6 +98,8 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("moniker", "anonymous")
 	conf.SetDefault("node_laddr", "tcp://0.0.0.0:46656")
 	conf.SetDefault("seeds", "")
+	conf.SetDefault("non_validator_node_auth", false)
+	conf.SetDefault("auth_by_ca", true)
 	conf.SetDefault("fast_sync", true)
 	conf.SetDefault("skip_upnp", false)
 	conf.SetDefault("addrbook_file", path.Join(root, "addrbook.json"))
