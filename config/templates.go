@@ -34,7 +34,7 @@ const MYCONFIGTPL = `
 	"base_reserve":0,
 	"max_txset_size":1000,
 
-	"block_size":2000,
+	"block_size":1000,
 	"block_part_size":65536,
 	"disable_data_hash":false,
 	"timeout_propose":3000,
