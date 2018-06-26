@@ -32,7 +32,7 @@ const MYCONFIGTPL = `
 {
 	"base_fee":0,
 	"base_reserve":0,
-	"max_txset_size":1000,
+	"max_txset_size":2000,
 	"block_size":2000,
 	"block_part_size":65536,
 	"disable_data_hash":false,
