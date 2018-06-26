@@ -99,7 +99,6 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("node_laddr", "tcp://0.0.0.0:46656")
 	conf.SetDefault("seeds", "")
 	conf.SetDefault("non_validator_node_auth", false)
-	conf.SetDefault("auth_by_ca", false)
 	conf.SetDefault("fast_sync", true)
 	conf.SetDefault("skip_upnp", false)
 	conf.SetDefault("addrbook_file", path.Join(root, "addrbook.json"))
@@ -129,6 +128,7 @@ func FillInDefaults(root string, conf *config.MapConfig) *config.MapConfig {
 	conf.SetDefault("timeout_precommit_delta", cfg.GetInt("timeout_precommit_delta"))
 	conf.SetDefault("timeout_commit", cfg.GetInt("timeout_commit"))
 	conf.SetDefault("skip_timeout_commit", cfg.GetBool("skip_timeout_commit"))
+	conf.SetDefault("auth_by_ca", cfg.GetBool("auth_by_ca"))
 
 	conf.SetDefault("mempool_recheck", true)
 	conf.SetDefault("mempool_recheck_empty", true)
