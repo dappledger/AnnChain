@@ -28,6 +28,7 @@ signbyCA = ""
 
 `
 
+//	"auth_by_ca":false
 const MYCONFIGTPL = `
 {
 	"base_fee":0,
@@ -43,7 +44,6 @@ const MYCONFIGTPL = `
 	"timeout_precommit":1000,
 	"timeout_precommit_delta":500,
 	"timeout_commit":1000,
-	"skip_timeout_commit":false,
-	"auth_by_ca":false
+	"skip_timeout_commit":false
 }
 `
