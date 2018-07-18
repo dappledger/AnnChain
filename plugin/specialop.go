@@ -280,16 +280,27 @@ func (s *Specialop) ValidateChangeValidator(cmd *types.SpecialOPCmd, toAdd *type
 
 	for _, v := range (*s.validators).Validators {
 		for _, s := range cmd.Sigs {
-			sig, err := crypto.SignatureFromBytes(s)
-			if err != nil {
-				continue
-			}
-			if v.PubKey.VerifyBytes(pubToAddEd[:], sig) {
+			//			sig, err := crypto.SignatureFromBytes(s)
+			//			if err != nil {
+			//				continue
+			//			}
+			//			if v.PubKey.VerifyBytes(pubToAddEd[:], sig) {
+			//				major23 += v.VotingPower
+
+			//				// We need only one signature of all validators
+			//				return nil
+			//			}
+			signedPkByte64 := types.BytesToByte64(s)
+
+			valPk := [32]byte(v.PubKey.(crypto.PubKeyEd25519))
+
+			if ed25519.Verify(&valPk, pubToAddEd[:], &signedPkByte64) {
 				major23 += v.VotingPower
 
 				// We need only one signature of all validators
 				return nil
 			}
+
 		}
 	}
 
