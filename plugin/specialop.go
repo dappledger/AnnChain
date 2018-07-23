@@ -219,6 +219,12 @@ func (s *Specialop) ProcessSpecialOP(cmd *types.SpecialOPCmd) error {
 			return err
 		}
 
+		for index, value := range s.ChangedValidators {
+			if value.Power == 0 {
+				s.ChangedValidators = append(s.ChangedValidators[:index], s.ChangedValidators[index+1:]...)
+			}
+		}
+
 		s.ChangedValidators = append(s.ChangedValidators, validator)
 
 	case types.SpecialOP_Disconnect:
