@@ -26,9 +26,10 @@ const (
 	CodeType_InsufficientFunds CodeType = 5
 	CodeType_UnknownRequest    CodeType = 6
 	CodeType_InvalidTx         CodeType = 7
+	CodeType_LowBalance        CodeType = 8
 
-	CodeType_Timeout CodeType = 8
-	CodeType_NonceTooLow       CodeType = 9
+	CodeType_Timeout     CodeType = 8
+	CodeType_NonceTooLow CodeType = 9
 	// Reserved for basecoin, 100 ~ 199
 	CodeType_BaseDuplicateAddress     CodeType = 101
 	CodeType_BaseEncodingError        CodeType = 102
@@ -59,6 +60,10 @@ const (
 	CodeType_GovInvalidVotingPower CodeType = 210
 	// Reserved for governance, 300 ~ 399
 	CodeType_ErrorParam CodeType = 301
+
+	CodeType_BadLimit  CodeType = 401
+	CodeType_BadPrice  CodeType = 402
+	CodeType_BadAmount CodeType = 403
 )
 
 var CodeType_name = map[int32]string{
@@ -69,6 +74,8 @@ var CodeType_name = map[int32]string{
 	4:   "Unauthorized",
 	5:   "InsufficientFunds",
 	6:   "UnknownRequest",
+	7:   "CodeType_InvalidTx",
+	8:   "CodeType_LowBalance",
 	101: "BaseDuplicateAddress",
 	102: "BaseEncodingError",
 	103: "BaseInsufficientFees",
@@ -95,6 +102,9 @@ var CodeType_name = map[int32]string{
 	209: "GovInvalidVote",
 	210: "GovInvalidVotingPower",
 	301: "ParamsError",
+	401: "CodeType_BadLimit",
+	402: "CodeType_BadPrice",
+	403: "CodeType_BadAmount",
 }
 var CodeType_value = map[string]int32{
 	"OK":                       0,
