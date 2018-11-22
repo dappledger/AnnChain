@@ -31,6 +31,7 @@ type Application interface {
 	CompatibleWithAngine()
 	CheckTx([]byte) Result
 	Query([]byte) Result
+	QueryNonce([]byte) Result
 	Info() ResultInfo
 	Start()
 	Stop()
