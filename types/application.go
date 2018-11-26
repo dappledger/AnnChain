@@ -31,7 +31,22 @@ type Application interface {
 	CompatibleWithAngine()
 	CheckTx([]byte) Result
 	Query([]byte) Result
-	QueryNonce([]byte) Result
+	QueryNonce(string) Result
+	QueryAccount(string) Result
+	QueryLedgers(string, uint64, uint64) Result
+	QueryLedger(uint64) Result
+	QueryPayments(string, uint64, uint64) Result
+	QueryAccountPayments(string, string, uint64, uint64) Result
+	QueryPayment(string) Result
+	QueryTransactions(string, uint64, uint64) Result
+	QueryTransaction(string) Result
+	QueryAccountTransactions(string, string, uint64, uint64) Result
+	QueryLedgerTransactions(uint64, string, uint64, uint64) Result
+	QueryDoContract([]byte) Result
+	QueryContractExist(string) Result
+	QueryReceipt(string) Result
+	QueryAccountManagedatas(string, string, uint64, uint64) Result
+	QueryAccountManagedata(string, string) Result
 	Info() ResultInfo
 	Start()
 	Stop()
