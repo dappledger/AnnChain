@@ -27,9 +27,10 @@ const (
 	CodeType_UnknownRequest    CodeType = 6
 	CodeType_InvalidTx         CodeType = 7
 	CodeType_LowBalance        CodeType = 8
-
-	CodeType_Timeout     CodeType = 8
-	CodeType_NonceTooLow CodeType = 9
+	CodeType_Timeout           CodeType = 9
+	CodeType_NonceTooLow       CodeType = 10
+	CodeType_Rpc               CodeType = 11
+	CodeType_DecodingError     CodeType = 12
 	// Reserved for basecoin, 100 ~ 199
 	CodeType_BaseDuplicateAddress     CodeType = 101
 	CodeType_BaseEncodingError        CodeType = 102
