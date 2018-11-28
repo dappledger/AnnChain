@@ -96,7 +96,7 @@ func genGenesiFile(path string, gVals []types.GenesisValidator) (*types.GenesisD
 		InitAccounts: []types.InitInfo{
 			types.InitInfo{
 				StartingBalance: "100000000000000",
-				Address:         "0x1dc0acae2ec57245b4ad0d3f6ce21373804ae77d", // privatekey:7cb4880c2d4863f88134fd01a250ef6633cc5e01aeba4c862bedbf883a148ba8
+				Address:         "0x65188459a1dc65984a0c7d4a397ed3986ed0c853", // privatekey:7cb4880c2d4863f88134fd01a250ef6633cc5e01aeba4c862bedbf883a148ba8
 			},
 		},
 	}
