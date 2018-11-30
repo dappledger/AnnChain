@@ -31,6 +31,8 @@ const (
 	CodeType_NonceTooLow       CodeType = 10
 	CodeType_Rpc               CodeType = 11
 	CodeType_DecodingError     CodeType = 12
+	CodeType_NullData          CodeType = 13
+
 	// Reserved for basecoin, 100 ~ 199
 	CodeType_BaseDuplicateAddress     CodeType = 101
 	CodeType_BaseEncodingError        CodeType = 102
