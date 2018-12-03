@@ -30,7 +30,6 @@ type Application interface {
 	GetAngineHooks() Hooks
 	CompatibleWithAngine()
 	CheckTx([]byte) Result
-	Query([]byte) Result
 	QueryNonce(string) Result
 	QueryAccount(string) Result
 	QueryLedgers(string, uint64, uint64) Result
