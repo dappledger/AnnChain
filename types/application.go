@@ -31,21 +31,21 @@ type Application interface {
 	CompatibleWithAngine()
 	CheckTx([]byte) Result
 	QueryNonce(string) Result
-	QueryAccount(string) Result
-	QueryLedgers(string, uint64, uint64) Result
-	QueryLedger(uint64) Result
-	QueryPayments(string, uint64, uint64) Result
-	QueryAccountPayments(string, string, uint64, uint64) Result
-	QueryPayment(string) Result
-	QueryTransactions(string, uint64, uint64) Result
-	QueryTransaction(string) Result
-	QueryAccountTransactions(string, string, uint64, uint64) Result
-	QueryLedgerTransactions(uint64, string, uint64, uint64) Result
-	QueryDoContract([]byte) Result
-	QueryContractExist(string) Result
-	QueryReceipt(string) Result
-	QueryAccountManagedatas(string, string, uint64, uint64) Result
-	QueryAccountManagedata(string, string) Result
+	QueryAccount(string) NewRPCResult
+	QueryLedgers(string, uint64, uint64) NewRPCResult
+	QueryLedger(uint64) NewRPCResult
+	QueryPayments(string, uint64, uint64) NewRPCResult
+	QueryAccountPayments(string, string, uint64, uint64) NewRPCResult
+	QueryPayment(string) NewRPCResult
+	QueryTransactions(string, uint64, uint64) NewRPCResult
+	QueryTransaction(string) NewRPCResult
+	QueryAccountTransactions(string, string, uint64, uint64) NewRPCResult
+	QueryLedgerTransactions(uint64, string, uint64, uint64) NewRPCResult
+	QueryDoContract([]byte) NewRPCResult
+	QueryContractExist(string) NewRPCResult
+	QueryReceipt(string) NewRPCResult
+	QueryAccountManagedatas(string, string, uint64, uint64) NewRPCResult
+	QueryAccountManagedata(string, string) NewRPCResult
 	Info() ResultInfo
 	Start()
 	Stop()

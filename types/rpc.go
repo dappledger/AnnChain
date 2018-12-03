@@ -148,6 +148,12 @@ type ResultCoreVersion struct {
 	Hash       string `json:"hash"`
 }
 
+type ResultAccountInfo struct {
+	Address string              `json:"address"`
+	Balance string              `json:"balance"`
+	Data    []map[string]string `json:"data"`
+}
+
 //----------------------------------------
 // response & result types
 
@@ -195,6 +201,8 @@ const (
 
 	// 0x9 bytes are for za_surveillance
 	ResultTypeSurveillance = byte(0x90)
+
+	ResultTypeAccountInfo = byte(0xbb)
 )
 
 type RPCResult interface {
@@ -230,4 +238,5 @@ var _ = wire.RegisterInterface(
 	wire.ConcreteType{&ResultSurveillance{}, ResultTypeSurveillance},
 	wire.ConcreteType{&ResultRefuseList{}, ResultTypeRefuseList},
 	wire.ConcreteType{&ResultCoreVersion{}, ResultTypeCoreVersion},
+	wire.ConcreteType{&ResultAccountInfo{}, ResultTypeAccountInfo},
 )

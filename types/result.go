@@ -25,6 +25,12 @@ type Result struct {
 	Log  string   `json:"Log"` // Can be non-deterministic
 }
 
+type NewRPCResult struct {
+	Code CodeType    `json:"Code"`
+	Data interface{} `json:"Data"`
+	Log  string      `json:"Log"` // Can be non-deterministic
+}
+
 type NewRoundResult struct {
 }
 
@@ -130,8 +136,23 @@ func NewResultOK(data []byte, log string) Result {
 	}
 }
 
+func NewRpcResultOK(data interface{}, log string) NewRPCResult {
+	return NewRPCResult{
+		Code: CodeType_OK,
+		Data: data,
+		Log:  log,
+	}
+}
+
 func NewError(code CodeType, log string) Result {
 	return Result{
+		Code: code,
+		Log:  log,
+	}
+}
+
+func NewRpcError(code CodeType, log string) NewRPCResult {
+	return NewRPCResult{
 		Code: code,
 		Log:  log,
 	}
