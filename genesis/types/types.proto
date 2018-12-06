@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package types;
+
+enum TRUST_LINE_FLAG{
+	NONE = 0;
+	AUTHORIZED = 1;
+}
+
+message PTrustData{
+	bytes Account = 1;
+	string AssetType = 2;
+	bytes AssetAmount = 3;
+	bytes Limit = 4;
+}
