@@ -27,7 +27,7 @@ import (
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/common/hexutil"
 	"github.com/dappledger/AnnChain/genesis/eth/rlp"
-	delostypes "github.com/dappledger/AnnChain/genesis/types"
+	genesistypes "github.com/dappledger/AnnChain/genesis/types"
 )
 
 var (
@@ -42,7 +42,7 @@ type Receipt struct {
 	Status            bool
 	CumulativeGasUsed *big.Int
 	Bloom             Bloom
-	Logs              []*delostypes.Log
+	Logs              []*genesistypes.Log
 	Ret               []byte
 	// Implementation fields (don't reorder!)
 	TxHash          common.Hash
@@ -52,15 +52,15 @@ type Receipt struct {
 }
 
 type jsonReceipt struct {
-	PostState         *common.Hash      `json:"root"`
-	Status            bool              `json:"txReceiptStatus"`
-	CumulativeGasUsed *hexutil.Big      `json:"cumulativeGasUsed"`
-	Bloom             *Bloom            `json:"logsBloom"`
-	Logs              []*delostypes.Log `json:"logs"`
-	TxHash            *common.Hash      `json:"transactionHash"`
-	ContractAddress   *common.Address   `json:"contractAddress"`
-	GasUsed           *hexutil.Big      `json:"gasUsed"`
-	Height            uint64            `json:"height"`
+	PostState         *common.Hash        `json:"root"`
+	Status            bool                `json:"txReceiptStatus"`
+	CumulativeGasUsed *hexutil.Big        `json:"cumulativeGasUsed"`
+	Bloom             *Bloom              `json:"logsBloom"`
+	Logs              []*genesistypes.Log `json:"logs"`
+	TxHash            *common.Hash        `json:"transactionHash"`
+	ContractAddress   *common.Address     `json:"contractAddress"`
+	GasUsed           *hexutil.Big        `json:"gasUsed"`
+	Height            uint64              `json:"height"`
 }
 
 // NewReceipt creates a barebone transaction receipt, copying the init fields.
@@ -87,7 +87,7 @@ func (r *Receipt) DecodeRLP(s *rlp.Stream) error {
 		PostState         []byte
 		CumulativeGasUsed *big.Int
 		Bloom             Bloom
-		Logs              []*delostypes.Log
+		Logs              []*genesistypes.Log
 		Height            uint64
 	}
 	if err := s.Decode(&receipt); err != nil {
@@ -186,9 +186,9 @@ func (r *ReceiptForStorage) DecodeRLP(s *rlp.Stream) error {
 	}
 	// Assign the consensus fields
 	r.PostState, r.CumulativeGasUsed, r.Bloom = receipt.PostState, receipt.CumulativeGasUsed, receipt.Bloom
-	r.Logs = make([]*delostypes.Log, len(receipt.Logs))
+	r.Logs = make([]*genesistypes.Log, len(receipt.Logs))
 	for i, log := range receipt.Logs {
-		r.Logs[i] = (*delostypes.Log)(log)
+		r.Logs[i] = (*genesistypes.Log)(log)
 	}
 	// Assign the implementation fields
 	r.TxHash, r.ContractAddress, r.GasUsed, r.Height = receipt.TxHash, receipt.ContractAddress, receipt.GasUsed, receipt.Height

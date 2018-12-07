@@ -22,7 +22,7 @@ import (
 	"github.com/dappledger/AnnChain/genesis/eth/core/state"
 	"github.com/dappledger/AnnChain/genesis/eth/core/types"
 	"github.com/dappledger/AnnChain/genesis/eth/core/vm"
-	delostypes "github.com/dappledger/AnnChain/genesis/types"
+	genesistypes "github.com/dappledger/AnnChain/genesis/types"
 )
 
 // Validator is an interface which defines the standard for block validation.
@@ -59,5 +59,5 @@ type HeaderValidator interface {
 // of gas used in the process and return an error if any of the internal rules
 // failed.
 type Processor interface {
-	Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*delostypes.Log, *big.Int, error)
+	Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*genesistypes.Log, *big.Int, error)
 }

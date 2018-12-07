@@ -21,7 +21,7 @@ import (
 
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/core/types"
-	delostypes "github.com/dappledger/AnnChain/genesis/types"
+	genesistypes "github.com/dappledger/AnnChain/genesis/types"
 )
 
 // TxPreEvent is posted when a transaction enters the transaction pool.
@@ -32,7 +32,7 @@ type TxPostEvent struct{ Tx *types.Transaction }
 
 // PendingLogsEvent is posted pre mining and notifies of pending logs.
 type PendingLogsEvent struct {
-	Logs []*delostypes.Log
+	Logs []*genesistypes.Log
 }
 
 // PendingStateEvent is posted pre mining and notifies of pending state changes.
@@ -45,18 +45,18 @@ type NewMinedBlockEvent struct{ Block *types.Block }
 type RemovedTransactionEvent struct{ Txs types.Transactions }
 
 // RemovedLogEvent is posted when a reorg happens
-type RemovedLogsEvent struct{ Logs []*delostypes.Log }
+type RemovedLogsEvent struct{ Logs []*genesistypes.Log }
 
 // ChainSplit is posted when a new head is detected
 type ChainSplitEvent struct {
 	Block *types.Block
-	Logs  []*delostypes.Log
+	Logs  []*genesistypes.Log
 }
 
 type ChainEvent struct {
 	Block *types.Block
 	Hash  common.Hash
-	Logs  []*delostypes.Log
+	Logs  []*genesistypes.Log
 }
 
 type ChainSideEvent struct {
@@ -65,7 +65,7 @@ type ChainSideEvent struct {
 
 type PendingBlockEvent struct {
 	Block *types.Block
-	Logs  []*delostypes.Log
+	Logs  []*genesistypes.Log
 }
 
 type ChainUncleEvent struct {

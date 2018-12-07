@@ -8,7 +8,6 @@ import (
 	"path"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
 	acfg "github.com/dappledger/AnnChain/angine/config"
 	"github.com/dappledger/AnnChain/ann-module/lib/ed25519"
 	"github.com/dappledger/AnnChain/ann-module/lib/go-config"
@@ -22,6 +21,7 @@ import (
 	"github.com/dappledger/AnnChain/genesis/chain/version"
 	"github.com/dappledger/AnnChain/genesis/eth/core/state"
 	"github.com/dappledger/AnnChain/genesis/tools"
+	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -156,7 +156,7 @@ func main() {
 func createNode(ctx *cli.Context) {
 	parseFlags(annConf, ctx)
 	dcfg.LoadDefaultConfig(annConf)
-	initApp := app.NewDelosApp(annConf, logger)
+	initApp := app.NewGenesisApp(annConf, logger)
 	node.RunNode(logger, annConf, initApp)
 }
 

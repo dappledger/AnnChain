@@ -7,7 +7,7 @@ import (
 )
 
 type DoManageData struct {
-	app *DelosApp
+	app *GenesisApp
 	op  *types.ManageDataOp
 	tx  *types.Transaction
 }

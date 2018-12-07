@@ -25,8 +25,8 @@ type DataManager struct {
 
 // NewDataManager create data manager
 func NewDataManager(cfg config.Config, logger *zap.Logger, dbc DBCreator) (*DataManager, error) {
-	opdb := dbc("delosop.db")
-	qdb := dbc("delosquety.db")
+	opdb := dbc("genesisop.db")
+	qdb := dbc("genesisquety.db")
 
 	// GetInitSQLs has nothing to do with specific instances, so use opdb or qdb are both ok
 	opt, opi, qt, qi := opdb.GetInitSQLs()

@@ -9,13 +9,13 @@ import (
 
 	"sync"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/dappledger/AnnChain/ann-module/lib/go-config"
 	"github.com/dappledger/AnnChain/genesis/chain/database"
 	"github.com/dappledger/AnnChain/genesis/chain/database/basesql"
 	"github.com/dappledger/AnnChain/genesis/chain/log"
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/types"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func getDM() *DataManager {
@@ -30,7 +30,7 @@ func getDM() *DataManager {
 
 	logger := log.Initialize("", "", "output.log", "err.log")
 
-	if _, err := splitlog.NewLog("D:/sqlitedb/", "delos", 2); err != nil {
+	if _, err := splitlog.NewLog("D:/sqlitedb/", "genesis", 2); err != nil {
 		panic(err)
 	}
 

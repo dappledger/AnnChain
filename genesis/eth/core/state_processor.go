@@ -26,7 +26,7 @@ import (
 	"github.com/dappledger/AnnChain/genesis/eth/logger"
 	"github.com/dappledger/AnnChain/genesis/eth/logger/glog"
 	"github.com/dappledger/AnnChain/genesis/eth/params"
-	delostypes "github.com/dappledger/AnnChain/genesis/types"
+	genesistypes "github.com/dappledger/AnnChain/genesis/types"
 )
 
 var (
@@ -58,13 +58,13 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain) *StateProcess
 // Process returns the receipts and logs accumulated during the process and
 // returns the amount of gas that was used in the process. If any of the
 // transactions failed to execute due to insufficient gas it will return an error.
-func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*delostypes.Log, *big.Int, error) {
+func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*genesistypes.Log, *big.Int, error) {
 	var (
 		receipts     types.Receipts
 		totalUsedGas = big.NewInt(0)
 		err          error
 		header       = block.Header()
-		allLogs      []*delostypes.Log
+		allLogs      []*genesistypes.Log
 		gp           = new(GasPool).AddGas(block.GasLimit())
 	)
 	// Mutate the the block and state according to any hard-fork specs

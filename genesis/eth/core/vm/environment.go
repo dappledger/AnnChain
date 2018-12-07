@@ -24,7 +24,7 @@ import (
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/crypto"
 	"github.com/dappledger/AnnChain/genesis/eth/params"
-	delostypes "github.com/dappledger/AnnChain/genesis/types"
+	genesistypes "github.com/dappledger/AnnChain/genesis/types"
 )
 
 type (
@@ -124,7 +124,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas,
 	}
 
 	var (
-		to       delostypes.Account
+		to       genesistypes.Account
 		snapshot = evm.StateDB.Snapshot()
 	)
 	if !evm.StateDB.Exist(addr) {

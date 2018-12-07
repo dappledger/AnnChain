@@ -63,7 +63,7 @@ type Paging struct {
 	Limit       uint64 // limit
 }
 
-// Database interface for delos app database-operation
+// Database interface for genesis app database-operation
 type Database interface {
 	Init(dbname string, cfg config.Config, logger *zap.Logger) error
 	Close()

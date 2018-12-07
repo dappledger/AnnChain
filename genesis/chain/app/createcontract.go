@@ -11,7 +11,7 @@ import (
 )
 
 type DoCreateContract struct {
-	app *DelosApp
+	app *GenesisApp
 	op  *types.CreateContractOp
 	tx  *types.Transaction
 	gas string

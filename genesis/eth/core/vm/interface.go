@@ -21,13 +21,13 @@ import (
 
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 	//	"github.com/dappledger/AnnChain/genesis/eth/core/types"
-	delostypes "github.com/dappledger/AnnChain/genesis/types"
+	genesistypes "github.com/dappledger/AnnChain/genesis/types"
 )
 
 // StateDB is an EVM database for full state querying.
 type StateDB interface {
-	GetAccount(common.Address) delostypes.Account
-	CreateAccount(common.Address) delostypes.Account
+	GetAccount(common.Address) genesistypes.Account
+	CreateAccount(common.Address) genesistypes.Account
 
 	SubBalance(common.Address, *big.Int, string)
 	AddBalance(common.Address, *big.Int, string)
@@ -60,7 +60,7 @@ type StateDB interface {
 	RevertToSnapshot(int)
 	Snapshot() int
 
-	AddLog(*delostypes.Log)
+	AddLog(*genesistypes.Log)
 	AddPreimage(common.Hash, []byte)
 }
 

@@ -13,7 +13,7 @@ import (
 )
 
 type DoExcuteContract struct {
-	app *DelosApp
+	app *GenesisApp
 	op  *types.ExcuteContractOp
 	tx  *types.Transaction
 }

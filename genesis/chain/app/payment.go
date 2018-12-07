@@ -8,7 +8,7 @@ import (
 )
 
 type DoPayment struct {
-	app *DelosApp
+	app *GenesisApp
 	op  *types.PaymentOp
 	tx  *types.Transaction
 }

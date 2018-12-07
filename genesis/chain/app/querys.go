@@ -57,7 +57,7 @@ func wrapActionResultData(actions []types.ActionData) at.NewRPCResult {
 	return at.NewRpcResultOK(mres, "")
 }
 
-func (app *DelosApp) queryDoContract(bs []byte) at.NewRPCResult {
+func (app *GenesisApp) queryDoContract(bs []byte) at.NewRPCResult {
 
 	var err error
 
@@ -105,7 +105,7 @@ func (app *DelosApp) queryDoContract(bs []byte) at.NewRPCResult {
 	return at.NewRpcResultOK(ethcmn.Bytes2Hex(res), "")
 }
 
-func (app *DelosApp) queryAllLedgers(cursor, limit uint64, order string) at.NewRPCResult {
+func (app *GenesisApp) queryAllLedgers(cursor, limit uint64, order string) at.NewRPCResult {
 	res, err := app.dataM.QueryAllLedgerHeaderData(cursor, limit, order)
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, err.Error())
@@ -114,7 +114,7 @@ func (app *DelosApp) queryAllLedgers(cursor, limit uint64, order string) at.NewR
 	return at.NewRpcResultOK(res, "")
 }
 
-func (app *DelosApp) queryLedger(seq *big.Int) at.NewRPCResult {
+func (app *GenesisApp) queryLedger(seq *big.Int) at.NewRPCResult {
 	res, err := app.dataM.QueryLedgerHeaderData(seq)
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, err.Error())
@@ -127,7 +127,7 @@ func (app *DelosApp) queryLedger(seq *big.Int) at.NewRPCResult {
 	return at.NewRpcResultOK(res, "")
 }
 
-func (app *DelosApp) queryPaymentsData(q types.ActionsQuery) at.NewRPCResult {
+func (app *GenesisApp) queryPaymentsData(q types.ActionsQuery) at.NewRPCResult {
 	res, err := app.dataM.QueryPaymentData(q)
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, err.Error())
@@ -140,7 +140,7 @@ func (app *DelosApp) queryPaymentsData(q types.ActionsQuery) at.NewRPCResult {
 	return wrapActionResultData(res)
 }
 
-func (app *DelosApp) queryEffectsData(q types.EffectsQuery) at.Result {
+func (app *GenesisApp) queryEffectsData(q types.EffectsQuery) at.Result {
 	res, err := app.dataM.QueryEffectData(q)
 	if err != nil {
 		return at.NewError(at.CodeType_InternalError, err.Error())
@@ -149,7 +149,7 @@ func (app *DelosApp) queryEffectsData(q types.EffectsQuery) at.Result {
 	return wrapEffectResultData(res)
 }
 
-func (app *DelosApp) queryActionsData(q types.ActionsQuery) at.NewRPCResult {
+func (app *GenesisApp) queryActionsData(q types.ActionsQuery) at.NewRPCResult {
 	res, err := app.dataM.QueryActionData(q)
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, err.Error())
@@ -162,7 +162,7 @@ func (app *DelosApp) queryActionsData(q types.ActionsQuery) at.NewRPCResult {
 	return wrapActionResultData(res)
 }
 
-func (app *DelosApp) queryAllTxs(cursor, limit uint64, order string) at.NewRPCResult {
+func (app *GenesisApp) queryAllTxs(cursor, limit uint64, order string) at.NewRPCResult {
 	res, err := app.dataM.QueryAllTxs(cursor, limit, order)
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, err.Error())
@@ -175,7 +175,7 @@ func (app *DelosApp) queryAllTxs(cursor, limit uint64, order string) at.NewRPCRe
 	return at.NewRpcResultOK(res, "")
 }
 
-func (app *DelosApp) queryTx(txhash ethcmn.Hash) at.Result {
+func (app *GenesisApp) queryTx(txhash ethcmn.Hash) at.Result {
 	res, err := app.dataM.QuerySingleTx(&txhash)
 	if err != nil {
 		return at.NewError(at.CodeType_InternalError, err.Error())
@@ -190,7 +190,7 @@ func (app *DelosApp) queryTx(txhash ethcmn.Hash) at.Result {
 	return makeResultData(data)
 }
 
-func (app *DelosApp) queryAccountTxs(addr ethcmn.Address, cursor, limit uint64, order string) at.NewRPCResult {
+func (app *GenesisApp) queryAccountTxs(addr ethcmn.Address, cursor, limit uint64, order string) at.NewRPCResult {
 	res, err := app.dataM.QueryAccountTxs(&addr, cursor, limit, order)
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, err.Error())
@@ -203,7 +203,7 @@ func (app *DelosApp) queryAccountTxs(addr ethcmn.Address, cursor, limit uint64, 
 	return at.NewRpcResultOK(res, "")
 }
 
-func (app *DelosApp) queryHeightTxs(height string, cursor, limit uint64, order string) at.NewRPCResult {
+func (app *GenesisApp) queryHeightTxs(height string, cursor, limit uint64, order string) at.NewRPCResult {
 	res, err := app.dataM.QueryHeightTxs(height, cursor, limit, order)
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, err.Error())
@@ -216,7 +216,7 @@ func (app *DelosApp) queryHeightTxs(height string, cursor, limit uint64, order s
 	return at.NewRpcResultOK(res, "")
 }
 
-func (app *DelosApp) queryAccountManagedata(addr ethcmn.Address, name string, cursor, limit uint64, order string) at.NewRPCResult {
+func (app *GenesisApp) queryAccountManagedata(addr ethcmn.Address, name string, cursor, limit uint64, order string) at.NewRPCResult {
 	res, err := app.dataM.QueryAccountManagedata(addr, name, cursor, limit, order)
 
 	if err != nil {
@@ -230,7 +230,7 @@ func (app *DelosApp) queryAccountManagedata(addr ethcmn.Address, name string, cu
 	return at.NewRpcResultOK(res, "")
 }
 
-func (app *DelosApp) queryAccountSingleManageData(addr ethcmn.Address, keys string) at.NewRPCResult {
+func (app *GenesisApp) queryAccountSingleManageData(addr ethcmn.Address, keys string) at.NewRPCResult {
 	res, err := app.dataM.QuerySingleManageData(addr, keys)
 
 	if err != nil {

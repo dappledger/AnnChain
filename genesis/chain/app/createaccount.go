@@ -8,7 +8,7 @@ import (
 )
 
 type DoCreateAccount struct {
-	app *DelosApp
+	app *GenesisApp
 	op  *types.CreateAccountOp
 	tx  *types.Transaction
 }

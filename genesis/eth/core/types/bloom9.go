@@ -23,7 +23,7 @@ import (
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/common/hexutil"
 	"github.com/dappledger/AnnChain/genesis/eth/crypto"
-	delostypes "github.com/dappledger/AnnChain/genesis/types"
+	genesistypes "github.com/dappledger/AnnChain/genesis/types"
 )
 
 type bytesBacked interface {
@@ -95,7 +95,7 @@ func CreateBloom(receipts Receipts) Bloom {
 	return BytesToBloom(bin.Bytes())
 }
 
-func LogsBloom(logs []*delostypes.Log) *big.Int {
+func LogsBloom(logs []*genesistypes.Log) *big.Int {
 	bin := new(big.Int)
 	for _, log := range logs {
 		bin.Or(bin, bloom9(log.Address.Bytes()))

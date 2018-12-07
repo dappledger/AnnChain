@@ -27,7 +27,7 @@ import (
 
 	"github.com/dappledger/AnnChain/genesis/eth/crypto"
 	"github.com/dappledger/AnnChain/genesis/eth/params"
-	delostypes "github.com/dappledger/AnnChain/genesis/types"
+	genesistypes "github.com/dappledger/AnnChain/genesis/types"
 )
 
 var (
@@ -651,7 +651,7 @@ func makeLog(size int) executionFunc {
 		}
 
 		d := memory.Get(mStart.Int64(), mSize.Int64())
-		env.StateDB.AddLog(&delostypes.Log{
+		env.StateDB.AddLog(&genesistypes.Log{
 			Address: contract.Address(),
 			Topics:  topics,
 			Data:    d,

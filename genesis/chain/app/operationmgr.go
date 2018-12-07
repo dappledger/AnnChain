@@ -15,10 +15,10 @@ import (
 
 type OperationManager struct {
 	DB  types.OperationDBItfc
-	app *DelosApp
+	app *GenesisApp
 }
 
-func (m *OperationManager) Init(db types.OperationDBItfc, app *DelosApp) {
+func (m *OperationManager) Init(db types.OperationDBItfc, app *GenesisApp) {
 	m.DB = db
 	m.app = app
 }
