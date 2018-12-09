@@ -1,0 +1,16 @@
+*.swp
+*.swo
+.bak
+*.bak
+*.exe
+.DS_Store
+build/*
+.ann_runtime/*
+rpc/test/.tendermint
+.debora
+.tendermint
+remote_dump
+.revision
+vendor
+.vagrant
+test/p2p/data/
