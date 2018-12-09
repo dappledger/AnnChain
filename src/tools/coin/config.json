@@ -1,8 +1,0 @@
-{
-  "duration": "1s",
-  "host":     "tcp://127.0.0.1:46657",
-  "value":     10,
-  "payload":  "abc",
-  "number":   2000,
-  "chainid": "test-chain-OJOk1H"
-}

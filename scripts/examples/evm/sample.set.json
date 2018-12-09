@@ -1,6 +1,0 @@
-{
-    "privkey": "0xb00d886c8b115e08065ba130c52ed9953783c74ffe4a681e731aeaaf04142e0e",
-    "contract": "0x5b91b6c8a1091290f57fa7fe14e26c2e52cdd04a",
-    "function": "set",
-    "params": ["hello", "world"]
-}
