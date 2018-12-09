@@ -1,7 +1,5 @@
 # AnnChain
 ## 一、Genesis介绍
-
-Genesis作为Annchain第一代公链系统，采用DPOS+PBFT混合共识，合约模块化，开发工具化的区块链基础设施。Genesis主要的目标是要能够以区块链技术为基础，承载众安科技的众多产品，快速开发部署区块链的应用模式。Genesis采用三层架构:协议层、扩展层和应用层，分别用以存储不可篡改的原始数据、实现各种功能（例如，智能合约）和运行各种应用（例如银行的移动应用）。每个区块链节点可以部署多个子链，子链承载不同的应用。目前，我们支持的应用有以太坊合约引擎和JVM合约引擎。
 注：Annchain.Genesis的开源协议为GPL3.0，详情参考[LICENSES](https://github.com/dappledger/AnnChain/blob/master/LICENSE)
 
 ### 1.1本教程你能学到什么
