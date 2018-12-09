@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package state;
+
+import "github.com/dappledger/AnnChain/angine/protos/types/types.proto";
+
+message GenesisDoc{
+	bytes JSONData = 1;	
+}
+
+message ValidatorSet{
+	bytes JSONData = 2;
+}
+
+//message ValidatorAttr{
+//	bytes PubKey = 1;
+//	uint64 Power = 2;
+//	bool IsCA = 3;
+//}
+
+enum Type{
+	PluginNone = 0;
+	PluginSpecialOp = 1;	
+	PluginSuspect = 2;
+	PluginQueryCache = 3;
+}
+
+message SpecialOp{
+	bytes JSONData = 1;	
+}
+
+message SuspectPlugin{
+	bytes JSONData = 1;
+}
+
+message QueryCachePlugin{
+	bytes JSONData = 1;
+}
+
+message Plugin{
+	Type Type = 1;
+	bytes PData = 2;
+}
+
+message State{
+	GenesisDoc GenesisDoc = 1;
+	string ChainID = 2;
+	int64 LastBlockHeight = 3;
+	types.BlockID LastBlockID = 4;
+	int64 LastBlockTime = 5;
+	ValidatorSet Validators = 6;
+	ValidatorSet LastValidators = 7;
+	int64 LastNonEmptyHeight = 8;
+	bytes AppHash = 9;
+	bytes ReceiptsHash = 10;
+	//repeated Plugin Plugins = 11;
+}

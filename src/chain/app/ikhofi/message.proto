@@ -1,0 +1,55 @@
+syntax = "proto3";
+package ikhofi;
+
+message Execution {
+    int32 version = 1;
+    string id = 2;
+    string method = 3;
+    repeated string args = 4;
+    TxInfo txInfo = 5;
+    bytes byteCode = 6;
+}
+
+message Query {
+    int32 version = 1;
+    string id = 2;
+    string method = 3;
+    repeated string args = 4;
+}
+
+message TxInfo {
+    int64 blockHeight = 1;
+    bytes lastCommitHash = 2;
+    string txFrom = 3;
+    int64 blockTime = 4;
+    bytes txHash = 5;
+}
+
+message Result {
+    int32 version = 1;
+    int32 code = 2;
+    string msg = 3;
+    string value = 4;
+}
+
+message TransactionPb {
+    bytes from = 1;
+    string to = 2;
+    string method = 3;
+    repeated string args = 4;
+    bytes bytecode = 5;
+    int64 nonce = 6;
+    bytes v = 7;
+    bytes r = 8;
+    bytes s = 9;
+    bytes hash = 10;
+}
+
+message TransactionPbTmp {
+    bytes from = 1;
+    string to = 2;
+    string method = 3;
+    repeated string args = 4;
+    bytes bytecode = 5;
+    int64 nonce = 6;
+}

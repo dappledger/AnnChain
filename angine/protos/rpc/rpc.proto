@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package rpc;
+
+import "github.com/dappledger/AnnChain/angine/protos/types/types.proto";
+import "github.com/dappledger/AnnChain/angine/protos/events/events.proto";
+
+message ResultBlockchainInfo{
+	int64 LastHeight = 1;
+	repeated types.BlockMeta BlockMetas = 2;
+}
+
+message ResultGenesis{
+	bytes GenesisJSON = 1;
+}
+
+message ResultBlock{
+	types.BlockMeta BlockMeta = 1;
+	types.Block Block = 2;
+}
+
+message ResultOrgs{
+	repeated string Names = 1;
+}
+
+message ResultStatus{
+	bytes NodeInfoJSON= 1;
+	types.PubKey Pubkey = 2;
+	bytes LatestBlockHash = 3;
+	bytes LatestAppHash = 4;
+	int64 LatestBlockHeight = 5;
+	int64 LatestBlockTime = 6;
+}
+
+message Peer {
+	bytes NodeInfoJSON = 1;
+	bool IsOutbound = 2;
+	bytes ConnectionStatusJSON = 3;	
+}
+
+message ResultNetInfo{
+	bool Listening = 1;
+	repeated string Listeners = 2;
+	repeated Peer peers = 3;
+}
+
+message ResultValidators{
+	int64 BlockHeight = 1;
+	repeated bytes ValidatorsJSON = 2;
+}
+
+message ResultDumpConsensusState{
+	string RoundState = 1;
+	repeated string PeerRoundStates = 2;
+}
+
+message ResultBroadcastTx{
+	types.Result Result = 1;
+}
+
+message ResultRequestSpecialOP{
+	types.Result Result = 1;
+}
+
+message ResultBroadcastTxCommit{
+	types.Result Result = 1;
+}
+
+message ResultUnconfirmedTxs{
+	int64 N = 1;
+	repeated bytes Txs = 2;
+}
+
+message ResultNumArchivedBlocks{
+	int64 Num = 1;
+}
+
+message ResultInfo{
+	string Data = 1;
+	string Version = 2;
+	int64 LastBlockHeight = 3;
+	bytes LastBlockAppHash = 4;
+}
+
+message ResultQuery{
+	types.Result Result = 1;
+}
+
+message ResultRefuseList{
+	repeated string Result = 1;
+}
+
+message ResultUnsafeFlushMempool{
+}
+
+message ResultUnsafeSetConfig{
+}
+
+message ResultUnsafeProfile{
+}
+
+message ResultSubscribe{
+}
+
+message ResultUnsubscribe{
+}
+
+message ResultEvent{
+	string Name = 1;
+	events.EventType Type = 2;
+	bytes Event = 3;
+}
+
+message ResultSurveillance{
+	int64 NanoSecsPerTx = 1;
+	int64 Height = 2;
+	string Addr = 3;
+	bool IsValidators = 4;
+	int64 NumValidators = 5;
+	int64 NumPeers = 6;
+	int64 RunningTime = 7;
+	string PubKey = 8;	
+}
+
+message ResultCoreVersion{
+	string Version = 1;
+	string AppName = 2;
+	string AppVersion = 3;
+	string Hash = 4;
+}
+
+message ResultNonEmptyHeights{
+	repeated int64 Heights = 1;
+}
+
+enum Type{
+	RpcNone = 0x00;
+	RpcGenesis           =0x01;
+	RpcBlockchainInfo    = 0x02;
+	RpcBlock             = 0x03;
+	RpcNonEmptyHeights   = 0x04;
+	RpcNumArchivedBlocks = 0x05;
+
+	// 0x2 bytes are for the network                        
+	RpcStatus    = 0x20;                        
+	RpcNetInfo   = 0x21;                        
+	RpcDialSeeds = 0x22;                        
+	RpcOrgs      = 0x23;                        
+
+	// 0x1  bytes are for refuseList                        
+	RpcRefuseList = 0x10; 
+
+	// 0x4 bytes are for the consensus                      
+	RpcValidators         = 0x40;
+	RpcDumpConsensusState = 0x41;
+
+	// 0x6 bytes are for txs / the application              
+	RpcBroadcastTx       = 0x60;
+	RpcUnconfirmedTxs    = 0x61;
+	RpcBroadcastTxCommit = 0x62;
+	RpcRequestSpecialOP  = 0x63;
+
+	// 0x7 bytes are for querying the application           
+	RpcQuery = 0x70;                     
+	RpcInfo  = 0x71;                     
+
+	// 0x8 bytes are for events                             
+	RpcSubscribe   = 0x80;                      
+	RpcUnsubscribe = 0x81;                      
+	RpcEvent       = 0x82;                      
+
+	// 0xa bytes for testing                                
+	RpcUnsafeSetConfig        = 0xa0;
+	RpcUnsafeStartCPUProfiler = 0xa1;
+	RpcUnsafeStopCPUProfiler  = 0xa2;
+	RpcUnsafeWriteHeapProfile = 0xa3;
+	RpcUnsafeFlushMempool     = 0xa4;
+	RpcCoreVersion            = 0xaf;
+
+	// 0x9 bytes are for za_surveillance                    
+	RpcSurveillance = 0x90;
+}

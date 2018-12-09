@@ -1,0 +1,402 @@
+// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package consensus
+
+import (
+	"bufio"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+
+	"go.uber.org/zap"
+
+	csspb "github.com/dappledger/AnnChain/angine/protos/consensus"
+	sm "github.com/dappledger/AnnChain/angine/state"
+	agtypes "github.com/dappledger/AnnChain/angine/types"
+	auto "github.com/dappledger/AnnChain/module/lib/go-autofile"
+	. "github.com/dappledger/AnnChain/module/lib/go-common"
+	"github.com/dappledger/AnnChain/module/xlib/def"
+)
+
+// Unmarshal and apply a single message to the consensus state
+// as if it were received in receiveRoutine
+// Lines that start with "#" are ignored.
+// NOTE: receiveRoutine should not be running
+func (cs *ConsensusState) readReplayMessage(msgBytes []byte, newStepCh chan interface{}) error {
+	// Skip over empty and meta lines
+	if len(msgBytes) == 0 || msgBytes[0] == '#' {
+		return nil
+	}
+	var err error
+	var msg TimedWALMessage
+	err = json.Unmarshal(msgBytes, &msg)
+	//err = msgpack.Unmarshal(msgBytes, &msg)
+	if err != nil {
+		fmt.Println("MsgBytes:", string(msgBytes), ",err:", err)
+		return fmt.Errorf("Error reading json data: %v", err)
+	}
+
+	// for logging
+	switch m := msg.GetMsg().(type) {
+	case *agtypes.EventDataRoundState:
+		cs.logger.Info("Replay: New Step", zap.Int64("height", m.Height), zap.Int64("round", m.Round), zap.String("step", m.Step))
+		// these are playback checks
+		ticker := time.After(time.Second * 2)
+		if newStepCh != nil {
+			select {
+			case mi := <-newStepCh:
+				m2 := mi.(agtypes.EventDataRoundState)
+				if m.Height != m2.Height || m.Round != m2.Round || m.Step != m2.Step {
+					return fmt.Errorf("RoundState mismatch. Got %v; Expected %v", m2, m)
+				}
+			case <-ticker:
+				return fmt.Errorf("Failed to read off newStepCh")
+			}
+		}
+	case *msgInfo:
+		peerKey := m.PeerKey
+		if peerKey == "" {
+			peerKey = "local"
+		}
+		switch msg := m.GetMsg().(type) {
+		case *csspb.ProposalMessage:
+			pdata := msg.Proposal.GetData()
+			cs.slogger.Debugw("Replay: Proposal", "height", pdata.Height, "round", pdata.Round, "header",
+				pdata.BlockPartsHeader, "pol", pdata.POLRound, "peer", peerKey)
+		case *csspb.BlockPartMessage:
+			cs.logger.Debug("Replay: BlockPart", zap.Int64("height", msg.Height), zap.Int64("round", msg.Round), zap.String("peer", peerKey))
+		case *csspb.VoteMessage:
+			v := msg.Vote.Data
+			cs.slogger.Debugw("Replay: Vote", "height", v.Height, "round", v.Round, "type", v.Type,
+				"blockID", v.BlockID, "peer", peerKey)
+		}
+
+		cs.handleMsg(*m, cs.RoundState)
+	case *timeoutInfo:
+		cs.slogger.Infow("Replay: Timeout", "height", m.Height, "round", m.Round, "step", m.Step, "dur", m.Duration)
+		cs.handleTimeout(*m, cs.RoundState)
+	default:
+		return fmt.Errorf("Replay: Unknown TimedWALMessage type: %v", reflect.TypeOf(msg.Msg))
+	}
+	return nil
+}
+
+func (cs *ConsensusState) CatchupReplay(height def.INT) error {
+	return cs.catchupReplay(height)
+}
+
+// replay only those messages since the last block.
+// timeoutRoutine should run concurrently to read off tickChan
+func (cs *ConsensusState) catchupReplay(csHeight def.INT) error {
+
+	// set replayMode
+	cs.replayMode = true
+	defer func() { cs.replayMode = false }()
+
+	// Ensure that height+1 doesn't exist
+	gr, found, err := cs.wal.group.Search("#HEIGHT: ", makeHeightSearchFunc(csHeight+1))
+	if found {
+		return errors.New(Fmt("WAL should not contain height %d.", csHeight+1))
+	}
+	if gr != nil {
+		gr.Close()
+	}
+
+	// Search for height marker
+	gr, found, err = cs.wal.group.Search("#HEIGHT: ", makeHeightSearchFunc(csHeight))
+	if err == io.EOF {
+		cs.logger.Warn("Replay: wal.group.Search returned EOF", zap.Int64("height", csHeight))
+		return nil
+	} else if err != nil {
+		return err
+	}
+	if !found {
+		return errors.New(Fmt("WAL does not contain height %d.", csHeight))
+	}
+	defer gr.Close()
+
+	cs.logger.Info("Catchup by replaying consensus messages", zap.Int64("height", csHeight))
+
+	for {
+		line, err := gr.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				return err
+			}
+		}
+		// NOTE: since the priv key is set when the msgs are received
+		// it will attempt to eg double sign but we can just ignore it
+		// since the votes will be replayed and we'll get to the next step
+		if err := cs.readReplayMessage([]byte(line), nil); err != nil {
+			return err
+		}
+	}
+	cs.logger.Info("Replay: Done")
+	return nil
+}
+
+//--------------------------------------------------------
+// replay messages interactively or all at once
+
+// Interactive playback
+func (cs ConsensusState) ReplayConsole(file string) error {
+	return cs.replay(file, true)
+}
+
+// Full playback, with tests
+func (cs ConsensusState) ReplayMessages(file string) error {
+	return cs.replay(file, false)
+}
+
+// replay all msgs or start the console
+func (cs *ConsensusState) replay(file string, console bool) error {
+	if cs.IsRunning() {
+		return errors.New("cs is already running, cannot replay")
+	}
+	if cs.wal != nil {
+		return errors.New("cs wal is open, cannot replay")
+	}
+
+	cs.startForReplay()
+
+	// ensure all new step events are regenerated as expected
+	newStepCh := subscribeToEvent(cs.evsw, "replay-test", agtypes.EventStringNewRoundStep(), 1)
+
+	// just open the file for reading, no need to use wal
+	fp, err := os.OpenFile(file, os.O_RDONLY, 0666)
+	if err != nil {
+		return err
+	}
+
+	pb := newPlayback(cs.slogger, file, fp, cs, cs.state.Copy())
+	defer pb.fp.Close()
+
+	var nextN int // apply N msgs in a row
+	for pb.scanner.Scan() {
+		if nextN == 0 && console {
+			nextN = pb.replayConsoleLoop()
+		}
+
+		if err := pb.cs.readReplayMessage(pb.scanner.Bytes(), newStepCh); err != nil {
+			return err
+		}
+
+		if nextN > 0 {
+			nextN -= 1
+		}
+		pb.count += 1
+	}
+	return nil
+}
+
+//------------------------------------------------
+// playback manager
+
+type playback struct {
+	cs *ConsensusState
+
+	fp      *os.File
+	scanner *bufio.Scanner
+	count   int // how many lines/msgs into the file are we
+
+	// replays can be reset to beginning
+	fileName     string    // so we can close/reopen the file
+	genesisState *sm.State // so the replay session knows where to restart from
+
+	slogger *zap.SugaredLogger
+}
+
+func newPlayback(slogger *zap.SugaredLogger, fileName string, fp *os.File, cs *ConsensusState, genState *sm.State) *playback {
+	return &playback{
+		cs:           cs,
+		fp:           fp,
+		fileName:     fileName,
+		genesisState: genState,
+		scanner:      bufio.NewScanner(fp),
+		slogger:      slogger,
+	}
+}
+
+// go back count steps by resetting the state and running (pb.count - count) steps
+func (pb *playback) replayReset(count int, newStepCh chan interface{}) error {
+
+	pb.cs.Stop()
+	pb.cs.Wait()
+
+	newCS := NewConsensusState(pb.slogger.Desugar(), pb.cs.config, pb.genesisState.Copy(), pb.cs.blockStore, pb.cs.mempool)
+	newCS.SetEventSwitch(pb.cs.evsw)
+	newCS.startForReplay()
+
+	pb.fp.Close()
+	fp, err := os.OpenFile(pb.fileName, os.O_RDONLY, 0666)
+	if err != nil {
+		return err
+	}
+	pb.fp = fp
+	pb.scanner = bufio.NewScanner(fp)
+	count = pb.count - count
+	pb.slogger.Infof("Reseting from %d to %d", pb.count, count)
+	pb.count = 0
+	pb.cs = newCS
+	for i := 0; pb.scanner.Scan() && i < count; i++ {
+		if err := pb.cs.readReplayMessage(pb.scanner.Bytes(), newStepCh); err != nil {
+			return err
+		}
+		pb.count += 1
+	}
+	return nil
+}
+
+func (cs *ConsensusState) startForReplay() {
+	// don't want to start full cs
+	cs.BaseService.OnStart()
+
+	cs.logger.Warn("Replay commands are disabled until someone updates them and writes tests")
+	/* TODO:!
+	// since we replay tocks we just ignore ticks
+		go func() {
+			for {
+				select {
+				case <-cs.tickChan:
+				case <-cs.Quit:
+					return
+				}
+			}
+		}()*/
+}
+
+// console function for parsing input and running commands
+func (pb *playback) replayConsoleLoop() int {
+	for {
+		fmt.Printf("> ")
+		bufReader := bufio.NewReader(os.Stdin)
+		line, more, err := bufReader.ReadLine()
+		if more {
+			Exit("input is too long")
+		} else if err != nil {
+			Exit(err.Error())
+		}
+
+		tokens := strings.Split(string(line), " ")
+		if len(tokens) == 0 {
+			continue
+		}
+
+		switch tokens[0] {
+		case "next":
+			// "next" -> replay next message
+			// "next N" -> replay next N messages
+
+			if len(tokens) == 1 {
+				return 0
+			} else {
+				i, err := strconv.Atoi(tokens[1])
+				if err != nil {
+					fmt.Println("next takes an integer argument")
+				} else {
+					return i
+				}
+			}
+
+		case "back":
+			// "back" -> go back one message
+			// "back N" -> go back N messages
+
+			// NOTE: "back" is not supported in the state machine design,
+			// so we restart and replay up to
+
+			// ensure all new step events are regenerated as expected
+			newStepCh := subscribeToEvent(pb.cs.evsw, "replay-test", agtypes.EventStringNewRoundStep(), 1)
+			if len(tokens) == 1 {
+				pb.replayReset(1, newStepCh)
+			} else {
+				i, err := strconv.Atoi(tokens[1])
+				if err != nil {
+					fmt.Println("back takes an integer argument")
+				} else if i > pb.count {
+					fmt.Printf("argument to back must not be larger than the current count (%d)\n", pb.count)
+				} else {
+					pb.replayReset(i, newStepCh)
+				}
+			}
+
+		case "rs":
+			// "rs" -> print entire round state
+			// "rs short" -> print height/round/step
+			// "rs <field>" -> print another field of the round state
+
+			rs := pb.cs.RoundState
+			if len(tokens) == 1 {
+				fmt.Println(rs)
+			} else {
+				switch tokens[1] {
+				case "short":
+					fmt.Printf("%v/%v/%v\n", rs.Height, rs.Round, rs.Step)
+				case "validators":
+					fmt.Println(rs.Validators)
+				case "proposal":
+					fmt.Println(rs.Proposal)
+				case "proposal_block":
+					fmt.Printf("%v %v\n", rs.ProposalBlockParts.StringShort(), rs.ProposalBlock.StringShort())
+				case "locked_round":
+					fmt.Println(rs.LockedRound)
+				case "locked_block":
+					fmt.Printf("%v %v\n", rs.LockedBlockParts.StringShort(), rs.LockedBlock.StringShort())
+				case "votes":
+					fmt.Println(rs.Votes.StringIndented("    "))
+
+				default:
+					fmt.Println("Unknown option", tokens[1])
+				}
+			}
+		case "n":
+			fmt.Println(pb.count)
+		}
+	}
+	return 0
+}
+
+//--------------------------------------------------------------------------------
+
+// Parses marker lines of the form:
+// #HEIGHT: 12345
+func makeHeightSearchFunc(height def.INT) auto.SearchFunc {
+	return func(line string) (int, error) {
+		line = strings.TrimRight(line, "\n")
+		parts := strings.Split(line, " ")
+		if len(parts) != 2 {
+			return -1, errors.New("Line did not have 2 parts")
+		}
+		i, err := strconv.ParseInt(parts[1], 10, 0)
+		if err != nil {
+			return -1, errors.New("Failed to parse INFO: " + err.Error())
+		}
+		if height < i {
+			return 1, nil
+		} else if height == i {
+			return 0, nil
+		} else {
+			return -1, nil
+		}
+	}
+}

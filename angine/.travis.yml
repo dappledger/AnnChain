@@ -1,0 +1,18 @@
+language: go
+go:
+    - 1.8
+
+install:
+    - export SRC=$HOME/gopath/src
+    - mkdir -p $SRC/github.com/annchain
+    - export TRAVIS_BUILD_DIR=$SRC/github.com/annchain/angine
+    - go get -v github.com/annchain/angine
+    - go get -v github.com/stretchr/testify/assert
+    - go get -v github.com/tendermint/go-db 
+
+script:
+    - cd $TRAVIS_BUILD_DIR
+    - go test ./refuse_list/ -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+    - bash <(curl -s https://codecov.io/bash) -t 9ef58ae3-0ea8-486f-b91a-6fc92a63267b
