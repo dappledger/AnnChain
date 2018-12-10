@@ -271,9 +271,15 @@ func (h *rpcHandler) BroadcastTxCommit(tx []byte) ([]byte, at.CodeType, error) {
 		return nil, ret.Code, errors.New(ret.Log)
 	}
 	result, err := h.node.Angine.BroadcastTxCommit(tx)
+
 	if err != nil {
+		return nil, result.Code, err
+	}
+
+	if result.Code != at.CodeType_OK {
 		return nil, result.Code, errors.New(result.Log)
 	}
+
 	return nil, at.CodeType_OK, nil
 }
 

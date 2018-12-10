@@ -35,7 +35,7 @@ func (ct *DoManageData) Apply(stateDup *stateDup) error {
 
 	for idx, r := range ct.op.DataName {
 		if err := db.QueryOneAccData(ct.op.Source, r); err != nil {
-			return at.NewError(at.CodeType_BaseInvalidInput, at.CodeType_BaseInvalidInput.String())
+			return at.NewError(at.CodeType_BaseInvalidInput, err.Error())
 		}
 		toAdd[r] = ct.op.Data[idx]
 	}
