@@ -4,7 +4,7 @@
 
 ## 注意事项：
 
-- 安装环境需满足annChain.Genesis运行的配置需求[操作手册1.1节](http://baidu.com)；
+- 安装环境需满足annChain.Genesis运行的配置需求[annChain.Genesis使用说明书v1.0](http://baidu.com)；
 - genesis_install.sh在CentOS和Ubuntu版本测试成功；
 - 如遇到执行genesis_install.sh中下载失败，一般和网络状况有关，请删除掉所有git clone下载的内容，重新执行genesis_install.sh.
 - 某些步骤会提示输入root密码。
