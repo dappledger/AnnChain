@@ -264,36 +264,36 @@ cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis
           AnnChain wiki: https://github.com/dappledger/AnnChain/blob/master/README.md
   ```
 
-## 五、Docker部署链节点
+## 第四章 Docker部署链节点
 
-### 5.1配置Dockerfile文件
+### 4.1配置Dockerfile文件
 
 ```
+#Build Genesis in a stock Go builder container
 FROM golang:latest as builder
-MAINTAINER lvguoxin "lvguoxin@zhongan.io"
+MAINTAINER lvguoxin "lvguoxinlinux@163.com"
 RUN apt-get update \
     && apt-get -y install net-tools \
     && apt-get -y install vim
-WORKDIR $GOPATH/src/gitlab.zhonganinfo.com/tech_bighealth/za-delos
-ADD . $GOPATH/src/gitlab.zhonganinfo.com/tech_bighealth/za-delos
+WORKDIR $GOPATH/src/github.com/dappledger/AnnChain/genesis
+ADD . $GOPATH/src/github.com/dappledger/AnnChain/genesis
 RUN make
 RUN ./build/genesis init
 
 EXPOSE 46656 46657 46658
 
 ENTRYPOINT [ "./build/genesis" ]
-注意dockerfile位置：$GOPATH/src/gitlab.zhonganinfo.com/tech_bighealth/za-delos
 ```
 
-### 5.2制作docker镜像
+### 4.2制作docker镜像
 
 `docker build -t annchain.io/genesis:v1.0 .`
 
-### 5.3运行docker节点
+### 4.3运行docker节点
 
 `docker run --name node1 -d annchain.io/genesis:v1.0 node`
 
-### 5.4查看docker运行状态
+### 4.4查看docker运行状态
 
 ```
 [root@bogon goproject]# docker ps
@@ -301,7 +301,7 @@ CONTAINER ID        IMAGE                         COMMAND                  CREAT
 b002176a0962        annchain.io/genesis:v1.0   "./build/genesis node -..."   8 days ago          Up 21 minutes       46656-46658/tcp     node1
 ```
 
-## 六、自动化脚本部署链节点
+## 第五章 自动化脚本部署链节点
 
 `./Genesis_install.sh`
 
@@ -339,7 +339,7 @@ b002176a0962        annchain.io/genesis:v1.0   "./build/genesis node -..."   8 d
 # https://github.com/dappledger/AnnChain/blob/master/README.md
 ##########################################################################
 
-VERSION=0.1
+VERSION=1.0.0
 TIME_BEGIN=$( date -u +%s )
 
 #install golang
@@ -417,16 +417,8 @@ function ExIsOk()
 #build Genesis
 function BuildGenesis()
 {
-    git clone http://gitlab.zhonganinfo.com/tech_bighealth/ann-module.git ${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/ann-module
-    cd ${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/ann-module
-    git checkout -b genesis origin/genesis >/dev/null 2>&1
-    git clone http://gitlab.zhonganinfo.com/tech_bighealth/angine.git ${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/angine
-    cd ${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/angine
-    git checkout -b genesis origin/genesis >/dev/null 2>&1
-    git clone http://gitlab.zhonganinfo.com/tech_bighealth/go-sdk.git ${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/go-sdk
-    git clone http://gitlab.zhonganinfo.com/tech_bighealth/za-delos.git ${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/za-delos
-    cd ${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/za-delos
-    git checkout -b genesis origin/genesis >/dev/null 2>&1
+    git clone https://github.com/dappledger/AnnChain.git ${GOPATH}/src/github.com/dappledger/AnnChain
+    cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis
     printf "\\n\\tBeginning build version: %s\\n" "${VERSION}"
     make
 }
@@ -434,7 +426,7 @@ function BuildGenesis()
 #init Genesis
 function InitGenesis()
 {
-    cd ${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/za-delos/build
+    cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis/build
     ./genesis init >/dev/null 2>&1 &
 }
 
@@ -463,7 +455,7 @@ function ConfigToml()
 #Run Genesis
 function RunGenesis()
 {
-    cd ${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/za-delos/build
+    cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis/build
     nohup ./genesis node >/dev/null 2>&1  &
 }
 
@@ -516,7 +508,9 @@ InitGenesis
 ConfigToml
 RunGenesis
 CheckGenesisIsOK
+
 ```
+## 第六章 链启停脚本
 
 `./Genesis_service.sh`
 
@@ -586,4 +580,3 @@ case "$1" in
 esac
 exit $RETURN_VALUE
 ```
-
