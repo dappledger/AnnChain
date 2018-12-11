@@ -75,7 +75,13 @@ aboutOne应用开发中，后续更新。
 
 ### 5.1区块链知识&行业动态
 
+[解读Conflux的共识机制](http://www.annchain.io/news/BlkaAVTkL)
 
+[布隆过滤器在区块链中的应用](http://www.annchain.io/news/8tkqctsPf)
+
+[像谈恋爱那样去招区块链工程师](http://www.annchain.io/news/8308r12PE)
+
+[区块链+“UKey”破解上链数据真伪之争，众安携手鼎钻推出钻石标准化交易模式](http://www.annchain.io/news/w-jzv7fBM)
 
 ### 5.2常见问题
 
