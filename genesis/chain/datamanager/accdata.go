@@ -2,12 +2,16 @@ package datamanager
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/dappledger/AnnChain/genesis/chain/database"
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
+	"github.com/dappledger/AnnChain/genesis/types"
 )
 
-func (m *DataManager) AddAccData(acct ethcmn.Address, k, v string) (uint64, error) {
+var managedatacategory types.ManageDataCategory
+
+func (m *DataManager) AddAccData(acct ethcmn.Address, k, v, category string) (uint64, error) {
 	if m.opNeedLock {
 		m.opLock.Lock()
 		defer m.opLock.Unlock()
@@ -17,6 +21,7 @@ func (m *DataManager) AddAccData(acct ethcmn.Address, k, v string) (uint64, erro
 		database.Feild{Name: "accountid", Value: acct.Hex()},
 		database.Feild{Name: "datakey", Value: k},
 		database.Feild{Name: "datavalue", Value: v},
+		database.Feild{Name: "category", Value: category},
 	}
 
 	sqlRes, err := m.opdb.Insert(database.TableAccData, fields)
@@ -33,7 +38,7 @@ func (m *DataManager) AddAccData(acct ethcmn.Address, k, v string) (uint64, erro
 }
 
 // UpdateAccData update
-func (m *DataManager) UpdateAccData(acct ethcmn.Address, k, v string, isPub bool) error {
+func (m *DataManager) UpdateAccData(acct ethcmn.Address, k, v, category string) error {
 	if m.opNeedLock {
 		m.opLock.Lock()
 		defer m.opLock.Unlock()
@@ -46,6 +51,7 @@ func (m *DataManager) UpdateAccData(acct ethcmn.Address, k, v string, isPub bool
 	where := []database.Where{
 		database.Where{Name: "accountid", Value: acct.Hex()},
 		database.Where{Name: "datakey", Value: k},
+		database.Where{Name: "category", Value: category},
 	}
 
 	_, err := m.opdb.Update(database.TableAccData, fields, where)
@@ -57,7 +63,7 @@ func (m *DataManager) UpdateAccData(acct ethcmn.Address, k, v string, isPub bool
 }
 
 // query account's all managedata
-func (m *DataManager) QueryAccData(acc ethcmn.Address, order string) (datas []map[string]string, err error) {
+func (m *DataManager) QueryAccData(acc ethcmn.Address, order string) (datas map[string]types.ManageDataCategory, err error) {
 	if m.opNeedLock {
 		m.opLock.Lock()
 		defer m.opLock.Unlock()
@@ -79,19 +85,18 @@ func (m *DataManager) QueryAccData(acc ethcmn.Address, order string) (datas []ma
 		return nil, err
 	}
 
-	datas = make([]map[string]string, len(result))
+	datas = make(map[string]types.ManageDataCategory, len(result))
 
-	for i, r := range result {
-		datas[i] = make(map[string]string)
-		datas[i]["name"] = r.DataKey
-		datas[i]["value"] = r.DataValue
+	for _, r := range result {
+		managedatacategory.Category = r.Category
+		managedatacategory.Value = r.DataValue
+		datas[r.DataKey] = managedatacategory
 	}
-
 	return
 }
 
 // QueryManageData query all recores of a specific account
-func (m *DataManager) QueryAccountManagedata(accid ethcmn.Address, name string, cursor, limit uint64, order string) (datas []map[string]string, err error) {
+func (m *DataManager) QueryAccountManagedata(accid ethcmn.Address, category string, name string, cursor, limit uint64, order string) (datas map[string]types.ManageDataCategory, err error) {
 	if m.opNeedLock {
 		m.opLock.Lock()
 		defer m.opLock.Unlock()
@@ -106,6 +111,12 @@ func (m *DataManager) QueryAccountManagedata(accid ethcmn.Address, name string, 
 		wheres = append(wheres, database.Where{Name: "accountid", Value: accid.Hex()})
 	}
 
+	if category != "" {
+		wheres = append(wheres, database.Where{Name: "accountid", Value: accid.Hex()})
+		wheres = append(wheres, database.Where{Name: "category", Value: category})
+	} else {
+		wheres = append(wheres, database.Where{Name: "accountid", Value: accid.Hex()})
+	}
 	orderT, err := database.MakeOrder(order, "dataid")
 	if err != nil {
 		return nil, err
@@ -118,17 +129,18 @@ func (m *DataManager) QueryAccountManagedata(accid ethcmn.Address, name string, 
 		return nil, err
 	}
 
-	datas = make([]map[string]string, len(result))
-
-	for i, r := range result {
-		datas[i] = make(map[string]string)
-		datas[i]["name"] = r.DataKey
-		datas[i]["value"] = r.DataValue
+	//datas = make([]map[string]string, len(result))
+	datas = make(map[string]types.ManageDataCategory, len(result))
+	fmt.Println(result)
+	for _, r := range result {
+		managedatacategory.Category = r.Category
+		managedatacategory.Value = r.DataValue
+		datas[r.DataKey] = managedatacategory
 	}
 	return
 }
 
-func (m *DataManager) QuerySingleManageData(accid ethcmn.Address, keys string) (datas map[string]string, err error) {
+func (m *DataManager) QuerySingleManageData(accid ethcmn.Address, keys string) (datas map[string]types.ManageDataCategory, err error) {
 
 	if m.opNeedLock {
 		m.opLock.Lock()
@@ -146,11 +158,40 @@ func (m *DataManager) QuerySingleManageData(accid ethcmn.Address, keys string) (
 		return nil, err
 	}
 
-	datas = make(map[string]string, len(result))
+	datas = make(map[string]types.ManageDataCategory, len(result))
 
 	for _, r := range result {
-		datas["name"] = r.DataKey
-		datas["value"] = r.DataValue
+		managedatacategory.Category = r.Category
+		managedatacategory.Value = r.DataValue
+		datas[r.DataKey] = managedatacategory
+	}
+	return
+}
+
+func (m *DataManager) QueryCategoryManageData(accid ethcmn.Address, category string) (datas map[string]types.ManageDataCategory, err error) {
+
+	if m.opNeedLock {
+		m.opLock.Lock()
+		defer m.opLock.Unlock()
+	}
+
+	where := []database.Where{
+		database.Where{Name: "accountid", Value: accid.Hex()},
+		database.Where{Name: "category", Value: category},
+	}
+
+	var result []database.AccData
+	err = m.opdb.SelectRows(database.TableAccData, where, nil, nil, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	datas = make(map[string]types.ManageDataCategory, len(result))
+
+	for _, r := range result {
+		managedatacategory.Category = r.Category
+		managedatacategory.Value = r.DataValue
+		datas[r.DataKey] = managedatacategory
 	}
 	return
 }

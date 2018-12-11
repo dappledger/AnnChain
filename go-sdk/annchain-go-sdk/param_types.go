@@ -18,8 +18,9 @@ type PaymentParam struct {
 }
 
 type ManageDataParam struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name     string `json:"name"`
+	Value    string `json:"value"`
+	Category string `json:"category"`
 }
 
 type ContractParam struct {

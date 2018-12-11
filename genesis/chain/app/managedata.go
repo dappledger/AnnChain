@@ -12,6 +12,11 @@ type DoManageData struct {
 	tx  *types.Transaction
 }
 
+type ValueCategory struct {
+	value    string
+	category string
+}
+
 func (ct *DoManageData) PreCheck() at.Result {
 	return at.NewResultOK([]byte{}, "")
 }
@@ -31,26 +36,29 @@ func (ct *DoManageData) Apply(stateDup *stateDup) error {
 		return at.NewError(at.CodeType_InvalidTx, at.CodeType_InvalidTx.String())
 	}
 
-	toAdd := make(map[string]string)
+	toAdd := make(map[string]ValueCategory)
 
 	for idx, r := range ct.op.DataName {
 		if err := db.QueryOneAccData(ct.op.Source, r); err != nil {
 			return at.NewError(at.CodeType_BaseInvalidInput, err.Error())
 		}
-		toAdd[r] = ct.op.Data[idx]
+		var vc ValueCategory
+		vc.value = ct.op.Data[idx]
+		vc.category = ct.op.Category[idx]
+		toAdd[r] = vc
 	}
 
 	for k, v := range toAdd {
-		_, err := db.AddAccData(ct.op.Source, k, v)
+		_, err := db.AddAccData(ct.op.Source, k, v.value, v.category)
 		if err != nil {
 			return at.NewError(at.CodeType_SaveFailed, at.CodeType_SaveFailed.String()+err.Error())
 		}
-		ct.SetEffects(ct.op.Source, k, v)
+		ct.SetEffects(ct.op.Source, k, v.value, v.category)
 	}
 	return nil
 }
 
-func (ct *DoManageData) SetEffects(source ethcmn.Address, dataName, data string) {
+func (ct *DoManageData) SetEffects(source ethcmn.Address, dataName, data, category string) {
 	ct.op.SetEffects(&types.ActionManageData{
 		ActionBase: types.ActionBase{
 			Typei:       types.OP_S_MANAGEDATA.OpInt(),
@@ -60,9 +68,10 @@ func (ct *DoManageData) SetEffects(source ethcmn.Address, dataName, data string)
 			BaseFee:     ct.tx.BaseFee(),
 			Memo:        ct.tx.Data.Memo,
 		},
-		Name:   dataName,
-		Value:  data,
-		Source: source,
+		Name:     dataName,
+		Value:    data,
+		Category: category,
+		Source:   source,
 	}, []types.EffectObject{})
 	return
 }

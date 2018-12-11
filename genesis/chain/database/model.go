@@ -11,6 +11,7 @@ type AccData struct {
 	AccountID string `db:"accountid"`
 	DataKey   string `db:"datakey"`
 	DataValue string `db:"datavalue"`
+	Category  string `db:"category"`
 }
 
 // LedgerHeader object for db

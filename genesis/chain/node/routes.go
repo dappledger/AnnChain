@@ -64,22 +64,23 @@ func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 		"info":                 rpc.NewRPCFunc(h.Info, argsWithChainID("")),
 
 		// Query
-		"query_nonce":                rpc.NewRPCFunc(h.QueryNonce, argsWithChainID("address")),
-		"query_account":              rpc.NewRPCFunc(h.QueryAccount, argsWithChainID("address")),
-		"query_ledgers":              rpc.NewRPCFunc(h.QueryLedgers, argsWithChainID("order,limit,cursor")),
-		"query_ledger":               rpc.NewRPCFunc(h.QueryLedger, argsWithChainID("height")),
-		"query_payments":             rpc.NewRPCFunc(h.QueryPayments, argsWithChainID("order,limit,cursor")),
-		"query_account_payments":     rpc.NewRPCFunc(h.QueryAccountPayments, argsWithChainID("address,order,limit,cursor")),
-		"query_payment":              rpc.NewRPCFunc(h.QueryPayment, argsWithChainID("txhash")),
-		"query_transactions":         rpc.NewRPCFunc(h.QueryTransactions, argsWithChainID("order,limit,cursor")),
-		"query_transaction":          rpc.NewRPCFunc(h.QueryTransaction, argsWithChainID("txhash")),
-		"query_account_transactions": rpc.NewRPCFunc(h.QueryAccountTransactions, argsWithChainID("address,order,limit,cursor")),
-		"query_contract":             rpc.NewRPCFunc(h.QueryDoContract, argsWithChainID("byte[]")),
-		"query_contract_exist":       rpc.NewRPCFunc(h.QueryContractExist, argsWithChainID("address")),
-		"query_receipt":              rpc.NewRPCFunc(h.QueryReceipt, argsWithChainID("txhash")),
-		"query_account_managedatas":  rpc.NewRPCFunc(h.QueryAccountManagedatas, argsWithChainID("address,order,limit,cursor")),
-		"query_account_managedata":   rpc.NewRPCFunc(h.QueryAccountManagedata, argsWithChainID("address,key")),
-		"query_ledger_transactions":  rpc.NewRPCFunc(h.QueryLedgerTransactions, argsWithChainID("height,order,limit,cursor")),
+		"query_nonce":                       rpc.NewRPCFunc(h.QueryNonce, argsWithChainID("address")),
+		"query_account":                     rpc.NewRPCFunc(h.QueryAccount, argsWithChainID("address")),
+		"query_ledgers":                     rpc.NewRPCFunc(h.QueryLedgers, argsWithChainID("order,limit,cursor")),
+		"query_ledger":                      rpc.NewRPCFunc(h.QueryLedger, argsWithChainID("height")),
+		"query_payments":                    rpc.NewRPCFunc(h.QueryPayments, argsWithChainID("order,limit,cursor")),
+		"query_account_payments":            rpc.NewRPCFunc(h.QueryAccountPayments, argsWithChainID("address,order,limit,cursor")),
+		"query_payment":                     rpc.NewRPCFunc(h.QueryPayment, argsWithChainID("txhash")),
+		"query_transactions":                rpc.NewRPCFunc(h.QueryTransactions, argsWithChainID("order,limit,cursor")),
+		"query_transaction":                 rpc.NewRPCFunc(h.QueryTransaction, argsWithChainID("txhash")),
+		"query_account_transactions":        rpc.NewRPCFunc(h.QueryAccountTransactions, argsWithChainID("address,order,limit,cursor")),
+		"query_contract":                    rpc.NewRPCFunc(h.QueryDoContract, argsWithChainID("byte[]")),
+		"query_contract_exist":              rpc.NewRPCFunc(h.QueryContractExist, argsWithChainID("address")),
+		"query_receipt":                     rpc.NewRPCFunc(h.QueryReceipt, argsWithChainID("txhash")),
+		"query_account_managedatas":         rpc.NewRPCFunc(h.QueryAccountManagedatas, argsWithChainID("address,order,limit,cursor")),
+		"query_account_managedata":          rpc.NewRPCFunc(h.QueryAccountManagedata, argsWithChainID("address,key")),
+		"query_account_category_managedata": rpc.NewRPCFunc(h.QueryAccountCategoryManagedata, argsWithChainID("address,category")),
+		"query_ledger_transactions":         rpc.NewRPCFunc(h.QueryLedgerTransactions, argsWithChainID("height,order,limit,cursor")),
 
 		//Execute
 		"create_account":   rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
@@ -409,6 +410,14 @@ func (h *rpcHandler) QueryAccountManagedatas(address string, order string, limit
 
 func (h *rpcHandler) QueryAccountManagedata(address string, key string) (interface{}, at.CodeType, error) {
 	result := h.node.Application.QueryAccountManagedata(address, key)
+	if result.Code != at.CodeType_OK {
+		return nil, result.Code, errors.New(result.Log)
+	}
+	return result.Data, at.CodeType_OK, nil
+}
+
+func (h *rpcHandler) QueryAccountCategoryManagedata(address string, category string) (interface{}, at.CodeType, error) {
+	result := h.node.Application.QueryAccountCategoryManagedata(address, category)
 	if result.Code != at.CodeType_OK {
 		return nil, result.Code, errors.New(result.Log)
 	}

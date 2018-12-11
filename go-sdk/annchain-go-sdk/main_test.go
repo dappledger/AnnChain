@@ -140,8 +140,8 @@ func TestManageData(t *testing.T) {
 
 	var datas []ManageDataParam
 
-	data1 := ManageDataParam{Name: "1", Value: "11"}
-	data2 := ManageDataParam{Name: "2", Value: "22"}
+	data1 := ManageDataParam{Name: "8", Value: "lvguoxin", Category: "B"}
+	data2 := ManageDataParam{Name: "9", Value: "fanhongyue", Category: "B"}
 
 	datas = append(datas, data1, data2)
 
@@ -167,7 +167,16 @@ func TestQueryAccountManageData(t *testing.T) {
 
 	client := NewAnnChainClient("tcp://127.0.0.1:46657")
 
-	result, code, err := client.QueryAccountManageData(superAddr, "1")
+	result, code, err := client.QueryAccountManageData(superAddr, "3")
+
+	t.Log(result, code, err)
+}
+
+func TestQueryAccountCategoryManageData(t *testing.T) {
+
+	client := NewAnnChainClient("tcp://127.0.0.1:46657")
+
+	result, code, err := client.QueryAccountCategoryManageData(superAddr, "B")
 
 	t.Log(result, code, err)
 }
