@@ -56,7 +56,7 @@
 
 ### 2.3实践指引
 
-[API接口](https://github.com/dappledger/AnnChain/blob/master/JSON-API/JSON-API.md)，后续更新。
+[API接口](https://github.com/dappledger/AnnChain/blob/master/JSON-API/)
 
 ## 三、特性介绍
 
