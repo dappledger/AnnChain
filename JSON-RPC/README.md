@@ -259,7 +259,7 @@
    1. 调用方式
 
      ```
-     curl -d '{"jsonrpc":"2.0","method":"query_ledgers","params":[order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+        curl -d '{"jsonrpc":"2.0","method":"query_ledgers","params":[order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
      ```
 
   2. 传入参数
