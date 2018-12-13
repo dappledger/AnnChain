@@ -1,33 +1,33 @@
 - ## 请求协议
 
-  1. Request：
+  1. Request
 
-  ```
-    {
-    "jsonrpc":"2.0",	       //rpc版本号
-    "method":"method name",  //方法名
-    "params":[],             //请求参数
-    "id":"0"                 //请求序列号
-    }
-  ```
+     ```
+     {
+       "jsonrpc":"2.0",
+       "method":"method name",
+       "params":[],
+       "id":"0"
+       }
+     ```
 
-  1. Response：
+  2. Response
 
-  ```
-    {
-    "jsonrpc":"2.0", 
-    "id":"",                       //与客户端传输ID一致
-    "result": ,                    //根据具体接口，返回数据不同，具体参见接口说明
-    "error": {code:100,message:""} //code string 错误码；Message string 错误信息；
-    }
-  ```
+     ```
+       {
+       "jsonrpc":"2.0", 
+       "id":"",
+       "result":,
+       "error": {code:100,message:""}
+       }
+     ```
 
 - ## 创建账户
 
   1. 调用方式
 
      ```
-     curl -d '{"jsonrpc":"2.0","method":"create_account","params":["base64编码数据"],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+     curl -d '{"jsonrpc":"2.0","method":"create_account","params":[""],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
      ```
 
   2. 传入参数
@@ -42,7 +42,7 @@
      	"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      	"operation": 
      				{
-     					"starting_balance":"10000000000"      //json 编码到 string
+     					"starting_balance":"10000000000"
      				},
      	"signature": ""
      }
@@ -63,7 +63,7 @@
   1. 调用方式
 
      ```
-     curl -d '{"jsonrpc":"2.0","method":"payment","params":["base64编码数据"],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+     curl -d '{"jsonrpc":"2.0","method":"payment","params":[""],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
      ```
 
   2. 传入参数
@@ -76,9 +76,9 @@
      	"optype": "payment",
      	"form": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      	"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-     	"operation": 
+     	"operation":
      				{
-     					"amount": "100"	//json 编码到 string
+     					"amount": "100"
      				},
      	"signature": ""
      }
@@ -99,7 +99,7 @@
   1. 调用方式
 
      ```
-     curl -d '{"jsonrpc":"2.0","method":"manage_data","params":["base64编码数据"],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+     curl -d '{"jsonrpc":"2.0","method":"manage_data","params":[""],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
      ```
 
   2. 传入参数
@@ -113,8 +113,8 @@
      	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      	"operation": 
      				{
-     					"name1"{"category": "A","value": "456"},
-     					"name2"{"category": "B","value": "123"}
+     					"name1"{"category": "A","value": "1"},
+     					"name2"{"category": "B","value": "2"}
      				},
      	"signature": ""
      }
@@ -135,7 +135,7 @@
   1. 调用方式
 
      ```
-     curl -d '{"jsonrpc":"2.0","method":"create_contract","params":["base64编码数据"],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+     curl -d '{"jsonrpc":"2.0","method":"create_contract","params":[""],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
      ```
 
   2. 传入参数
@@ -148,11 +148,11 @@
      	"optype": "create_contract",
      	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      	"operation": 
-     				{	//json 编码到 string
-     					"payload": ""  //打包后数据
-     					"gas_price": "" //消耗单价
-     					"gas_limit": "" //消耗上限
-     					"amount":""  //原生资产数量
+     				{	
+     					"payload": ""
+     					"gas_price": ""
+     					"gas_limit": ""
+     					"amount":""
      				},
      	"signature": ""
      }
@@ -173,7 +173,7 @@
   1. 调用方式
 
      ```
-     curl -d '{"jsonrpc":"2.0","method":"execute_contract","params":["base64编码数据"],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+     curl -d '{"jsonrpc":"2.0","method":"execute_contract","params":[""],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
      ```
 
   2. 传入参数
@@ -187,11 +187,11 @@
      	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      	"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      	"operation": 
-     				{	//json 编码到 string
-     					"payload": ""  //打包后数据
-     					"gas_price": "" //消耗单价
-     					"gas_limit": "" //消耗上限
-     					"amount":""  //原生资产数量
+     				{	
+     					"payload": ""
+     					"gas_price": ""
+     					"gas_limit": ""
+     					"amount":""
      		},
      	"signature": ""
      }
@@ -258,74 +258,73 @@
 
   1. 调用方式
 
-  ```
-  curl -d '{"jsonrpc":"2.0","method":"query_ledgers","params":[order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-  ```
-  ```
+       ```
+       curl -d '{"jsonrpc":"2.0","method":"query_ledgers","params":[order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+       ```
 
-  1. 传入参数
-
-  ```
-     order：排序，默认desc，asc或者desc  string
-     limit：限行数，默认10，最大200  uint64
-     cursor: 游标，用于指定查询“起点”，首次查询可以置0  uint64
-     ```
-
-  2. 返回值
+  2. 传入参数
 
      ```
-     "result": {
-         {
-     		"base_fee": 0,
-     		"closed_at": "2018-11-09T17:21:28.471+08:00",
-     		"hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
-     		"max_tx_set_size": 2000,
-     		"prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
-     		"height": 621,
-     		"total_coins": 100000000000000,
-     		"transaction_count": 99
-     	},
-     	{
-     		"base_fee": 0,
-     		"closed_at": "2018-11-09T17:21:28.471+08:00",
-     		"hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
-     		"max_tx_set_size": 2000,
-     		"prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
-     		"height": 621,
-     		"total_coins": 100000000000000,
-     		"transaction_count": 99
-     	}
-     }
-     ```
+     order：排序，默认desc，asc或者desc
+  limit：限行数，默认10，最大200
+  cursor: 游标，用于指定查询“起点”，首次查询可以置0
+  	```
+  	
+  3. 返回值
+
+       ```
+       "result": {
+           {
+       		"base_fee": 0,
+       		"closed_at": "2018-11-09T17:21:28.471+08:00",
+       		"hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
+       		"max_tx_set_size": 2000,
+       		"prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
+       		"height": 621,
+       		"total_coins": 100000000000000,
+       		"transaction_count": 99
+       	},
+       	{
+       		"base_fee": 0,
+       		"closed_at": "2018-11-09T17:21:28.471+08:00",
+       		"hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
+       		"max_tx_set_size": 2000,
+       		"prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
+       		"height": 621,
+       		"total_coins": 100000000000000,
+       		"transaction_count": 99
+       	}
+       }
+       ```
 
 - ## 查询指定账页信息
 
   1. 调用方式
 
-  ```
-    curl -d '{"jsonrpc":"2.0","method":"query_ledger","params":[height],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-  ```
+     ```
+     curl -d '{"jsonrpc":"2.0","method":"query_ledger","params":[height],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+     ```
 
-  1. 传入参数
+  2. 传入参数
 
-  ```
-    height：当前账页序列值 uint64
-  ```
+     ```
+     height：当前账页序列值
+     ```
 
-  1. 返回值
+  3. 返回值
 
-  ```
-    "result":{
-    	"base_fee": 0,
-    	"closed_at": "2018-11-09T17:21:28.471+08:00",
-    	"hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
-    	"max_tx_set_size": 2000,
-    	"prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
-    	"height": 621,
-    	"total_coins": 100000000000000，
-    	"transaction_count": 99
-    }
-  ```
+     ```
+     "result":{
+       	"base_fee": 0,
+       	"closed_at": "2018-11-09T17:21:28.471+08:00",
+       	"hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
+       	"max_tx_set_size": 2000,
+       	"prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
+       	"height": 621,
+       	"total_coins": 100000000000000，
+       	"transaction_count": 99
+     }
+     ```
 
 - ## 查询所有转账
 
@@ -333,41 +332,38 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_payments","params":[order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
-     ```
-       order：排序，默认desc，asc或者desc  string
-       limit：限行数，默认10，最大200  uint64
-       cursor: 游标，用于指定查询“起点”，首次查询可以置0  uint64
-     
-     ```
+       ```
+       order：排序，默认desc，asc或者desc
+       limit：限行数，默认10，最大200
+       cursor: 游标，用于指定查询“起点”，首次查询可以置0
+       ```
 
   3. 返回值
 
-     ```
-     "result":{
-     	{
-     		"amount": "100000",
-     		"created_at": 1541757921098600700,
-     		from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-     		"hash": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-     		"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-     		"optype": "payment"
-     	},
-     	{
-     		"amount": "100000",
-     		"created_at": 1541757921098600700,
-     		from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-     		"hash": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-     		"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-     		"optype": "payment"
-     	}
-     }
-     
-     ```
+       ```
+       "result":{
+       	{
+       		"amount": "100000",
+       		"created_at": 1541757921098600700,
+       		from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+       		"hash": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+       		"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+       		"optype": "payment"
+       	},
+       	{
+       		"amount": "100000",
+       		"created_at": 1541757921098600700,
+       		from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+       		"hash": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+       		"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+       		"optype": "payment"
+       	}
+       }
+       ```
 
 - ## 查询指定账户转账
 
@@ -375,17 +371,15 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_account_payments","params":[address,order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
      ```
-     address：账户地址 string
-     order：排序，默认desc，asc或者desc  string
-     limit：限行数，默认10，最大200	uint64
-     cursor: 游标，用于指定查询“起点”，首次查询可以置0	uint64
-     
+     address：账户地址
+     order：排序，默认desc，asc或者desc
+     limit：限行数，默认10，最大200
+     cursor: 游标，用于指定查询“起点”，首次查询可以置0
      ```
 
   3. 返回值
@@ -409,7 +403,6 @@
      		"optype": "payment"
      		}
      }
-     
      ```
 
 - ## 查询指定交易转账
@@ -418,14 +411,12 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_payment","params":[txhash],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
      ```
-     txhash：交易hash 	string
-     
+     txhash：交易hash
      ```
 
   3. 返回值
@@ -441,7 +432,6 @@
      		"optype": "payment",
      	}
      }
-     
      ```
 
 - ## 查询所有交易信息
@@ -450,16 +440,14 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_transactions","params":[order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
      ```
-     order：排序，默认desc，asc或者desc	string
-     limit：限行数，默认10，最大200	uint64
-     cursor: 游标，用于指定查询“起点”，首次查询可以置0	uint64
-     
+     order：排序，默认desc，asc或者desc
+     limit：限行数，默认10，最大200
+     cursor: 游标，用于指定查询“起点”，首次查询可以置0
      ```
 
   3. 返回值
@@ -487,7 +475,6 @@
      			"memo": ""
      	}
      }
-     
      ```
 
 - ## 查询指定交易详情
@@ -496,14 +483,12 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_transaction","params":[txhash],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
      ```
      txhash：交易哈希
-     
      ```
 
   3. 返回值
@@ -528,7 +513,6 @@
      		"created_at": 1541752733447227100,
      	}
      }
-     
      ```
 
   4. 返回创建账户交易详情
@@ -549,7 +533,6 @@
      		"starting_balance":"10000000000" 
      		}
      }
-     
      ```
 
   5. 返回转账交易详情
@@ -568,7 +551,6 @@
      	   	"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      		"amount": "100"
      }
-     
      ```
 
   6. 返回数据实体交易详情
@@ -592,7 +574,6 @@
      			}
      		}
      }
-     
      ```
 
 - ## 查询指定账户交易信息
@@ -601,18 +582,15 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_account_transactions","params":[adress,order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
+   2. 传入参数
 
-  2. 传入参数
-
-     ```
-     address:账户地址	string
-     order：排序，默认desc，asc或者desc	string
-     limit：限行数，默认10，最大200	uint64
-     cursor: 游标，用于指定查询“起点”，首次查询可以置0	 uint64
-     
-     ```
+      ```
+      address:账户地址
+      order：排序，默认desc，asc或者desc
+      limit：限行数，默认10，最大200
+      cursor: 游标，用于指定查询“起点”，首次查询可以置0
+      ```
 
   3. 返回值
 
@@ -640,7 +618,6 @@
      			"memo": ""
      		}
      }
-     
      ```
 
 - ## 查询指定账页交易信息
@@ -649,17 +626,15 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_ledger_transactions","params":[height,order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
      ```
-     height: 账户地址	uint64
-     order：排序，默认desc，asc或者desc	string
-     limit：限行数，默认10，最大200	uint64
-     cursor: 游标，用于指定查询“起点”，首次查询可以置0	  uint64
-     
+     height: 块高度
+     order：排序，默认desc，asc或者desc
+     limit：限行数，默认10，最大200
+     cursor: 游标，用于指定查询“起点”，首次查询可以置0
      ```
 
   3. 返回值
@@ -688,7 +663,6 @@
      			"memo": ""
      		}
      }
-     
      ```
 
 - ## 查询合约
@@ -697,33 +671,30 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_contract","params":[(byte[])],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
-  ```
-    {
-    	"basefee": "0", (统一传0)
-    	"memo": "", (忽略不传)
-        "nonce": "0", (统一传0)
-    	"optype": "query_contract",
-    	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-    	"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-    	"operation": 
-    				{
-    					"payload": byte[]
-    				},
-    	"signature": ""  （如果为空，不验签；不为空，验签）
-    }
-  
-  ```
+     ```
+     {
+       	"basefee": "0",
+       	"memo": "",
+          "nonce": "0",
+       	"optype": "query_contract",
+       	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+       	"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+       	"operation": 
+       				{
+       					"payload": byte[]
+       				},
+       	"signature": ""
+     }
+     ```
 
-  1. 返回值
+  3. 返回值
 
      ```
      "result": 16进制数据
-     
      ```
 
 - ## 查询合约是否存在
@@ -732,14 +703,12 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_contract_exist","params":[contract_address],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
      ```
-     contract_address：合约地址	string
-     
+     contract_address：合约地址
      ```
 
   3. 返回值
@@ -750,7 +719,6 @@
      		"code_hash":"",
      		"is_exist":true/false
      }
-     
      ```
 
 - ## 查询合约票据
@@ -759,17 +727,15 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_receipt","params":[txhash],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
-  ```
-    txhash：交易哈希 string
-  
-  ```
+     ```
+     txhash：交易哈希
+     ```
 
-  1. 返回值
+  3. 返回值
 
      ```
      "result": {
@@ -779,7 +745,7 @@
      		"hash": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      		"tx_receipt_status": true,
      		"msg": "",
-     		"result":  , // 16进制数据
+     		"result": "",
      		"height": 1873,
      		"contract_address": "0xf9a519291ed30cc7dfecfe00d2e2f0c1dd0a1a4f",
      		"function": "",
@@ -787,9 +753,8 @@
      		"gas_price": "0",
      		"gas_limit": "8000000",
      		"gas_used": 921296,
-     		"logs": // 16进制数据
+     		"logs": ""
      }
-     
      ```
 
 - ## 查询指定账户所有实体数据
@@ -798,27 +763,24 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_account_managedatas","params":[],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
-  ```
-    address：查询用户地址	string
-    order：排序，默认desc，asc或者desc	string
-    limit：限行数，默认10，最大200	uint64
-    cursor: 游标，用于指定查询“起点”，首次查询可以置0	uint64
-  
-  ```
+     ```
+     address：查询用户地址
+     order：排序，默认desc，asc或者desc
+     limit：限行数，默认10，最大200
+     cursor: 游标，用于指定查询“起点”，首次查询可以置0
+     ```
 
-  1. 返回值
+  3. 返回值
 
      ```
      "result":{
          "name1":{"value":"lgx","category":"A"},
      	"name2":{"value":"zj","category":"B"}
      }
-     
      ```
 
 - ## 查询账户指定数据类别
@@ -828,15 +790,13 @@
      ```
      // Request
      curl -d '{"jsonrpc":"2.0","method":"query_account_category_managedata","params":["0x39124ac876a52aff624c7c3809309e154f1318b1","category"],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
      ```
-     address：用户地址	string
-     category：数据实体类别 string
-     
+     address：用户地址
+     category：数据实体类别
      ```
 
   3. 输出格式
@@ -846,7 +806,6 @@
      		"name1":{"value":"lgx","category":"A"},
      	  	"name2":{"value":"zj","category":"A"}
      }
-     
      ```
 
 - ## 查询账户指定实体数据
@@ -855,15 +814,13 @@
 
      ```
      curl -d '{"jsonrpc":"2.0","method":"query_account_managedata","params":["0x39124ac876a52aff624c7c3809309e154f1318b1","name1"],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-     
      ```
 
   2. 传入参数
 
      ```
-     address：用户地址 string
-     name：数据实体name string
-     
+     address：用户地址
+     name：数据实体name
      ```
 
   3. 返回值
@@ -872,7 +829,6 @@
      "result": {
          "name1":{"value":"lgx","category":"A"},
      }
-     
      ```
 
 - ## 获取网络节点信息
@@ -881,22 +837,19 @@
 
      ```
      GET http://IP:port/net_info
-     
      ```
 
   2. 传入参数
 
      ```
-     无
-     
+     none
      ```
 
   3. 返回值
 
      ```
      "result":{
-     		listeners:"Listener(@192.168.252.130:44656)", //获取本机地址
-     		peers：[                             //除本机外其他节点信息
+     		peers：[ 
             			"node_info": {
                 		"pub_key": [],
      				"signd_pub_key": "",
@@ -908,8 +861,8 @@
                 			 	"other": [
                      				"wire_version=0.6.0",
                      				"p2p_version=0.3.5",
-                    				 "node_start_at=1543993454",
-                    				 "revision=0.1.0-ef3baa"
+                    				 	"node_start_at=1543993454",
+                    				 	"revision=0.1.0-ef3baa"
                			 	 ]
          			},
             			"node_info": {
@@ -923,8 +876,8 @@
                 				"other": [
                      				"wire_version=0.6.0",
                      				"p2p_version=0.3.5",
-                    				 "node_start_at=1543993454",
-                    				 "revision=0.1.0-ef3baa"
+                    				 	"node_start_at=1543993454",
+                    				 	"revision=0.1.0-ef3baa"
                			 	 ]
          			}
      		]  
