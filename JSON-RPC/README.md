@@ -270,30 +270,30 @@
      cursor: 游标，用于指定查询“起点”，首次查询可以置0
   	```
   	
-  3. 返回值
+   3. 返回值
 
      ```
      "result": {
-           {
-       		"base_fee": 0,
-       		"closed_at": "2018-11-09T17:21:28.471+08:00",
-       		"hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
-       		"max_tx_set_size": 2000,
-       		"prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
-       		"height": 621,
-       		"total_coins": 100000000000000,
-       		"transaction_count": 99
-       	},
-       	{
-       		"base_fee": 0,
-       		"closed_at": "2018-11-09T17:21:28.471+08:00",
-       		"hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
-       		"max_tx_set_size": 2000,
-       		"prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
-       		"height": 621,
-       		"total_coins": 100000000000000,
-       		"transaction_count": 99
-       	}
+        {
+		    "base_fee": 0,
+		    "closed_at": "2018-11-09T17:21:28.471+08:00",
+		    "hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
+		    "max_tx_set_size": 2000,
+		    "prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
+		    "height": 621,
+		    "total_coins": 100000000000000,
+		    "transaction_count": 99
+	       },
+	      {
+		    "base_fee": 0,
+		    "closed_at": "2018-11-09T17:21:28.471+08:00",
+		    "hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
+		    "max_tx_set_size": 2000,
+		    "prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
+		    "height": 621,
+		    "total_coins": 100000000000000,
+		    "transaction_count": 99
+	      }
      }
      ```
 
