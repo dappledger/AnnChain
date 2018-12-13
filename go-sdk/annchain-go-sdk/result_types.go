@@ -5,14 +5,14 @@ import (
 )
 
 type QueryManageDataResult struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Value    string `json:"value"`
+	Category string `json:"category"`
 }
 
 type QueryAccountResult struct {
-	Address string                  `json:"address"`
-	Balance string                  `json:"balance"`
-	Data    []QueryManageDataResult `json:"data"`
+	Address string                           `json:"address"`
+	Balance string                           `json:"balance"`
+	Data    map[string]QueryManageDataResult `json:"data"`
 }
 
 type QueryLedgerResult struct {

@@ -171,6 +171,7 @@ var BIG_INT0 = big.NewInt(0)
 var BIG_MINBLC = big.NewInt(0)
 var ZERO_ADDRESS = ethcmn.Address{}
 var ZERO_HASH = ethcmn.Hash{}
+var MAX_GASLIMIT = big.NewInt(8000000)
 
 type API_QUERY_TYPE byte
 

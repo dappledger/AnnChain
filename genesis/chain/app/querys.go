@@ -216,8 +216,8 @@ func (app *GenesisApp) queryHeightTxs(height string, cursor, limit uint64, order
 	return at.NewRpcResultOK(res, "")
 }
 
-func (app *GenesisApp) queryAccountManagedata(addr ethcmn.Address, name string, cursor, limit uint64, order string) at.NewRPCResult {
-	res, err := app.dataM.QueryAccountManagedata(addr, name, cursor, limit, order)
+func (app *GenesisApp) queryAccountManagedata(addr ethcmn.Address, category string, name string, cursor, limit uint64, order string) at.NewRPCResult {
+	res, err := app.dataM.QueryAccountManagedata(addr, category, name, cursor, limit, order)
 
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, err.Error())
@@ -232,6 +232,19 @@ func (app *GenesisApp) queryAccountManagedata(addr ethcmn.Address, name string, 
 
 func (app *GenesisApp) queryAccountSingleManageData(addr ethcmn.Address, keys string) at.NewRPCResult {
 	res, err := app.dataM.QuerySingleManageData(addr, keys)
+
+	if err != nil {
+		return at.NewRpcError(at.CodeType_InternalError, err.Error())
+	}
+
+	if len(res) == 0 {
+		return at.NewRpcError(at.CodeType_NullData, "No Data!")
+	}
+	return at.NewRpcResultOK(res, "")
+}
+
+func (app *GenesisApp) queryAccountCategoryManageData(addr ethcmn.Address, category string) at.NewRPCResult {
+	res, err := app.dataM.QueryCategoryManageData(addr, category)
 
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, err.Error())

@@ -157,7 +157,7 @@ func (self *StateTransition) to() vm.Account {
 	if to == nil {
 		return nil // contract creation
 	}
-	fmt.Println("jjj:", to, self.state.Exist(*to))
+
 	if !self.state.Exist(*to) {
 		return self.state.CreateAccount(*to)
 	}

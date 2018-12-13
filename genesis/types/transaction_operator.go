@@ -97,6 +97,7 @@ type ManageDataOp struct {
 	BaseOp
 	DataName []string
 	Data     []string
+	Category []string
 }
 
 func (mop *ManageDataOp) Type() TYPE_OP {

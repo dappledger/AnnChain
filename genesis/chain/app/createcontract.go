@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	//	"fmt"
 	"math/big"
 	"strconv"
 
@@ -25,6 +26,15 @@ func (ca *DoCreateContract) CheckValid(stateDup *stateDup) error {
 
 	if len(ca.op.Source.Bytes()) != ethcmn.AddressLength || !stateDup.state.Exist(ca.op.Source) {
 		return at.NewError(at.CodeType_BaseUnknownAddress, at.CodeType_BaseUnknownAddress.String())
+	}
+
+	r, ok := new(big.Int).SetString(ca.op.GasLimit, 10)
+	if !ok {
+		panic("invalid hex in source file: " + ca.op.GasLimit)
+	}
+
+	if r.Cmp(types.MAX_GASLIMIT) > 0 {
+		return at.NewError(at.CodeType_BadLimit, at.CodeType_BadLimit.String())
 	}
 
 	return nil

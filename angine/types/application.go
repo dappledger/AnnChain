@@ -46,6 +46,7 @@ type Application interface {
 	QueryReceipt(string) NewRPCResult
 	QueryAccountManagedatas(string, string, uint64, uint64) NewRPCResult
 	QueryAccountManagedata(string, string) NewRPCResult
+	QueryAccountCategoryManagedata(string, string) NewRPCResult
 	Info() ResultInfo
 	Start()
 	Stop()

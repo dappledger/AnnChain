@@ -55,7 +55,8 @@ const (
 		dataid			INTEGER 		PRIMARY KEY	AUTOINCREMENT,
 		accountid       VARCHAR(66)		NOT NULL,
 		datakey			VARCHAR(256)	NOT NULL,
-		datavalue		VARCHAR(256)	NOT NULL
+		datavalue		VARCHAR(256)	NOT NULL,
+		category		VARCHAR(256)	NOT NULL
 	);`
 
 	//========================================================================//

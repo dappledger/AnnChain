@@ -82,6 +82,10 @@ type ActionObject interface {
 	GetActionBase() *ActionBase
 	// SetTxhash(txhash ethcmn.Hash)
 }
+type ManageDataCategory struct {
+	Value    string `json:"value"`
+	Category string `json:"category"`
+}
 
 // GetActionBase interface impl
 func (a *ActionBase) GetActionBase() *ActionBase {
@@ -123,9 +127,10 @@ type (
 
 	ActionManageData struct {
 		ActionBase
-		Name   string         `json:"name"`
-		Value  string         `json:"value"`
-		Source ethcmn.Address `json:"source_account"`
+		Name     string         `json:"name"`
+		Value    string         `json:"value"`
+		Category string         `json:"category"`
+		Source   ethcmn.Address `json:"source_account"`
 	}
 
 	ActionCreateContract struct {
@@ -221,8 +226,8 @@ type EffectGroup struct {
 type OperationDBItfc interface {
 
 	// ops for Manage AccData
-	AddAccData(acct ethcmn.Address, k, v string) (uint64, error)
-	QueryAccData(acc ethcmn.Address, order string) ([]map[string]string, error)
+	AddAccData(acct ethcmn.Address, k, v, category string) (uint64, error)
+	QueryAccData(acc ethcmn.Address, order string) (map[string]ManageDataCategory, error)
 
 	//=================================================================================================//
 
