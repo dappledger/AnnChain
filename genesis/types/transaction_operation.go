@@ -9,8 +9,9 @@ type Payment struct {
 }
 
 type KeyPair struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name     string `json:"name"`
+	Value    string `json:"value"`
+	Category string `json:"category"`
 }
 type ManageData struct {
 	KeyPairs []KeyPair

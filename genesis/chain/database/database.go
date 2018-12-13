@@ -23,8 +23,9 @@ const (
 
 // Feild database field
 type Feild struct {
-	Name  string
-	Value interface{}
+	Name     string
+	Value    interface{}
+	Category string
 }
 
 // Where query field

@@ -919,7 +919,7 @@ func (app *GenesisApp) QueryAccountManagedatas(address string, order string, lim
 		return at.NewRpcError(at.CodeType_BaseInvalidInput, "Invalid address")
 	}
 
-	return app.queryAccountManagedata(account, "", cursor, limit, order)
+	return app.queryAccountManagedata(account, "", "", cursor, limit, order)
 }
 
 // query account's managedata for key
@@ -936,6 +936,21 @@ func (app *GenesisApp) QueryAccountManagedata(address string, key string) at.New
 		return at.NewRpcError(at.CodeType_BaseInvalidInput, "Invalid address")
 	}
 	return app.queryAccountSingleManageData(account, key)
+}
+
+func (app *GenesisApp) QueryAccountCategoryManagedata(address string, category string) at.NewRPCResult {
+	if !ethcmn.IsHexAddress(address) {
+		return at.NewRpcError(at.CodeType_BaseInvalidInput, "Invalid address")
+	}
+	if strings.Index(address, "0x") == 0 {
+		address = address[2:]
+	}
+	account := ethcmn.HexToAddress(address)
+
+	if account == types.ZERO_ADDRESS {
+		return at.NewRpcError(at.CodeType_BaseInvalidInput, "Invalid address")
+	}
+	return app.queryAccountCategoryManageData(account, category)
 }
 
 // ParseBaseFee get base fee

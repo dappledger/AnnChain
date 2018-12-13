@@ -119,7 +119,9 @@ func unmarshalResponseBytes(responseBytes []byte, result interface{}) ([]byte, a
 	if response.Error.Code != at.CodeType_OK || response.Result == nil {
 		return nil, response.Error.Code, errors.New(response.Error.Message)
 	}
-
+	if response.Result == nil {
+		return nil, at.CodeType_OK, nil
+	}
 	if bytResult, err = response.Result.MarshalJSON(); err != nil {
 		return nil, at.CodeType_DecodingError, err
 	}

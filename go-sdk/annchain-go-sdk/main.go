@@ -8,9 +8,9 @@ import (
 	"strconv"
 
 	at "github.com/dappledger/AnnChain/angine/types"
-	"github.com/dappledger/AnnChain/go-sdk/annchain-go-sdk/rpc"
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/crypto"
+	"github.com/dappledger/AnnChain/go-sdk/annchain-go-sdk/rpc"
 )
 
 func GenerateKey() (privekey, address string) {
@@ -299,20 +299,31 @@ func (c *AnnChainClient) QueryReceipt(txhash string) (QueryReceiptResult, at.Cod
 
 }
 
-func (c *AnnChainClient) QueryAccountManageDatas(address, order string, limit, cursor uint64) ([]QueryManageDataResult, at.CodeType, error) {
+func (c *AnnChainClient) QueryAccountManageDatas(address, order string, limit, cursor uint64) (map[string]QueryManageDataResult, at.CodeType, error) {
 
-	var query []QueryManageDataResult
+	var query map[string]QueryManageDataResult
 
 	_, code, err := c.rpcClient.Call("query_account_managedatas", []interface{}{address, order, limit, cursor}, &query)
 
 	return query, code, err
 }
 
-func (c *AnnChainClient) QueryAccountManageData(address, name string) (map[string]string, at.CodeType, error) {
+func (c *AnnChainClient) QueryAccountManageData(address, name string) (map[string]QueryManageDataResult, at.CodeType, error) {
 
-	query := make(map[string]string)
+	//query := make(map[string]QueryManageDataResult)
+	var query map[string]QueryManageDataResult
 
 	_, code, err := c.rpcClient.Call("query_account_managedata", []interface{}{address, name}, &query)
+
+	return query, code, err
+}
+
+func (c *AnnChainClient) QueryAccountCategoryManageData(address, category string) (map[string]QueryManageDataResult, at.CodeType, error) {
+
+	//query := make(map[string]QueryManageDataResult)
+	var query map[string]QueryManageDataResult
+
+	_, code, err := c.rpcClient.Call("query_account_category_managedata", []interface{}{address, category}, &query)
 
 	return query, code, err
 }

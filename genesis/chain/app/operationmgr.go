@@ -123,6 +123,7 @@ func (m *OperationManager) NewOperator(tx *types.Transaction) (DoOperatorItfc, e
 		for _, v := range opManageData.KeyPairs {
 			manageData.DataName = append(manageData.DataName, v.Name)
 			manageData.Data = append(manageData.Data, v.Value)
+			manageData.Category = append(manageData.Category, v.Category)
 		}
 
 		manageData.BaseOp.Source = tx.GetFrom()

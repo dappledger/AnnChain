@@ -10,9 +10,9 @@ const AccDataLength = 1000
 const TypeiUndefined = 127
 
 type ShowAccount struct {
-	Address string              `json:"address"`
-	Balance string              `json:"balance"`
-	Data    []map[string]string `json:"data"`
+	Address string                        `json:"address"`
+	Balance string                        `json:"balance"`
+	Data    map[string]ManageDataCategory `json:"data"`
 }
 
 type QueryExRequest struct {
