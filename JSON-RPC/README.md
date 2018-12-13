@@ -254,15 +254,15 @@
      }
      ```
 
-## 查询所有账页信息
+- ## 查询所有账页信息
 
-1. 调用方式
+   1. 调用方式
 
    ```
    curl -d '{"jsonrpc":"2.0","method":"query_ledgers","params":[order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
    ```
 
-2. 传入参数
+  2. 传入参数
 
    ```
    order：排序，默认desc，asc或者desc
@@ -270,7 +270,7 @@
    cursor: 游标，用于指定查询“起点”，首次查询可以置0
    ```
 
-3. 返回值
+  3. 返回值
 
    ```
    "result":{
