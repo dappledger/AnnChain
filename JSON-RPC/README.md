@@ -254,48 +254,48 @@
      }
      ```
 
-- ## 查询所有账页信息
+## 查询所有账页信息
 
-  1. 调用方式
+1. 调用方式
 
-       ```
-       curl -d '{"jsonrpc":"2.0","method":"query_ledgers","params":[order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
-       ```
+   ```
+   curl -d '{"jsonrpc":"2.0","method":"query_ledgers","params":[order,limit,cursor],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+   ```
 
-  2. 传入参数
+2. 传入参数
 
-     ```
-     order：排序，默认desc，asc或者desc
-     limit：限行数，默认10，最大200
-     cursor: 游标，用于指定查询“起点”，首次查询可以置0
-  	```
-  	
-   3. 返回值
+   ```
+   order：排序，默认desc，asc或者desc
+   limit：限行数，默认10，最大200
+   cursor: 游标，用于指定查询“起点”，首次查询可以置0
+   ```
 
-    ```
-    "result":{
-    {
-        "base_fee": 0,
-        "closed_at": "2018-11-09T17:21:28.471+08:00",
-        "hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
-        "max_tx_set_size": 2000,
-        "prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
-        "height": 621,
-        "total_coins": 100000000000000,
-        "transaction_count": 99
-    },
-    {
-        "base_fee": 0,
-        "closed_at": "2018-11-09T17:21:28.471+08:00",
-        "hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
-        "max_tx_set_size": 2000,
-        "prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
-        "height": 621,
-        "total_coins": 100000000000000,
-        "transaction_count": 99
-    }
-}
-    ```
+3. 返回值
+
+   ```
+   "result":{
+       {
+           "base_fee": 0,
+           "closed_at": "2018-11-09T17:21:28.471+08:00",
+           "hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
+           "max_tx_set_size": 2000,
+           "prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
+           "height": 621,
+           "total_coins": 100000000000000,
+           "transaction_count": 99
+       },
+       {
+           "base_fee": 0,
+           "closed_at": "2018-11-09T17:21:28.471+08:00",
+           "hash": "0xafc51ee76c42bc4f54452036882717d144f71599",
+           "max_tx_set_size": 2000,
+           "prev_hash": "0xf21be594a7539c576aa7e5e4132a3fe294416424",
+           "height": 621,
+           "total_coins": 100000000000000,
+           "transaction_count": 99
+       }
+   }
+   ```
 
 - ## 查询指定账页信息
 
