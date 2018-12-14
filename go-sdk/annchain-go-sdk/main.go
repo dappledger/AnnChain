@@ -64,7 +64,7 @@ func (c *AnnChainClient) CreateContract(nonce uint64, privKey, basefee, memo, fr
 	return txhash, code, err
 }
 
-func (c *AnnChainClient) ManageData(nonce uint64, privKey, basefee, memo, from string, datas []ManageDataParam) (string, at.CodeType, error) {
+func (c *AnnChainClient) ManageData(nonce uint64, privKey, basefee, memo, from string, datas map[string]ManageDataValueParam) (string, at.CodeType, error) {
 
 	privateKey := crypto.ToECDSA(ethcmn.Hex2Bytes(privKey))
 
@@ -303,8 +303,9 @@ func (c *AnnChainClient) QueryAccountManageDatas(address, order string, limit, c
 
 	var query map[string]QueryManageDataResult
 
-	_, code, err := c.rpcClient.Call("query_account_managedatas", []interface{}{address, order, limit, cursor}, &query)
+	result, code, err := c.rpcClient.Call("query_account_managedatas", []interface{}{address, order, limit, cursor}, &query)
 
+	fmt.Println(string(result))
 	return query, code, err
 }
 

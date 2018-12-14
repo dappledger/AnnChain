@@ -83,8 +83,8 @@ type QueryPaymentTransactionResult struct {
 
 type QueryManageDataTransactionResult struct {
 	QueryTransactionResult
-	Nonce   uint64            `json:"nonce"`
-	KeyPair []ManageDataParam `json:"keypair"`
+	Nonce   uint64                          `json:"nonce"`
+	KeyPair map[string]ManageDataValueParam `json:"keypair"`
 }
 
 type QueryReceiptResult struct {

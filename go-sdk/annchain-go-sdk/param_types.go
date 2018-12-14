@@ -17,8 +17,7 @@ type PaymentParam struct {
 	Amount string `json:"amount"`
 }
 
-type ManageDataParam struct {
-	Name     string `json:"name"`
+type ManageDataValueParam struct {
 	Value    string `json:"value"`
 	Category string `json:"category"`
 }
