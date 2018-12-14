@@ -21,7 +21,7 @@ func NewPaymentTx(nonce uint64, basefee, memo, from, to, amount string) *types.T
 	return types.NewTransaction(strconv.FormatUint(nonce, 10), basefee, from, to, PAYMENT, memo, string(jspByte))
 }
 
-func NewManageDataTx(nonce uint64, basefee, memo, from string, datas []ManageDataParam) *types.Transaction {
+func NewManageDataTx(nonce uint64, basefee, memo, from string, datas map[string]ManageDataValueParam) *types.Transaction {
 
 	jspByte, _ := json.Marshal(datas)
 

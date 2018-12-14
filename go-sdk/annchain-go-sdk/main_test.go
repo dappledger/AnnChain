@@ -138,12 +138,12 @@ func TestManageData(t *testing.T) {
 
 	client := NewAnnChainClient("tcp://127.0.0.1:46657")
 
-	var datas []ManageDataParam
+	var datas map[string]ManageDataValueParam
 
-	data1 := ManageDataParam{Name: "8", Value: "lvguoxin", Category: "B"}
-	data2 := ManageDataParam{Name: "9", Value: "fanhongyue", Category: "B"}
+	datas = make(map[string]ManageDataValueParam)
 
-	datas = append(datas, data1, data2)
+	datas["8"] = ManageDataValueParam{Value: "zhaoyang", Category: "B"}
+	datas["9"] = ManageDataValueParam{Value: "fanhongyue", Category: "B"}
 
 	result, code, err := client.ManageData(GetNonce(superAddr), superPriv, "100", "memo", superAddr, datas)
 

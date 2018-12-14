@@ -114,14 +114,14 @@ func (m *OperationManager) NewOperator(tx *types.Transaction) (DoOperatorItfc, e
 
 		var opManageData types.ManageData
 
-		if err := json.Unmarshal(tx.GetOperation(), &opManageData.KeyPairs); err != nil {
+		if err := json.Unmarshal(tx.GetOperation(), &opManageData.Mparis); err != nil {
 			return nil, err
 		}
 
 		manageData := new(types.ManageDataOp)
 
-		for _, v := range opManageData.KeyPairs {
-			manageData.DataName = append(manageData.DataName, v.Name)
+		for k, v := range opManageData.Mparis {
+			manageData.DataName = append(manageData.DataName, k)
 			manageData.Data = append(manageData.Data, v.Value)
 			manageData.Category = append(manageData.Category, v.Category)
 		}
