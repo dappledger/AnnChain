@@ -119,14 +119,21 @@ cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis
 
 同2.2
 
-### 3.3初始化链节点
+### 3.3配置运行目录
+
+```
+echo export ANN_RUNTIME=/data/genesis >> /etc/profile  //path customize
+source /etc/profile
+```
+
+### 3.4初始化链节点
 
 `./genesis init `
 
 初始化目录结构
 
 ```
-[root@bogon .ann_runtime]# pwd
+[root@bogon .ann_runtime]# pwd    //default
 /root/.ann_runtime
 [root@bogon .ann_runtime]# tree -L 2
 .
@@ -150,7 +157,7 @@ cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis
 7 directories, 9 files
 ```
 
-### 3.4配置创世节点
+### 3.5配置创世节点
 
 - config.toml
 
@@ -229,7 +236,7 @@ cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis
   }
   ```
 
-### 3.5启动链节点
+### 3.6启动链节点
 
 - 命令行启动
 
