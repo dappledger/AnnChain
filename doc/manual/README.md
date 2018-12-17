@@ -133,7 +133,7 @@ source /etc/profile
 初始化目录结构
 
 ```
-[root@bogon .ann_runtime]# pwd    //default
+[root@bogon .ann_runtime]# pwd    //default run dir
 /root/.ann_runtime
 [root@bogon .ann_runtime]# tree -L 2
 .
