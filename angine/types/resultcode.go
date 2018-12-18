@@ -25,6 +25,8 @@ const (
 	CodeType_LowBalance    CodeType = 4
 	CodeType_Timeout       CodeType = 5
 	CodeType_NullData      CodeType = 6
+	CodeType_DecodingError CodeType = 7
+	CodeType_EncodingError CodeType = 8
 
 	// Reserved for basecoin, 100 ~ 199
 	CodeType_BaseInsufficientFunds CodeType = 101
@@ -47,6 +49,8 @@ var CodeType_name = map[int32]string{
 	4:   "LowBalance",
 	5:   "RequestTimeout",
 	6:   "EmptyData",
+	7:   "DecodingError",
+	8:   "EncodingError",
 	101: "BaseInsufficientFunds",
 	102: "BaseInvalidInput",
 	103: "BaseInvalidSignature",
@@ -65,6 +69,8 @@ var CodeType_value = map[string]int32{
 	"LowBalance":            4,
 	"RequestTimeout":        5,
 	"EmptyData":             6,
+	"DecodingError":         7,
+	"EncodingError":         8,
 	"BaseInsufficientFunds": 101,
 	"BaseInvalidInput":      102,
 	"BaseInvalidSignature":  103,
