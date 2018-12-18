@@ -143,7 +143,6 @@ func (m *DataManager) QueryAccountManagedata(accid ethcmn.Address, category stri
 		return nil, err
 	}
 
-	//datas = make([]map[string]string, len(result))
 	datas = make(map[string]types.ManageDataCategory, len(result))
 	fmt.Println(result)
 	for _, r := range result {

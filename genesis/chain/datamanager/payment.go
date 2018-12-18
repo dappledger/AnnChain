@@ -15,9 +15,6 @@
 package datamanager
 
 import (
-	//"encoding/json"
-	//"time"
-
 	"github.com/dappledger/AnnChain/genesis/chain/database"
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/types"

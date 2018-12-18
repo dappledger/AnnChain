@@ -27,13 +27,12 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
-
-	"github.com/gorilla/websocket"
 	. "github.com/dappledger/AnnChain/ann-module/lib/go-common"
 	"github.com/dappledger/AnnChain/ann-module/lib/go-events"
 	. "github.com/dappledger/AnnChain/ann-module/lib/go-rpc/types"
 	"github.com/dappledger/AnnChain/ann-module/lib/go-wire"
+	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 // Adds a route for each function in the funcMap, as well as general jsonrpc and websocket handlers for all functions.

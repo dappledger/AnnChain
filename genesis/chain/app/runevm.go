@@ -58,8 +58,6 @@ func RunEvm(curHeader *ethtypes.Header, state *ethstate.StateDB, tx *ethtypes.Tr
 		big.NewInt(0),
 		evmConfig)
 
-	//ethvm.StdErrFormat(mLog.StructLogs())
-
 	return
 }
 
@@ -86,8 +84,6 @@ func QueryContractExcute(state *ethstate.StateDB, tx *ethtypes.Transaction) (res
 	gpl := new(ethcore.GasPool).AddGas(ethcmn.MaxBig)
 
 	res, gas, _, err = ethcore.ApplyMessage(vmEnv, txMsg, gpl)
-
-	//ethvm.StdErrFormat(mLog.StructLogs())
 
 	return
 

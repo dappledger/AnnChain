@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package basesql
 
 import (
@@ -22,14 +21,13 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/dappledger/AnnChain/ann-module/lib/go-config"
 	"github.com/dappledger/AnnChain/genesis/chain/database"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
 
-// Basesql sql-like database
-//	is not goroutine-safe
+// Basesql sql-like database is not goroutine-safe
 type Basesql struct {
 	conn   *sqlx.DB
 	tx     *sqlx.Tx
@@ -37,8 +35,8 @@ type Basesql struct {
 }
 
 // Init initialization
-//	init db connection
-// 	create tables if not exist
+// init db connection
+// create tables if not exist
 func (bs *Basesql) Init(dbname string, cfg config.Config, logger *zap.Logger) error {
 	dbDriver := cfg.GetString("db_type")
 	var dbConn string

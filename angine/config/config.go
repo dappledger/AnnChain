@@ -29,7 +29,7 @@ const (
 	DEFAULT_RUNTIME = ".ann_runtime"
 	DATADIR         = "data"
 	CONFIGFILE      = "config.toml"
-	MYCONFIGFILE    = "config.json" // 设置手续费等配置信息
+	MYCONFIGFILE    = "config.json"
 )
 
 func parseConfigTpl(moniker string, root string) (conf string) {
@@ -52,11 +52,11 @@ func InitRuntime(root string) {
 	common.EnsureDir(root, 0700)
 	common.EnsureDir(path.Join(root, DATADIR), 0700)
 	configFilePath := path.Join(root, CONFIGFILE)
-	// 生成默认的config.toml
+	// create default config.toml
 	if !common.FileExists(configFilePath) {
 		common.MustWriteFile(configFilePath, []byte(parseConfigTpl("anonymous", root)), 0644)
 	}
-	// 生成默认的config.json
+	// create default config.json
 	myConfigFilePath := path.Join(root, MYCONFIGFILE)
 	if !common.FileExists(myConfigFilePath) {
 		common.MustWriteFile(myConfigFilePath, []byte(MYCONFIGTPL), 0644)

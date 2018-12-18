@@ -61,11 +61,9 @@ const (
 )
 
 type LastBlockInfo struct {
-	Height    uint64 // may be just for info-show
-	StateRoot []byte
-	AppHash   []byte
-
-	// PrevHash     []byte
+	Height       uint64
+	StateRoot    []byte
+	AppHash      []byte
 	TotalCoin    string
 	Feepool      string
 	InflationSeq uint64
@@ -237,7 +235,6 @@ func NewGenesisApp(config cfg.Config, _logger *zap.Logger) *GenesisApp {
 		OnExecute:  at.NewHook(app.OnExecute),
 	}
 
-	// app.opM.Init(nil, &app)
 	app.opM.Init(app.dataM, &app)
 	app.txCache = cmn.NewCMap()
 
