@@ -57,6 +57,7 @@ AnnChain是工信部DAPPLedger开源社区项目之一，Annchain.Genesis是底�
 ### 2.3实践指引
 
 [API接口](https://github.com/dappledger/AnnChain/tree/master/JSON-RPC)
+[错误码清单](https://github.com/dappledger/AnnChain/blob/master/doc/genesis%E9%94%99%E8%AF%AF%E8%BF%94%E5%9B%9E%E7%A0%81%E6%B8%85%E5%8D%95.md)
 
 ## 三、特性介绍
 
