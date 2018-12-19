@@ -39,7 +39,7 @@ func NewEVMContext(msg Message, header *types.Header, chain HeaderFetcher) vm.Co
 
 		Origin:      msg.From(),
 		Coinbase:    header.Coinbase,
-		BlockNumber: new(big.Int).Set(header.Number),
+		BlockNumber: header.Number,
 		Time:        new(big.Int).Set(header.Time),
 		Difficulty:  new(big.Int).Set(header.Difficulty),
 		GasLimit:    new(big.Int).Set(header.GasLimit),

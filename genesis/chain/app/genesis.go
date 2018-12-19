@@ -406,7 +406,6 @@ func (app *GenesisApp) OnExecute(height, round int, block *at.Block) (interface{
 
 		sk = stateKey(block, height, round)
 	)
-
 	app.EvmCurrentHeader = app.makeCurrentHeader(block)
 
 	app.stateDupsMtx.Lock()

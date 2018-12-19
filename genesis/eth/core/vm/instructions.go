@@ -404,7 +404,7 @@ func opTimestamp(pc *uint64, env *EVM, contract *Contract, memory *Memory, stack
 }
 
 func opNumber(pc *uint64, env *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-	stack.push(U256(new(big.Int).Set(env.BlockNumber)))
+	stack.push(U256(env.interpreter.intPool.get().Set(env.Context.BlockNumber)))
 	return nil, nil
 }
 
