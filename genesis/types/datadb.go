@@ -1,3 +1,17 @@
+// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package types
 
 import (
@@ -31,17 +45,6 @@ type LedgerHeaderData struct {
 	MaxTxSetSize     uint64            `json:"max_tx_set_size"`
 }
 
-type LedgerHeaderQueryData struct {
-	Height           *big.Int  `json:"height"`
-	Hash             string    `json:"hash"`
-	PrevHash         string    `json:"prev_hash"`
-	TransactionCount uint64    `json:"transaction_count"`
-	ClosedAt         time.Time `json:"closed_at"`
-	TotalCoins       *big.Int  `json:"total_coins"`
-	BaseFee          *big.Int  `json:"base_fee"`
-	MaxTxSetSize     uint64    `json:"max_tx_set_size"`
-}
-
 // TransactionData object for app
 type TransactionData struct {
 	TxID            uint64            `json:"txid"`
@@ -59,6 +62,23 @@ type TransactionData struct {
 	Memo            string            `json:"memo"`
 }
 
+// ActionData object for app
+type ActionData struct {
+	ActionID uint64
+	JSONData string
+}
+
+type LedgerHeaderQueryData struct {
+	Height           *big.Int  `json:"height"`
+	Hash             string    `json:"hash"`
+	PrevHash         string    `json:"prev_hash"`
+	TransactionCount uint64    `json:"transaction_count"`
+	ClosedAt         time.Time `json:"closed_at"`
+	TotalCoins       *big.Int  `json:"total_coins"`
+	BaseFee          *big.Int  `json:"base_fee"`
+	MaxTxSetSize     uint64    `json:"max_tx_set_size"`
+}
+
 type TransactionQueryData struct {
 	Hash     ethcmn.Hash    `json:"hash"`
 	Height   *big.Int       `json:"height"`
@@ -69,12 +89,6 @@ type TransactionQueryData struct {
 	BaseFee  *big.Int       `json:"basefee"`
 	OpType   string         `json:"optype"`
 	Memo     string         `json:"memo"`
-}
-
-// ActionData object for app
-type ActionData struct {
-	ActionID uint64
-	JSONData string
 }
 
 // ActionObject interface
@@ -91,10 +105,6 @@ type ManageDataCategory struct {
 func (a *ActionBase) GetActionBase() *ActionBase {
 	return a
 }
-
-// func (a *ActionBase) SetTxhash(txhash ethcmn.Hash) {
-// 	a.TxHash = txhash
-// }
 
 type (
 	// ActionBase object for app(Action-Base)
@@ -161,7 +171,6 @@ type EffectData struct {
 // EffectObject interface
 type EffectObject interface {
 	GetEffectBase() *EffectBase
-	// SetTxhash(txhash ethcmn.Hash)
 }
 
 // GetEffectBase interface impl

@@ -17,52 +17,24 @@ package types
 type CodeType int32
 
 const (
-	CodeType_OK CodeType = 0
 	// General response codes, 0 ~ 99
-	CodeType_InternalError     CodeType = 1
-	CodeType_EncodingError     CodeType = 2
-	CodeType_BadNonce          CodeType = 3
-	CodeType_Unauthorized      CodeType = 4
-	CodeType_InsufficientFunds CodeType = 5
-	CodeType_UnknownRequest    CodeType = 6
-	CodeType_InvalidTx         CodeType = 7
-	CodeType_LowBalance        CodeType = 8
-	CodeType_Timeout           CodeType = 9
-	CodeType_NonceTooLow       CodeType = 10
-	CodeType_Rpc               CodeType = 11
-	CodeType_DecodingError     CodeType = 12
-	CodeType_NullData          CodeType = 13
+	CodeType_OK            CodeType = 0
+	CodeType_InternalError CodeType = 1
+	CodeType_BadNonce      CodeType = 2
+	CodeType_InvalidTx     CodeType = 3
+	CodeType_LowBalance    CodeType = 4
+	CodeType_Timeout       CodeType = 5
+	CodeType_NullData      CodeType = 6
+	CodeType_DecodingError CodeType = 7
+	CodeType_EncodingError CodeType = 8
 
 	// Reserved for basecoin, 100 ~ 199
-	CodeType_BaseDuplicateAddress     CodeType = 101
-	CodeType_BaseEncodingError        CodeType = 102
-	CodeType_BaseInsufficientFees     CodeType = 103
-	CodeType_BaseInsufficientFunds    CodeType = 104
-	CodeType_BaseInsufficientGasPrice CodeType = 105
-	CodeType_BaseInvalidInput         CodeType = 106
-	CodeType_BaseInvalidOutput        CodeType = 107
-	CodeType_BaseInvalidPubKey        CodeType = 108
-	CodeType_BaseInvalidSequence      CodeType = 109
-	CodeType_BaseInvalidSignature     CodeType = 110
-	CodeType_BaseUnknownAddress       CodeType = 111
-	CodeType_BaseUnknownPubKey        CodeType = 112
-	CodeType_BaseUnknownPlugin        CodeType = 113
-	CodeType_WrongRLP                 CodeType = 114
-	CodeType_SaveFailed               CodeType = 115
-	CodeType_WrongJSON                CodeType = 116
-	// Reserved for governance, 200 ~ 299
-	CodeType_GovUnknownEntity      CodeType = 201
-	CodeType_GovUnknownGroup       CodeType = 202
-	CodeType_GovUnknownProposal    CodeType = 203
-	CodeType_GovDuplicateGroup     CodeType = 204
-	CodeType_GovDuplicateMember    CodeType = 205
-	CodeType_GovDuplicateProposal  CodeType = 206
-	CodeType_GovDuplicateVote      CodeType = 207
-	CodeType_GovInvalidMember      CodeType = 208
-	CodeType_GovInvalidVote        CodeType = 209
-	CodeType_GovInvalidVotingPower CodeType = 210
-	// Reserved for governance, 300 ~ 399
-	CodeType_ErrorParam CodeType = 301
+	CodeType_BaseInsufficientFunds CodeType = 101
+	CodeType_BaseInvalidInput      CodeType = 102
+	CodeType_BaseInvalidSignature  CodeType = 103
+	CodeType_BaseUnknownAddress    CodeType = 104
+	CodeType_WrongRLP              CodeType = 105
+	CodeType_SaveFailed            CodeType = 106
 
 	CodeType_BadLimit  CodeType = 401
 	CodeType_BadPrice  CodeType = 402
@@ -72,94 +44,42 @@ const (
 var CodeType_name = map[int32]string{
 	0:   "OK",
 	1:   "InternalError",
-	2:   "EncodingError",
-	3:   "BadNonce",
-	4:   "Unauthorized",
-	5:   "InsufficientFunds",
-	6:   "UnknownRequest",
-	7:   "InvalidTx",
-	8:   "LowBalance",
-	9:   "RequestTimeout",
-	10:  "NonceTooLow",
-	11:  "RPCError",
-	12:  "DecodingError",
-	13:  "EmptyData",
-	101: "BaseDuplicateAddress",
-	102: "BaseEncodingError",
-	103: "BaseInsufficientFees",
-	104: "BaseInsufficientFunds",
-	105: "BaseInsufficientGasPrice",
-	106: "BaseInvalidInput",
-	107: "BaseInvalidOutput",
-	108: "BaseInvalidPubKey",
-	109: "BaseInvalidSequence",
-	110: "BaseInvalidSignature",
-	111: "BaseUnknownAddress",
-	112: "BaseUnknownPubKey",
-	113: "BaseUnknownPlugin",
-	114: "WrongRLP",
-	115: "SaveFailed",
-	116: "CodeType_WrongJSON",
-	201: "GovUnknownEntity",
-	202: "GovUnknownGroup",
-	203: "GovUnknownProposal",
-	204: "GovDuplicateGroup",
-	205: "GovDuplicateMember",
-	206: "GovDuplicateProposal",
-	207: "GovDuplicateVote",
-	208: "GovInvalidMember",
-	209: "GovInvalidVote",
-	210: "GovInvalidVotingPower",
-	301: "ParamsError",
+	2:   "BadNonce",
+	3:   "InvalidTx",
+	4:   "LowBalance",
+	5:   "RequestTimeout",
+	6:   "EmptyData",
+	7:   "DecodingError",
+	8:   "EncodingError",
+	101: "BaseInsufficientFunds",
+	102: "BaseInvalidInput",
+	103: "BaseInvalidSignature",
+	104: "BaseUnknownAddress",
+	105: "WrongRLP",
+	106: "SaveFailed",
 	401: "CodeType_BadLimit",
 	402: "CodeType_BadPrice",
 	403: "CodeType_BadAmount",
 }
 var CodeType_value = map[string]int32{
-	"OK":                       0,
-	"InternalError":            1,
-	"EncodingError":            2,
-	"BadNonce":                 3,
-	"Unauthorized":             4,
-	"InsufficientFunds":        5,
-	"UnknownRequest":           6,
-	"InvalidTx":                7,
-	"LowBalance":               8,
-	"RequestTimeout":           9,
-	"NonceTooLow":              10,
-	"RPCError":                 11,
-	"DecodingError":            12,
-	"EmptyData":                13,
-	"BaseDuplicateAddress":     101,
-	"BaseEncodingError":        102,
-	"BaseInsufficientFees":     103,
-	"BaseInsufficientFunds":    104,
-	"BaseInsufficientGasPrice": 105,
-	"BaseInvalidInput":         106,
-	"BaseInvalidOutput":        107,
-	"BaseInvalidPubKey":        108,
-	"BaseInvalidSequence":      109,
-	"BaseInvalidSignature":     110,
-	"BaseUnknownAddress":       111,
-	"BaseUnknownPubKey":        112,
-	"BaseUnknownPlugin":        113,
-	"WrongRLP":                 114,
-	"SaveFailed":               115,
-	"CodeType_WrongJSON":       116,
-	"GovUnknownEntity":         201,
-	"GovUnknownGroup":          202,
-	"GovUnknownProposal":       203,
-	"GovDuplicateGroup":        204,
-	"GovDuplicateMember":       205,
-	"GovDuplicateProposal":     206,
-	"GovDuplicateVote":         207,
-	"GovInvalidMember":         208,
-	"GovInvalidVote":           209,
-	"GovInvalidVotingPower":    210,
-	"ParamsError":              301,
-	"CodeType_BadLimit":        401,
-	"CodeType_BadPrice":        402,
-	"CodeType_BadAmount":       403,
+	"OK":                    0,
+	"InternalError":         1,
+	"BadNonce":              2,
+	"InvalidTx":             3,
+	"LowBalance":            4,
+	"RequestTimeout":        5,
+	"EmptyData":             6,
+	"DecodingError":         7,
+	"EncodingError":         8,
+	"BaseInsufficientFunds": 101,
+	"BaseInvalidInput":      102,
+	"BaseInvalidSignature":  103,
+	"BaseUnknownAddress":    104,
+	"WrongRLP":              105,
+	"SaveFailed":            106,
+	"CodeType_BadLimit":     401,
+	"CodeType_BadPrice":     402,
+	"CodeType_BadAmount":    403,
 }
 
 func (x CodeType) String() string {

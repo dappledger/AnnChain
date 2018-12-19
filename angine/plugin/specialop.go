@@ -80,7 +80,6 @@ func (s *Specialop) DeliverTx(tx []byte, i int) (bool, error) {
 		return true, nil
 	}
 	var cmd types.SpecialOPCmd
-	//err := wire.ReadBinaryBytes(types.UnwrapTx(tx), &cmd)
 	err := json.Unmarshal(types.UnwrapTx(tx), &cmd)
 	if err != nil || cmd.CmdCode != types.SpecialOP {
 		return true, err
@@ -155,26 +154,6 @@ func (s *Specialop) CheckSpecialOP(cmd *types.SpecialOPCmd) (res error, sig cryp
 		err := errors.New("[CheckSpecialOP] only validators can issue special op")
 		return err, s.privkey.Sign([]byte(err.Error()))
 	}
-
-	// verify all the signatures from cmd.sigs, return error if anything fails
-	// for _, sig := range cmd.Sigs {
-	// 	pk, err := crypto.PubKeyFromBytes(sig[:33])
-	// 	if err != nil {
-	// 		err := errors.New("fail to get pubkey from sigs")
-	// 		return err, s.privkey.Sign([]byte(err.Error()))
-	// 	}
-	// 	pk32 := [32]byte(pk.(crypto.PubKeyEd25519))
-	// 	signature, err := crypto.SignatureFromBytes(sig[33:])
-	// 	if err != nil {
-	// 		err := errors.New("fail to get signature from sigs")
-	// 		return err, s.privkey.Sign([]byte(err.Error()))
-	// 	}
-	// 	sig64 := [64]byte(signature.(crypto.SignatureEd25519))
-	// 	if !ed25519.Verify(&pk32, cmd.ExCmd, &sig64) {
-	// 		err := errors.New("signature verification failed")
-	// 		return err, s.privkey.Sign([]byte(err.Error()))
-	// 	}
-	// }
 
 	switch cmd.CmdType {
 	case types.SpecialOP_ChangeValidator:
@@ -287,10 +266,6 @@ func (s *Specialop) ValidateChangeValidator(cmd *types.SpecialOPCmd, toAdd *type
 
 	for _, v := range (*s.validators).Validators {
 		for _, s := range cmd.Sigs {
-			//			sig, err := crypto.SignatureFromBytes(s)
-			//			if err != nil {
-			//				continue
-			//			}
 			signedPkByte64 := types.BytesToByte64(s)
 
 			valPk := [32]byte(v.PubKey.(crypto.PubKeyEd25519))
@@ -301,12 +276,6 @@ func (s *Specialop) ValidateChangeValidator(cmd *types.SpecialOPCmd, toAdd *type
 				// We need only one signature of all validators
 				return nil
 			}
-			//			if v.PubKey.VerifyBytes(pubToAddEd[:], sig) {
-			//				major23 += v.VotingPower
-
-			//				// We need only one signature of all validators
-			//				return nil
-			//			}
 		}
 	}
 

@@ -1,3 +1,17 @@
+// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package node
 
 import (
@@ -63,7 +77,7 @@ func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 		"core_version":         rpc.NewRPCFunc(h.CoreVersion, argsWithChainID("")),
 		"info":                 rpc.NewRPCFunc(h.Info, argsWithChainID("")),
 
-		// Query
+		// Query RPC
 		"query_nonce":                       rpc.NewRPCFunc(h.QueryNonce, argsWithChainID("address")),
 		"query_account":                     rpc.NewRPCFunc(h.QueryAccount, argsWithChainID("address")),
 		"query_ledgers":                     rpc.NewRPCFunc(h.QueryLedgers, argsWithChainID("order,limit,cursor")),
@@ -82,7 +96,7 @@ func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 		"query_account_category_managedata": rpc.NewRPCFunc(h.QueryAccountCategoryManagedata, argsWithChainID("address,category")),
 		"query_ledger_transactions":         rpc.NewRPCFunc(h.QueryLedgerTransactions, argsWithChainID("height,order,limit,cursor")),
 
-		//Execute
+		//Execute RPC
 		"create_account":   rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
 		"payment":          rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
 		"manage_data":      rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
