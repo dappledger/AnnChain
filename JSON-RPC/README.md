@@ -114,8 +114,8 @@
      	"to":"",
      	"operation": 
      				{
-     					"name1"{"category": "A","value": "1"},
-     					"name2"{"category": "B","value": "2"}
+     					"name1"：{"category": "A","value": "1"},
+     					"name2"：{"category": "B","value": "2"}
      				},
      	"signature": ""
      }
