@@ -71,8 +71,8 @@
      ```
      {
      	"basefee": "100",
+      "nonce": "2",
      	"memo": "payment",
-     	"nonce": "2",
      	"optype": "payment",
      	"form": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      	"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
@@ -143,10 +143,11 @@
      ```
      {
      	"basefee": "100",
+      "nonce": "4",
      	"memo": "",
-     	"nonce": "4",
      	"optype": "create_contract",
      	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+      "to":"",
      	"operation": 
      				{	
      					"payload": ""
@@ -181,8 +182,8 @@
      ```
      {
      	"basefee": "100",
+      "nonce": "4",
      	"memo": "",
-     	"nonce": "4",
      	"optype": "execute_contract",
      	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
      	"to": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
