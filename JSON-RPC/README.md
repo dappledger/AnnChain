@@ -111,6 +111,7 @@
      	"memo": "manage_data",
      	"optype": "manage_data",
      	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
+     	"to":"",
      	"operation": 
      				{
      					"name1"{"category": "A","value": "1"},
