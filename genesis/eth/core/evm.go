@@ -22,7 +22,12 @@ import (
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/core/types"
 	"github.com/dappledger/AnnChain/genesis/eth/core/vm"
+	"github.com/dappledger/AnnChain/genesis/eth/crypto"
 )
+
+// emptyCodeHash is used by create to ensure deployment is disallowed to already
+// deployed contract addresses (relevant after the account abstraction).
+var emptyCodeHash = crypto.Keccak256Hash(nil)
 
 // BlockFetcher retrieves headers by their hash
 type HeaderFetcher interface {
@@ -36,7 +41,6 @@ func NewEVMContext(msg Message, header *types.Header, chain HeaderFetcher) vm.Co
 		CanTransfer: CanTransfer,
 		Transfer:    Transfer,
 		GetHash:     GetHashFn(header, chain),
-
 		Origin:      msg.From(),
 		Coinbase:    header.Coinbase,
 		BlockNumber: new(big.Int).Set(header.Number),
@@ -49,10 +53,23 @@ func NewEVMContext(msg Message, header *types.Header, chain HeaderFetcher) vm.Co
 
 // GetHashFn returns a GetHashFunc which retrieves header hashes by number
 func GetHashFn(ref *types.Header, chain HeaderFetcher) func(n uint64) common.Hash {
+	var cache map[uint64]common.Hash
 	return func(n uint64) common.Hash {
+		// If there's no hash cache yet, make one
+		if cache == nil {
+			cache = map[uint64]common.Hash{
+				ref.Number.Uint64() - 1: ref.ParentHash,
+			}
+		}
+		// Try to fulfill the request from the cache
+		if hash, ok := cache[n]; ok {
+			return hash
+		}
+		// Not cached, iterate the blocks and cache the hashes
 		for header := chain.GetHeader(ref.ParentHash, ref.Number.Uint64()-1); header != nil; header = chain.GetHeader(header.ParentHash, header.Number.Uint64()-1) {
-			if header.Number.Uint64() == n {
-				return header.Hash()
+			cache[header.Number.Uint64()-1] = header.ParentHash
+			if n == header.Number.Uint64()-1 {
+				return header.ParentHash
 			}
 		}
 

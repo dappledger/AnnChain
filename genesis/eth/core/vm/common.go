@@ -60,6 +60,12 @@ func calcMemSize(off, l *big.Int) *big.Int {
 	return new(big.Int).Add(off, l)
 }
 
+// bigUint64 returns the integer casted to a uint64 and returns whether it
+// overflowed in the process.
+func bigUint64(v *big.Int) (uint64, bool) {
+	return v.Uint64(), v.BitLen() > 64
+}
+
 // calculates the quadratic gas
 func quadMemGas(mem *Memory, newMemSize, gas *big.Int) {
 	if newMemSize.Cmp(common.Big0) > 0 {

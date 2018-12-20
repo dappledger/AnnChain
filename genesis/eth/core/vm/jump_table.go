@@ -29,6 +29,8 @@ type (
 	memorySizeFunc      func(*Stack) *big.Int
 )
 
+var errGasUintOverflow = errors.New("gas uint64 overflow")
+
 type operation struct {
 	// op is the operation function
 	execute executionFunc
@@ -45,34 +47,78 @@ type operation struct {
 	// counter from further incrementing.
 	reverts bool
 	returns bool
-	jumps   bool
+
+	jumps  bool
+	writes bool // determines whether this a state modifying operation
 	// valid is used to check whether the retrieved operation is valid and known
-	valid            bool
-	clearsReturndata bool
+	valid bool
 }
 
 var defaultJumpTable = NewJumpTable()
 
 func NewJumpTable() [256]operation {
 	return [256]operation{
+		SHL: {
+			execute:       opSHL,
+			gasCost:       constGasFunc(GasFastestStep),
+			validateStack: makeStackFunc(2, 1),
+			valid:         true,
+		},
+		SHR: {
+			execute:       opSHR,
+			gasCost:       constGasFunc(GasFastestStep),
+			validateStack: makeStackFunc(2, 1),
+			valid:         true,
+		},
+		SAR:{
+			execute:       opSAR,
+			gasCost:       constGasFunc(GasFastestStep),
+			validateStack: makeStackFunc(2, 1),
+			valid:         true,
+		}，
+		EXTCODEHASH :{
+			execute:       opExtCodeHash,
+			gasCost:       gasExtCodeHash,
+			validateStack: makeStackFunc(1, 1),
+			valid:         true,
+		},
+		CREATE2:{
+			execute:       opCreate2,
+			gasCost:       gasCreate2,
+			validateStack: makeStackFunc(4, 1),
+			memorySize:    memoryCreate2,
+			valid:         true,
+			writes:        true,
+			returns:       true,
+		},
+		STATICCALL:{
+			execute:       opStaticCall,
+			gasCost:       gasStaticCall,
+			validateStack: makeStackFunc(6, 1),
+			memorySize:    memoryStaticCall,
+			valid:         true,
+			returns:       true,
+		},
+		RETURNDATASIZE:{
+			execute:       opReturnDataSize,
+			gasCost:       constGasFunc(GasQuickStep),
+			validateStack: makeStackFunc(0, 1),
+			valid:         true,
+		},
 		REVERT: {
 			execute:       opRevert,
-			gasCost:       constGasFunc(new(big.Int)),
+			gasCost:       gasRevert,
 			validateStack: makeStackFunc(2, 0),
+			memorySize:    memoryRevert,
 			valid:         true,
 			reverts:       true,
 			returns:       true,
 		},
 		RETURNDATACOPY: {
 			execute:       opReturnDataCopy,
-			gasCost:       constGasFunc(new(big.Int)),
+			gasCost:       gasReturnDataCopy,
 			validateStack: makeStackFunc(3, 0),
-			valid:         true,
-		},
-		RETURNDATASIZE: {
-			execute:       opReturnDataSize,
-			gasCost:       constGasFunc(new(big.Int)),
-			validateStack: makeStackFunc(0, 1),
+			memorySize:    memoryReturnDataCopy,
 			valid:         true,
 		},
 		STOP: {
@@ -85,139 +131,139 @@ func NewJumpTable() [256]operation {
 		ADD: {
 			execute:       opAdd,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		MUL: {
 			execute:       opMul,
 			gasCost:       constGasFunc(GasFastStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		SUB: {
 			execute:       opSub,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		DIV: {
 			execute:       opDiv,
 			gasCost:       constGasFunc(GasFastStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		SDIV: {
 			execute:       opSdiv,
 			gasCost:       constGasFunc(GasFastStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		MOD: {
 			execute:       opMod,
 			gasCost:       constGasFunc(GasFastStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		SMOD: {
 			execute:       opSmod,
 			gasCost:       constGasFunc(GasFastStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		ADDMOD: {
 			execute:       opAddmod,
 			gasCost:       constGasFunc(GasMidStep),
-			validateStack: makeStackFunc(3, -2),
+			validateStack: makeStackFunc(3, 1),
 			valid:         true,
 		},
 		MULMOD: {
 			execute:       opMulmod,
 			gasCost:       constGasFunc(GasMidStep),
-			validateStack: makeStackFunc(3, -2),
+			validateStack: makeStackFunc(3, 1),
 			valid:         true,
 		},
 		EXP: {
 			execute:       opExp,
 			gasCost:       gasExp,
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		SIGNEXTEND: {
 			execute:       opSignExtend,
 			gasCost:       constGasFunc(GasFastStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		LT: {
 			execute:       opLt,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		GT: {
 			execute:       opGt,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		SLT: {
 			execute:       opSlt,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		SGT: {
 			execute:       opSgt,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		EQ: {
 			execute:       opEq,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		ISZERO: {
 			execute:       opIszero,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(1, 0),
+			validateStack: makeStackFunc(1, 1),
 			valid:         true,
 		},
 		AND: {
 			execute:       opAnd,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		XOR: {
 			execute:       opXor,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		OR: {
 			execute:       opOr,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		NOT: {
 			execute:       opNot,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(1, 0),
+			validateStack: makeStackFunc(1, 1),
 			valid:         true,
 		},
 		BYTE: {
 			execute:       opByte,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
 		SHA3: {
 			execute:       opSha3,
 			gasCost:       gasSha3,
-			validateStack: makeStackFunc(2, -1),
+			validateStack: makeStackFunc(2, 1),
 			memorySize:    memorySha3,
 			valid:         true,
 		},
@@ -230,7 +276,7 @@ func NewJumpTable() [256]operation {
 		BALANCE: {
 			execute:       opBalance,
 			gasCost:       gasBalance,
-			validateStack: makeStackFunc(1, 0),
+			validateStack: makeStackFunc(1, 1),
 			valid:         true,
 		},
 		ORIGIN: {
@@ -254,7 +300,7 @@ func NewJumpTable() [256]operation {
 		CALLDATALOAD: {
 			execute:       opCalldataLoad,
 			gasCost:       constGasFunc(GasFastestStep),
-			validateStack: makeStackFunc(1, 0),
+			validateStack: makeStackFunc(1, 1),
 			valid:         true,
 		},
 		CALLDATASIZE: {
@@ -266,7 +312,7 @@ func NewJumpTable() [256]operation {
 		CALLDATACOPY: {
 			execute:       opCalldataCopy,
 			gasCost:       gasCalldataCopy,
-			validateStack: makeStackFunc(3, -3),
+			validateStack: makeStackFunc(3, 0),
 			memorySize:    memoryCalldataCopy,
 			valid:         true,
 		},
@@ -279,7 +325,7 @@ func NewJumpTable() [256]operation {
 		CODECOPY: {
 			execute:       opCodeCopy,
 			gasCost:       gasCodeCopy,
-			validateStack: makeStackFunc(3, -3),
+			validateStack: makeStackFunc(3, 0),
 			memorySize:    memoryCodeCopy,
 			valid:         true,
 		},
@@ -292,13 +338,13 @@ func NewJumpTable() [256]operation {
 		EXTCODESIZE: {
 			execute:       opExtCodeSize,
 			gasCost:       gasExtCodeSize,
-			validateStack: makeStackFunc(1, 0),
+			validateStack: makeStackFunc(1, 1),
 			valid:         true,
 		},
 		EXTCODECOPY: {
 			execute:       opExtCodeCopy,
 			gasCost:       gasExtCodeCopy,
-			validateStack: makeStackFunc(4, -4),
+			validateStack: makeStackFunc(4, 0),
 			memorySize:    memoryExtCodeCopy,
 			valid:         true,
 		},
@@ -341,20 +387,20 @@ func NewJumpTable() [256]operation {
 		POP: {
 			execute:       opPop,
 			gasCost:       constGasFunc(GasQuickStep),
-			validateStack: makeStackFunc(1, -1),
+			validateStack: makeStackFunc(1, 0),
 			valid:         true,
 		},
 		MLOAD: {
 			execute:       opMload,
 			gasCost:       gasMLoad,
-			validateStack: makeStackFunc(1, 0),
+			validateStack: makeStackFunc(1, 1),
 			memorySize:    memoryMLoad,
 			valid:         true,
 		},
 		MSTORE: {
 			execute:       opMstore,
 			gasCost:       gasMStore,
-			validateStack: makeStackFunc(2, -2),
+			validateStack: makeStackFunc(2, 0),
 			memorySize:    memoryMStore,
 			valid:         true,
 		},
@@ -362,33 +408,33 @@ func NewJumpTable() [256]operation {
 			execute:       opMstore8,
 			gasCost:       gasMStore8,
 			memorySize:    memoryMStore8,
-			validateStack: makeStackFunc(2, -2),
+			validateStack: makeStackFunc(2, 0),
 
 			valid: true,
 		},
 		SLOAD: {
 			execute:       opSload,
 			gasCost:       gasSLoad,
-			validateStack: makeStackFunc(1, 0),
+			validateStack: makeStackFunc(1, 1),
 			valid:         true,
 		},
 		SSTORE: {
 			execute:       opSstore,
 			gasCost:       gasSStore,
-			validateStack: makeStackFunc(2, -2),
+			validateStack: makeStackFunc(2, 0),
 			valid:         true,
 		},
 		JUMP: {
 			execute:       opJump,
 			gasCost:       constGasFunc(GasMidStep),
-			validateStack: makeStackFunc(1, -1),
+			validateStack: makeStackFunc(1, 0),
 			jumps:         true,
 			valid:         true,
 		},
 		JUMPI: {
 			execute:       opJumpi,
 			gasCost:       constGasFunc(GasSlowStep),
-			validateStack: makeStackFunc(2, -2),
+			validateStack: makeStackFunc(2, 0),
 			jumps:         true,
 			valid:         true,
 		},
@@ -803,63 +849,72 @@ func NewJumpTable() [256]operation {
 		LOG0: {
 			execute:       makeLog(0),
 			gasCost:       makeGasLog(0),
-			validateStack: makeStackFunc(2, -2),
+			validateStack: makeStackFunc(2, 0),
 			memorySize:    memoryLog,
 			valid:         true,
+			writes:        true,
 		},
 		LOG1: {
 			execute:       makeLog(1),
 			gasCost:       makeGasLog(1),
-			validateStack: makeStackFunc(3, -3),
+			validateStack: makeStackFunc(3, 0),
 			memorySize:    memoryLog,
 			valid:         true,
+			writes:        true,
 		},
 		LOG2: {
 			execute:       makeLog(2),
 			gasCost:       makeGasLog(2),
-			validateStack: makeStackFunc(4, -4),
+			validateStack: makeStackFunc(4, 0),
 			memorySize:    memoryLog,
 			valid:         true,
+			writes:        true,
 		},
 		LOG3: {
 			execute:       makeLog(3),
 			gasCost:       makeGasLog(3),
-			validateStack: makeStackFunc(5, -5),
+			validateStack: makeStackFunc(5, 0),
 			memorySize:    memoryLog,
 			valid:         true,
+			writes:        true,
 		},
 		LOG4: {
 			execute:       makeLog(4),
 			gasCost:       makeGasLog(4),
-			validateStack: makeStackFunc(6, -6),
+			validateStack: makeStackFunc(6, 0),
 			memorySize:    memoryLog,
 			valid:         true,
+			writes:        true,
 		},
 		CREATE: {
 			execute:       opCreate,
 			gasCost:       gasCreate,
-			validateStack: makeStackFunc(3, -2),
+			validateStack: makeStackFunc(3, 0),
 			memorySize:    memoryCreate,
 			valid:         true,
+			writes:        true,
+			returns:       true,
 		},
 		CALL: {
 			execute:       opCall,
 			gasCost:       gasCall,
-			validateStack: makeStackFunc(7, -6),
+			validateStack: makeStackFunc(7, 1),
 			memorySize:    memoryCall,
 			valid:         true,
+			returns:       true,
 		},
 		CALLCODE: {
 			execute:       opCallCode,
 			gasCost:       gasCallCode,
-			validateStack: makeStackFunc(7, -6),
+			validateStack: makeStackFunc(7, 1),
 			memorySize:    memoryCall,
 			valid:         true,
+			returns:       true,
 		},
 		RETURN: {
 			execute:       opReturn,
 			gasCost:       gasReturn,
-			validateStack: makeStackFunc(2, -2),
+			validateStack: makeStackFunc(2, 0),
 			memorySize:    memoryReturn,
 			halts:         true,
 			valid:         true,
@@ -867,16 +922,18 @@ func NewJumpTable() [256]operation {
 		DELEGATECALL: {
 			execute:       opDelegateCall,
 			gasCost:       gasDelegateCall,
-			validateStack: makeStackFunc(6, -5),
+			validateStack: makeStackFunc(6, 1),
 			memorySize:    memoryDelegateCall,
 			valid:         true,
+			returns:       true,
 		},
 		SELFDESTRUCT: {
 			execute:       opSuicide,
 			gasCost:       gasSuicide,
-			validateStack: makeStackFunc(1, -1),
+			validateStack: makeStackFunc(1, 0),
 			halts:         true,
 			valid:         true,
+			writes:        true,
 		},
 	}
 }

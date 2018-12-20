@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"time"
 	"unicode"
 
 	"github.com/dappledger/AnnChain/genesis/eth/common"
@@ -65,7 +66,10 @@ type StructLog struct {
 // Note that reference types are actual VM data structures; make copies
 // if you need to retain them beyond the current call.
 type Tracer interface {
+	CaptureStart(from common.Address, to common.Address, call bool, input []byte, gas uint64, value *big.Int) error
 	CaptureState(env *EVM, pc uint64, op OpCode, gas, cost *big.Int, memory *Memory, stack *Stack, contract *Contract, depth int, err error) error
+	CaptureFault(env *EVM, pc uint64, op OpCode, gas, cost uint64, memory *Memory, stack *Stack, contract *Contract, depth int, err error) error
+	CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) error
 }
 
 // StructLogger is an EVM state logger and implements Tracer.

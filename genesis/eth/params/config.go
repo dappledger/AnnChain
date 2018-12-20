@@ -65,11 +65,15 @@ type ChainConfig struct {
 
 	EIP155Block *big.Int `json:"eip155Block"` // EIP155 HF block
 	EIP158Block *big.Int `json:"eip158Block"` // EIP158 HF block
+
+	ByzantiumBlock      *big.Int `json:"byzantiumBlock,omitempty"`      // Byzantium switch block (nil = no fork, 0 = already on byzantium)
+	ConstantinopleBlock *big.Int `json:"constantinopleBlock,omitempty"` // Constantinople switch block (nil = no fork, 0 = already activated)
+	EWASMBlock          *big.Int `json:"ewasmBlock,omitempty"`          // EWASM switch block (nil = no fork, 0 = already activated
 }
 
 // String implements the Stringer interface.
 func (c *ChainConfig) String() string {
-	return fmt.Sprintf("{ChainID: %v Homestead: %v DAO: %v DAOSupport: %v EIP150: %v EIP155: %v EIP158: %v}",
+	return fmt.Sprintf("{ChainID: %v Homestead: %v DAO: %v DAOSupport: %v EIP150: %v EIP155: %v EIP158: %v Byzantium: %v Constantinople: %v}",
 		c.ChainId,
 		c.HomesteadBlock,
 		c.DAOForkBlock,
@@ -77,6 +81,8 @@ func (c *ChainConfig) String() string {
 		c.EIP150Block,
 		c.EIP155Block,
 		c.EIP158Block,
+		c.ByzantiumBlock,
+		c.ConstantinopleBlock,
 	)
 }
 
@@ -135,6 +141,24 @@ func (c *ChainConfig) IsEIP158(num *big.Int) bool {
 
 }
 
+// IsByzantium returns whether num is either equal to the Byzantium fork block or greater.
+func (c *ChainConfig) IsByzantium(num *big.Int) bool {
+	return isForked(c.ByzantiumBlock, num)
+}
+
+// IsConstantinople returns whether num is either equal to the Constantinople fork block or greater.
+func (c *ChainConfig) IsConstantinople(num *big.Int) bool {
+	return isForked(c.ConstantinopleBlock, num)
+}
+
+// isForked returns whether a fork scheduled at block s is active at the given head block.
+func isForked(s, head *big.Int) bool {
+	if s == nil || head == nil {
+		return false
+	}
+	return s.Cmp(head) <= 0
+}
+
 // Rules wraps ChainConfig and is merely syntatic sugar or can be used for functions
 // that do not have or require information about the block.
 //
@@ -146,5 +170,12 @@ type Rules struct {
 }
 
 func (c *ChainConfig) Rules(num *big.Int) Rules {
-	return Rules{ChainId: new(big.Int).Set(c.ChainId), IsHomestead: c.IsHomestead(num), IsEIP150: c.IsEIP150(num), IsEIP155: c.IsEIP155(num), IsEIP158: c.IsEIP158(num)}
+	return Rules{
+		ChainId: new(big.Int).Set(c.ChainId), 
+		IsHomestead: c.IsHomestead(num), 
+		IsEIP150: c.IsEIP150(num), 
+		IsEIP155: c.IsEIP155(num), 
+		IsEIP158: c.IsEIP158(num)},
+		IsByzantium:      c.IsByzantium(num),
+		IsConstantinople: c.IsConstantinople(num),
 }

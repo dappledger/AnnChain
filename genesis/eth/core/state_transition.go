@@ -17,9 +17,8 @@
 package core
 
 import (
-	//	"encoding/hex"
-	//	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/dappledger/AnnChain/genesis/eth/common"
@@ -102,7 +101,16 @@ func IntrinsicGas(data []byte, contractCreation, homestead bool) *big.Int {
 				nz++
 			}
 		}
+
+		// Make sure we don't exceed uint64 for all data combinations
 		m := big.NewInt(nz)
+		max := big.NewInt(math.Max)
+		max.Sub(max, igas)
+		max.Div(max, params.TxDataNonZeroGas)
+		if max.Cmp(m) < 0 {
+			return 0, vm.ErrOutOfGas
+		}
+
 		m.Mul(m, params.TxDataNonZeroGas)
 		igas.Add(igas, m)
 		m.SetInt64(int64(len(data)) - nz)
@@ -115,15 +123,13 @@ func IntrinsicGas(data []byte, contractCreation, homestead bool) *big.Int {
 // NewStateTransition initialises and returns a new state transition object.
 func NewStateTransition(env *vm.EVM, msg Message, gp *GasPool) *StateTransition {
 	return &StateTransition{
-		gp:         gp,
-		env:        env,
-		msg:        msg,
-		gas:        new(big.Int),
-		gasPrice:   msg.GasPrice(),
-		initialGas: new(big.Int),
-		value:      msg.Value(),
-		data:       msg.Data(),
-		state:      env.StateDB,
+		gp:       gp,
+		env:      env,
+		msg:      msg,
+		gasPrice: msg.GasPrice(),
+		value:    msg.Value(),
+		data:     msg.Data(),
+		state:    env.StateDB,
 	}
 }
 
@@ -227,12 +233,11 @@ func (self *StateTransition) TransitionDb() (ret []byte, usedGas *big.Int, faile
 	sender := self.from() // err checked in preCheck
 
 	contractCreation := MessageCreatesContract(msg)
-	//contractUpgrade := MessageUpgradeContract(msg)
 
 	// Pay intrinsic gas
-	// homestead := self.env.ChainConfig().IsHomestead(self.env.BlockNumber)
+	gas, err := IntrinsicGas(st.data, contractCreation, true)
 	// Edit by Kyli
-	if err = self.useGas(IntrinsicGas(self.data, contractCreation, true)); err != nil {
+	if err != nil {
 		return nil, big.NewInt(0), false, InvalidTxError(err)
 	}
 
@@ -244,41 +249,21 @@ func (self *StateTransition) TransitionDb() (ret []byte, usedGas *big.Int, faile
 		vmerr error
 	)
 	if contractCreation {
-		ret, _, vmerr = vmenv.Create(sender, self.data, self.gas, self.value)
-		/* else if contractUpgrade {
-			fmt.Println("contract upgrading...")
-			//parse parameters
-			var p []string
-			json.Unmarshal(self.data, &p)
-			addr := common.HexToAddress(p[0])
-			rawCode := []byte(p[1])
-			if len(rawCode) >= 2 && rawCode[0] == '0' && (rawCode[1] == 'x' || rawCode[1] == 'X') {
-				rawCode = rawCode[2:]
-			}
-			code := make([]byte, len(rawCode)/2)
-			hex.Decode(code, rawCode)
-
-			// Upgrade contract
-			ret, err = vmenv.Upgrade(sender, addr, code, self.gas, self.value)
-			fmt.Println("contract upgrade excuted")
-		}*/
+		ret, _, self.gas, vmerr = vmenv.Create(sender, self.data, self.gas, self.value)
 	} else {
 		// Increment the nonce for the next transaction
-		//self.state.SetNonce(sender.Address(), self.state.GetNonce(sender.Address())+1)
-		ret, vmerr = vmenv.Call(sender, self.to().Address(), self.data, self.gas, self.value)
+		ret, self.gas, vmerr = vmenv.Call(sender, self.to().Address(), self.data, self.gas, self.value)
 	}
 	if vmerr != nil {
 		glog.V(logger.Core).Infoln("vm returned with error:", err)
 		// The only possible consensus-error would be if there wasn't
 		// sufficient balance to make the transfer happen. The first
 		// balance transfer may never fail.
-		//		if vmerr == vm.ErrInsufficientBalance {
-		return nil, big.NewInt(0), false, InvalidTxError(vmerr)
-		//		}
+		if vmerr == vm.ErrInsufficientBalance {
+			return nil, big.NewInt(0), false, InvalidTxError(vmerr)
+		}
 	}
 
-	// requiredGas = new(big.Int).Set(self.gasUsed())
-	// Edit by: Kyli
 	self.refundGas()
 	self.state.AddBalance(self.env.Coinbase, new(big.Int).Mul(self.gasUsed(), self.gasPrice), "")
 

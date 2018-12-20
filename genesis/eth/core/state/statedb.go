@@ -25,13 +25,13 @@ import (
 
 	"go.uber.org/zap"
 
-	lru "github.com/hashicorp/golang-lru"
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/crypto"
 	"github.com/dappledger/AnnChain/genesis/eth/ethdb"
 	"github.com/dappledger/AnnChain/genesis/eth/rlp"
 	"github.com/dappledger/AnnChain/genesis/eth/trie"
 	"github.com/dappledger/AnnChain/genesis/types"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 // Trie cache generation limit after which to evic trie nodes from memory.
@@ -69,6 +69,13 @@ type StateDB struct {
 	stateObjects      map[ethcmn.Address]*StateObject
 	stateObjectsDirty map[ethcmn.Address]struct{}
 
+	// DB error.
+	// State objects are used by the consensus core and VM which are
+	// unable to deal with database-level errors. Any error that occurs
+	// during a database read is memoized here and will eventually be returned
+	// by StateDB.Commit.
+	dbErr error
+
 	// The refund counter, also used by state transitioning.
 	refund *big.Int
 
@@ -84,8 +91,6 @@ type StateDB struct {
 	journal        journal
 	validRevisions []revision
 	nextRevisionId int
-
-	lock sync.RWMutex
 }
 
 func (s *StateDB) GetTrie() *trie.SecureTrie {
@@ -119,12 +124,20 @@ func New(root ethcmn.Hash, db ethdb.Database) (*StateDB, error) {
 	}, nil
 }
 
+// setError remembers the first non-nil error it is called with.
+func (self *StateDB) setError(err error) {
+	if self.dbErr == nil {
+		self.dbErr = err
+	}
+}
+
+func (self *StateDB) Error() error {
+	return self.dbErr
+}
+
 // New creates a new statedb by reusing any journalled tries to avoid costly
 // disk io.
 func (self *StateDB) New(root ethcmn.Hash) (*StateDB, error) {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-
 	tr, err := self.openTrie(root)
 	if err != nil {
 		return nil, err
@@ -144,9 +157,6 @@ func (self *StateDB) New(root ethcmn.Hash) (*StateDB, error) {
 // Reset clears out all emphemeral state objects from the state db, but keeps
 // the underlying state trie to avoid reloading data for the next operations.
 func (self *StateDB) Reset(root ethcmn.Hash) error {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-
 	tr, err := self.openTrie(root)
 	if err != nil {
 		return err
@@ -178,9 +188,6 @@ func (self *StateDB) openTrie(root ethcmn.Hash) (*trie.SecureTrie, error) {
 }
 
 func (self *StateDB) pushTrie(t *trie.SecureTrie) {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-
 	if len(self.pastTries) >= maxPastTries {
 		copy(self.pastTries, self.pastTries[1:])
 		self.pastTries[len(self.pastTries)-1] = t
@@ -386,15 +393,12 @@ func (self *StateDB) deleteStateObject(stateObject *StateObject) {
 // Retrieve a state object given my the address. Returns nil if not found.
 func (self *StateDB) GetStateObject(addr ethcmn.Address) (stateObject *StateObject) {
 	// Prefer 'live' objects.
-	self.lock.Lock()
 	if obj := self.stateObjects[addr]; obj != nil {
-		self.lock.Unlock()
 		if obj.deleted {
 			return nil
 		}
 		return obj
 	}
-	defer self.lock.Unlock()
 
 	// Load the object from the database.
 	enc := self.trie.Get(addr[:])
@@ -445,9 +449,7 @@ func (self *StateDB) createObject(addr ethcmn.Address) (newobj, prev *StateObjec
 	} else {
 		self.journal = append(self.journal, resetObjectChange{prev: prev})
 	}
-	self.lock.Lock()
 	self.setStateObject(newobj)
-	self.lock.Unlock()
 	return newobj, prev
 }
 
@@ -473,8 +475,6 @@ func (self *StateDB) CreateAccount(addr ethcmn.Address) types.Account {
 // Copy creates a deep, independent copy of the state.
 // Snapshots of the copied state cannot be applied to the copy.
 func (self *StateDB) Copy() *StateDB {
-	self.lock.Lock()
-	defer self.lock.Unlock()
 	// Copy all the basic fields, initialize the memory ones
 	state := &StateDB{
 		db:                self.db,
@@ -504,8 +504,6 @@ func (self *StateDB) Copy() *StateDB {
 }
 
 func (self *StateDB) DeepCopy() *StateDB {
-	self.lock.Lock()
-	defer self.lock.Unlock()
 	// Copy all the basic fields, initialize the memory ones
 	newTrie, err := trie.NewSecure(self.trie.Hash(), self.db, MaxTrieCacheGen)
 	if err != nil {
@@ -579,7 +577,6 @@ func (self *StateDB) GetRefund() *big.Int {
 // It is called in between transactions to get the root hash that
 // goes into transaction receipts.
 func (s *StateDB) IntermediateRoot(deleteEmptyObjects bool) ethcmn.Hash {
-	s.lock.Lock()
 	for addr := range s.stateObjectsDirty {
 		stateObject := s.stateObjects[addr]
 		if stateObject.suicided || (deleteEmptyObjects && stateObject.empty()) {
@@ -591,7 +588,6 @@ func (s *StateDB) IntermediateRoot(deleteEmptyObjects bool) ethcmn.Hash {
 	}
 	// Invalidate journal because reverting across transactions is not allowed.
 	s.clearJournalAndRefund()
-	s.lock.Unlock()
 	return s.trie.Hash()
 }
 
@@ -602,7 +598,6 @@ func (s *StateDB) IntermediateRoot(deleteEmptyObjects bool) ethcmn.Hash {
 // under any circumstances.
 func (s *StateDB) DeleteSuicides() {
 	// Reset refund so that any used-gas calculations can use this method.
-	s.lock.Lock()
 	s.clearJournalAndRefund()
 	for addr := range s.stateObjectsDirty {
 		stateObject := s.stateObjects[addr]
@@ -614,7 +609,6 @@ func (s *StateDB) DeleteSuicides() {
 		}
 		delete(s.stateObjectsDirty, addr)
 	}
-	s.lock.Unlock()
 }
 
 // Commit commits all state changes to the database.
@@ -625,7 +619,7 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (root ethcmn.Hash, err error) 
 
 // CommitBatch commits all state changes to a write batch but does not
 // execute the batch. It is used to validate state changes against
-// the root hash stored in a block.
+// the root hash stored in a b.
 func (s *StateDB) CommitBatch(deleteEmptyObjects bool) (root ethcmn.Hash, batch ethdb.Batch) {
 	batch = s.db.NewBatch()
 	root, _ = s.commit(batch, deleteEmptyObjects)
@@ -645,7 +639,6 @@ func (s *StateDB) commit(dbw trie.DatabaseWriter, deleteEmptyObjects bool) (root
 	defer s.clearJournalAndRefund()
 
 	// Commit objects to the trie.
-	s.lock.Lock()
 	for addr, stateObject := range s.stateObjects {
 		_, isDirty := s.stateObjectsDirty[addr]
 		switch {
@@ -657,18 +650,15 @@ func (s *StateDB) commit(dbw trie.DatabaseWriter, deleteEmptyObjects bool) (root
 			// Write any contract code associated with the state object
 			if stateObject.code != nil && stateObject.dirtyCode {
 				if err := dbw.Put(stateObject.ByteCodeHash(), stateObject.byteCode); err != nil {
-					s.lock.Unlock()
 					return ethcmn.Hash{}, err
 				}
 				if err := dbw.Put(stateObject.CodeHash(), stateObject.code); err != nil {
-					s.lock.Unlock()
 					return ethcmn.Hash{}, err
 				}
 				stateObject.dirtyCode = false
 			}
 			// Write any storage changes in the state object to its storage trie.
 			if err := stateObject.CommitTrie(s.db, dbw); err != nil {
-				s.lock.Unlock()
 				return ethcmn.Hash{}, err
 			}
 			// Update the object in the main account trie.
@@ -678,7 +668,6 @@ func (s *StateDB) commit(dbw trie.DatabaseWriter, deleteEmptyObjects bool) (root
 	}
 	// Write trie changes.
 	root, err = s.trie.CommitTo(dbw)
-	s.lock.Unlock()
 
 	if err == nil {
 		s.pushTrie(s.trie)

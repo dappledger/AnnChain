@@ -89,7 +89,6 @@ type Header struct {
 	Extra       []byte         // Extra data
 	MixDigest   common.Hash    // for quick difficulty verification
 	Nonce       BlockNonce
-	Height      uint64
 }
 
 type jsonHeader struct {
