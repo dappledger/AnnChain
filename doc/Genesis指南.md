@@ -100,3 +100,7 @@ Genesis链提供基于Solidity 语言开发的图灵完备的智能合约系统�
 具体函数使用可参考API文档，通过上面提供的合约方法，为开发者提供方便、完整的合约开发使用功能。
 
 ### 数据实体
+
+Genesis链提供了一个基于账户特殊属性的数据实体，并且每个账户允许设置任意数量结构为Key=Value格式数据条目。按照账户、Key、数据类别进行查询数据条目，可用于特定应用场景。
+
+针对数据实体（Manage data）所提供的功能，详见[API接口文档](https://github.com/dappledger/AnnChain/tree/master/JSON-RPC)。
