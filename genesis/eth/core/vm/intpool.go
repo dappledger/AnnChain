@@ -24,7 +24,6 @@ import (
 var checkVal = big.NewInt(-42)
 
 const poolLimit = 256
-const verifyPool = false
 
 // intPool is a pool of big integers that
 // can be reused for all big.Int operations.

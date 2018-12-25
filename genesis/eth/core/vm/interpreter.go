@@ -17,8 +17,12 @@
 package vm
 
 import (
+	"fmt"
+	"hash"
+	"math/big"
 	"sync/atomic"
 
+	"github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/common/math"
 	"github.com/dappledger/AnnChain/genesis/eth/params"
 )
@@ -102,7 +106,7 @@ func NewEVMInterpreter(evm *EVM, cfg Config) *EVMInterpreter {
 		cfg.JumpTable = defaultJumpTable
 	}
 
-	return &Interpreter{
+	return &EVMInterpreter{
 		evm:      evm,
 		cfg:      cfg,
 		gasTable: evm.ChainConfig().GasTable(evm.BlockNumber),
@@ -166,7 +170,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		// It's theoretically possible to go above 2^64. The YP defines the PC
 		// to be uint256. Practically much less so feasible.
 		pc   = uint64(0) // program counter
-		cost uint64
+		cost *big.Int
 		// copies used by tracer
 		pcCopy  uint64 // needed for the deferred Tracer
 		gasCopy uint64 // for Tracer to log gas remaining before execution
@@ -181,9 +185,9 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		defer func() {
 			if err != nil {
 				if !logged {
-					in.cfg.Tracer.CaptureState(in.evm, pcCopy, op, gasCopy, cost, mem, stack, contract, in.evm.depth, err)
+					in.cfg.Tracer.CaptureState(in.evm, pcCopy, op, new(big.Int).SetUint64(gasCopy), cost, mem, stack, contract, in.evm.depth, err)
 				} else {
-					in.cfg.Tracer.CaptureFault(in.evm, pcCopy, op, gasCopy, cost, mem, stack, contract, in.evm.depth, err)
+					in.cfg.Tracer.CaptureFault(in.evm, pcCopy, op, new(big.Int).SetUint64(gasCopy), cost, mem, stack, contract, in.evm.depth, err)
 				}
 			}
 		}()
@@ -195,7 +199,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 	for atomic.LoadInt32(&in.evm.abort) == 0 {
 		if in.cfg.Debug {
 			// Capture pre-execution values for tracing.
-			logged, pcCopy, gasCopy = false, pc, contract.Gas
+			logged, pcCopy, gasCopy = false, pc, contract.Gas.Uint64()
 		}
 
 		// Get the operation from the jump table and validate the stack to ensure there are
@@ -218,18 +222,20 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		// the operation
 		if operation.memorySize != nil {
 			memSize, overflow := bigUint64(operation.memorySize(stack))
+			fmt.Println("**************************over1", stack, operation.memorySize(stack).BitLen(), op, overflow)
 			if overflow {
 				return nil, errGasUintOverflow
 			}
 			// memory is expanded in words of 32 bytes. Gas
 			// is also calculated in words.
-			if memorySize, overflow = math.SafeMul(toWordSize(memSize), 32); overflow {
+			if memorySize, overflow = math.SafeMul(toWordSize(new(big.Int).SetUint64(memSize)).Uint64(), 32); overflow {
+				fmt.Println("**************************over2", overflow)
 				return nil, errGasUintOverflow
 			}
 		}
 		// consume the gas and return an error if not enough gas is available.
 		// cost is explicitly set so that the capture state defer method can get the proper cost
-		cost, err = operation.gasCost(in.gasTable, in.evm, contract, stack, mem, memorySize)
+		cost, err = operation.gasCost(in.gasTable, in.evm, contract, stack, mem, new(big.Int).SetUint64(memorySize))
 		if err != nil || !contract.UseGas(cost) {
 			return nil, ErrOutOfGas
 		}
@@ -238,12 +244,13 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		}
 
 		if in.cfg.Debug {
-			in.cfg.Tracer.CaptureState(in.evm, pc, op, gasCopy, cost, mem, stack, contract, in.evm.depth, err)
+			in.cfg.Tracer.CaptureState(in.evm, pc, op, new(big.Int).SetUint64(gasCopy), cost, mem, stack, contract, in.evm.depth, err)
 			logged = true
 		}
 
 		// execute the operation
 		res, err := operation.execute(&pc, in, contract, mem, stack)
+		fmt.Println("*********************", op, cost, res, contract.UsedGas)
 		// verifyPool is a build flag. Pool verification makes sure the integrity
 		// of the integer pool by comparing values to a default value.
 		if verifyPool {

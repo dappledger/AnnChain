@@ -55,6 +55,7 @@ var (
 	EpochDuration                  = big.NewInt(30000)  // Duration between proof-of-work epochs.
 	CallGas                        = big.NewInt(40)     // Once per CALL operation & message call transaction.
 	CreateDataGas                  = big.NewInt(200)    //
+	Create2Gas                     = big.NewInt(32000)  // Once per CREATE2 operation
 	Ripemd160Gas                   = big.NewInt(600)    //
 	Ripemd160WordGas               = big.NewInt(120)    //
 	MinimumDifficulty              = big.NewInt(131072) // The minimum that the difficulty may ever be.

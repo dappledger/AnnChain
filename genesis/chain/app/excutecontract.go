@@ -85,7 +85,7 @@ func (ca *DoExcuteContract) Apply(stateDup *stateDup) error {
 			TxReceiptStatus: false,
 			Message:         err.Error(),
 			ContractAddress: ca.op.To.Hex(),
-			Height:          ca.app.EvmCurrentHeader.Height,
+			Height:          ca.app.EvmCurrentHeader.Number.Uint64(),
 			Source:          ca.op.Source,
 			GasPrice:        ca.op.Price,
 			GasLimit:        ca.op.GasLimit,

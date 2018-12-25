@@ -17,14 +17,15 @@
 package vm
 
 import (
+	"errors"
 	"math/big"
 
 	"github.com/dappledger/AnnChain/genesis/eth/params"
 )
 
 type (
-	executionFunc       func(pc *uint64, env *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error)
-	gasFunc             func(params.GasTable, *EVM, *Contract, *Stack, *Memory, *big.Int) *big.Int
+	executionFunc       func(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error)
+	gasFunc             func(params.GasTable, *EVM, *Contract, *Stack, *Memory, *big.Int) (*big.Int, error)
 	stackValidationFunc func(*Stack) error
 	memorySizeFunc      func(*Stack) *big.Int
 )
@@ -70,19 +71,19 @@ func NewJumpTable() [256]operation {
 			validateStack: makeStackFunc(2, 1),
 			valid:         true,
 		},
-		SAR:{
+		SAR: {
 			execute:       opSAR,
 			gasCost:       constGasFunc(GasFastestStep),
 			validateStack: makeStackFunc(2, 1),
 			valid:         true,
-		}，
-		EXTCODEHASH :{
+		},
+		EXTCODEHASH: {
 			execute:       opExtCodeHash,
 			gasCost:       gasExtCodeHash,
 			validateStack: makeStackFunc(1, 1),
 			valid:         true,
 		},
-		CREATE2:{
+		CREATE2: {
 			execute:       opCreate2,
 			gasCost:       gasCreate2,
 			validateStack: makeStackFunc(4, 1),
@@ -91,7 +92,7 @@ func NewJumpTable() [256]operation {
 			writes:        true,
 			returns:       true,
 		},
-		STATICCALL:{
+		STATICCALL: {
 			execute:       opStaticCall,
 			gasCost:       gasStaticCall,
 			validateStack: makeStackFunc(6, 1),
@@ -99,7 +100,7 @@ func NewJumpTable() [256]operation {
 			valid:         true,
 			returns:       true,
 		},
-		RETURNDATASIZE:{
+		RETURNDATASIZE: {
 			execute:       opReturnDataSize,
 			gasCost:       constGasFunc(GasQuickStep),
 			validateStack: makeStackFunc(0, 1),

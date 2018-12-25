@@ -16,17 +16,15 @@
 
 package vm
 
-import (
-	"fmt"
-	"math/big"
-	"sync/atomic"
-	"time"
+//	"fmt"
+//	"math/big"
+//	"sync/atomic"
+//	"time"
 
-	"github.com/dappledger/AnnChain/genesis/eth/common"
-	"github.com/dappledger/AnnChain/genesis/eth/crypto"
-	"github.com/dappledger/AnnChain/genesis/eth/logger"
-	"github.com/dappledger/AnnChain/genesis/eth/logger/glog"
-)
+//	"github.com/dappledger/AnnChain/genesis/eth/common"
+//	"github.com/dappledger/AnnChain/genesis/eth/crypto"
+//	"github.com/dappledger/AnnChain/genesis/eth/logger"
+//	"github.com/dappledger/AnnChain/genesis/eth/logger/glog"
 
 //// Run loops and evaluates the contract's code with the given input data
 //func (evm *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err error) {

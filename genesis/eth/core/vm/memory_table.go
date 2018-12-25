@@ -3,6 +3,8 @@ package vm
 import (
 	"math/big"
 
+	"github.com/dappledger/AnnChain/genesis/eth/common/math"
+
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 )
 
@@ -38,6 +40,21 @@ func memoryMStore(stack *Stack) *big.Int {
 
 func memoryCreate(stack *Stack) *big.Int {
 	return calcMemSize(stack.Back(1), stack.Back(2))
+}
+
+func memoryCreate2(stack *Stack) *big.Int {
+	return calcMemSize(stack.Back(1), stack.Back(2))
+}
+
+func memoryStaticCall(stack *Stack) *big.Int {
+	x := calcMemSize(stack.Back(4), stack.Back(5))
+	y := calcMemSize(stack.Back(2), stack.Back(3))
+
+	return math.BigMax(x, y)
+}
+
+func memoryRevert(stack *Stack) *big.Int {
+	return calcMemSize(stack.Back(0), stack.Back(1))
 }
 
 func memoryCall(stack *Stack) *big.Int {

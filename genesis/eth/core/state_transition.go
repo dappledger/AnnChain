@@ -94,6 +94,7 @@ func IntrinsicGas(data []byte, contractCreation, homestead bool) *big.Int {
 	} else {
 		igas.Set(params.TxGas)
 	}
+	var gas uint64
 	if len(data) > 0 {
 		var nz int64
 		for _, byt := range data {
@@ -103,33 +104,32 @@ func IntrinsicGas(data []byte, contractCreation, homestead bool) *big.Int {
 		}
 
 		// Make sure we don't exceed uint64 for all data combinations
-		m := big.NewInt(nz)
-		max := big.NewInt(math.Max)
-		max.Sub(max, igas)
-		max.Div(max, params.TxDataNonZeroGas)
-		if max.Cmp(m) < 0 {
-			return 0, vm.ErrOutOfGas
+		if (math.MaxUint64-igas.Uint64())/params.TxDataNonZeroGas.Uint64() < uint64(nz) {
+			return big.NewInt(0)
 		}
+		gas += uint64(nz * params.TxDataNonZeroGas.Int64())
 
-		m.Mul(m, params.TxDataNonZeroGas)
-		igas.Add(igas, m)
-		m.SetInt64(int64(len(data)) - nz)
-		m.Mul(m, params.TxDataZeroGas)
-		igas.Add(igas, m)
+		z := uint64(len(data)) - uint64(nz)
+		if (math.MaxUint64-gas)/params.TxDataZeroGas.Uint64() < z {
+			return big.NewInt(0)
+		}
+		gas += z * params.TxDataZeroGas.Uint64()
 	}
-	return igas
+	return new(big.Int).SetUint64(gas)
 }
 
 // NewStateTransition initialises and returns a new state transition object.
 func NewStateTransition(env *vm.EVM, msg Message, gp *GasPool) *StateTransition {
 	return &StateTransition{
-		gp:       gp,
-		env:      env,
-		msg:      msg,
-		gasPrice: msg.GasPrice(),
-		value:    msg.Value(),
-		data:     msg.Data(),
-		state:    env.StateDB,
+		gp:         gp,
+		env:        env,
+		msg:        msg,
+		gas:        new(big.Int),
+		gasPrice:   msg.GasPrice(),
+		initialGas: new(big.Int),
+		value:      msg.Value(),
+		data:       msg.Data(),
+		state:      env.StateDB,
 	}
 }
 
@@ -203,11 +203,9 @@ func (self *StateTransition) buyGas() error {
 
 func (self *StateTransition) preCheck() (err error) {
 	msg := self.msg
-	sender := self.from()
-
 	// Make sure this transaction's nonce is correct
 	if msg.CheckNonce() {
-		if n := self.state.GetNonce(sender.Address()); n != msg.Nonce() {
+		if n := self.state.GetNonce(self.msg.From()); n != msg.Nonce() {
 			return NonceError(msg.Nonce(), n)
 		}
 	}
@@ -235,10 +233,14 @@ func (self *StateTransition) TransitionDb() (ret []byte, usedGas *big.Int, faile
 	contractCreation := MessageCreatesContract(msg)
 
 	// Pay intrinsic gas
-	gas, err := IntrinsicGas(st.data, contractCreation, true)
+	gas := IntrinsicGas(self.data, contractCreation, true)
 	// Edit by Kyli
 	if err != nil {
 		return nil, big.NewInt(0), false, InvalidTxError(err)
+	}
+
+	if err = self.useGas(gas); err != nil {
+		return nil, big.NewInt(0), false, err
 	}
 
 	var (
@@ -266,7 +268,7 @@ func (self *StateTransition) TransitionDb() (ret []byte, usedGas *big.Int, faile
 
 	self.refundGas()
 	self.state.AddBalance(self.env.Coinbase, new(big.Int).Mul(self.gasUsed(), self.gasPrice), "")
-
+	fmt.Println("***************************vmerr", vmerr)
 	return ret, self.gasUsed(), vmerr != nil, err
 }
 

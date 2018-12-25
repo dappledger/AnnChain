@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"math/big"
 	"sort"
-	"sync"
 
 	"go.uber.org/zap"
 

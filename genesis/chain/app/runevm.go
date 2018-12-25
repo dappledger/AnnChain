@@ -14,7 +14,7 @@ import (
 
 var (
 	chainConfig = &ethparams.ChainConfig{}
-	evmConfig   = ethvm.Config{DisableGasMetering: false, EnableJit: false, ForceJit: false, Debug: false}
+	evmConfig   = ethvm.Config{}
 	ethSigner   = ethtypes.HomesteadSigner{}
 )
 

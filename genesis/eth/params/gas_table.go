@@ -21,6 +21,7 @@ import "math/big"
 type GasTable struct {
 	ExtcodeSize *big.Int
 	ExtcodeCopy *big.Int
+	ExtcodeHash *big.Int
 	Balance     *big.Int
 	SLoad       *big.Int
 	Calls       *big.Int

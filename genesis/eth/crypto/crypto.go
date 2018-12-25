@@ -74,6 +74,12 @@ func CreateAddress(b ethcmn.Address, nonce uint64) ethcmn.Address {
 	return ethcmn.BytesToAddress(Keccak256(data)[12:])
 }
 
+// CreateAddress2 creates an ethereum address given the address bytes, initial
+// contract code hash and a salt.
+func CreateAddress2(b ethcmn.Address, salt [32]byte, inithash []byte) ethcmn.Address {
+	return ethcmn.BytesToAddress(Keccak256([]byte{0xff}, b.Bytes(), salt[:], inithash)[12:])
+}
+
 func Sha256(data []byte) []byte {
 	hash := sha256.Sum256(data)
 

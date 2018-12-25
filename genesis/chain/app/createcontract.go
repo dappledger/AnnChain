@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"strconv"
 
@@ -79,7 +78,7 @@ func (ca *DoCreateContract) Apply(stateDup *stateDup) error {
 			TxReceiptStatus: false,
 			Message:         err.Error(),
 			GasUsed:         gas,
-			Height:          ca.app.EvmCurrentHeader.Height,
+			Height:          ca.app.EvmCurrentHeader.Number.Uint64(),
 			Source:          ca.op.Source,
 			GasPrice:        ca.op.Price,
 			GasLimit:        ca.op.GasLimit,

@@ -17,11 +17,17 @@
 package vm
 
 import (
+	"encoding/hex"
 	"fmt"
+	"io"
 	"math/big"
 	"os"
 	"time"
 	"unicode"
+
+	"github.com/dappledger/AnnChain/genesis/eth/core/types"
+
+	"github.com/dappledger/AnnChain/genesis/eth/common/math"
 
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 )
@@ -44,6 +50,7 @@ type LogConfig struct {
 	DisableStorage bool // disable storage capture
 	FullStorage    bool // show full storage (slow)
 	Limit          int  // maximum length of output, but zero means unlimited
+	Debug          bool // print output during capture end
 }
 
 // StructLog is emitted to the EVM each cycle and lists information about the current internal state
@@ -68,7 +75,7 @@ type StructLog struct {
 type Tracer interface {
 	CaptureStart(from common.Address, to common.Address, call bool, input []byte, gas uint64, value *big.Int) error
 	CaptureState(env *EVM, pc uint64, op OpCode, gas, cost *big.Int, memory *Memory, stack *Stack, contract *Contract, depth int, err error) error
-	CaptureFault(env *EVM, pc uint64, op OpCode, gas, cost uint64, memory *Memory, stack *Stack, contract *Contract, depth int, err error) error
+	CaptureFault(env *EVM, pc uint64, op OpCode, gas, cost *big.Int, memory *Memory, stack *Stack, contract *Contract, depth int, err error) error
 	CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) error
 }
 
@@ -82,6 +89,8 @@ type StructLogger struct {
 
 	logs          []StructLog
 	changedValues map[common.Address]Storage
+	output        []byte
+	err           error
 }
 
 // NewLogger returns a new logger
@@ -93,6 +102,11 @@ func NewStructLogger(cfg *LogConfig) *StructLogger {
 		logger.cfg = *cfg
 	}
 	return logger
+}
+
+// CaptureStart implements the Tracer interface to initialize the tracing operation.
+func (l *StructLogger) CaptureStart(from common.Address, to common.Address, create bool, input []byte, gas uint64, value *big.Int) error {
+	return nil
 }
 
 // captureState logs a new structured log message and pushes it out to the environment
@@ -165,6 +179,12 @@ func (l *StructLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost *b
 	return nil
 }
 
+// CaptureFault implements the Tracer interface to trace an execution fault
+// while running an opcode.
+func (l *StructLogger) CaptureFault(env *EVM, pc uint64, op OpCode, gas, cost *big.Int, memory *Memory, stack *Stack, contract *Contract, depth int, err error) error {
+	return nil
+}
+
 // StructLogs returns a list of captured log entries
 func (l *StructLogger) StructLogs() []StructLog {
 	return l.logs
@@ -210,5 +230,61 @@ func StdErrFormat(logs []StructLog) {
 			fmt.Fprintf(os.Stderr, "%x: %x\n", h, item)
 		}
 		fmt.Fprintln(os.Stderr)
+	}
+}
+
+// CaptureEnd is called after the call finishes to finalize the tracing.
+func (l *StructLogger) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) error {
+	l.output = output
+	l.err = err
+	if l.cfg.Debug {
+		fmt.Printf("0x%x\n", output)
+		if err != nil {
+			fmt.Printf(" error: %v\n", err)
+		}
+	}
+	return nil
+}
+
+// WriteTrace writes a formatted trace to the given writer
+func WriteTrace(writer io.Writer, logs []StructLog) {
+	for _, log := range logs {
+		fmt.Fprintf(writer, "%-16spc=%08d gas=%v cost=%v", log.Op, log.Pc, log.Gas, log.GasCost)
+		if log.Err != nil {
+			fmt.Fprintf(writer, " ERROR: %v", log.Err)
+		}
+		fmt.Fprintln(writer)
+
+		if len(log.Stack) > 0 {
+			fmt.Fprintln(writer, "Stack:")
+			for i := len(log.Stack) - 1; i >= 0; i-- {
+				fmt.Fprintf(writer, "%08d  %x\n", len(log.Stack)-i-1, math.PaddedBigBytes(log.Stack[i], 32))
+			}
+		}
+		if len(log.Memory) > 0 {
+			fmt.Fprintln(writer, "Memory:")
+			fmt.Fprint(writer, hex.Dump(log.Memory))
+		}
+		if len(log.Storage) > 0 {
+			fmt.Fprintln(writer, "Storage:")
+			for h, item := range log.Storage {
+				fmt.Fprintf(writer, "%x: %x\n", h, item)
+			}
+		}
+		fmt.Fprintln(writer)
+	}
+}
+
+// WriteLogs writes vm logs in a readable format to the given writer
+func WriteLogs(writer io.Writer, logs []*types.Log) {
+	for _, log := range logs {
+		fmt.Fprintf(writer, "LOG%d: %x bn=%d txi=%x\n", len(log.Topics), log.Address, log.BlockNumber, log.TxIndex)
+
+		for i, topic := range log.Topics {
+			fmt.Fprintf(writer, "%08d  %x\n", i, topic)
+		}
+
+		fmt.Fprint(writer, hex.Dump(log.Data))
+		fmt.Fprintln(writer)
 	}
 }

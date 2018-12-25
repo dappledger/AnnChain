@@ -17,6 +17,7 @@
 package core
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/dappledger/AnnChain/genesis/eth/core/state"
@@ -104,6 +105,7 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, gp *GasPool, s
 	vmenv := vm.NewEVM(context, statedb, config, cfg)
 	// Apply the transaction to the current state (included in the env)
 	ret, gas, failed, err := ApplyMessage(vmenv, msg, gp)
+	fmt.Println("*****************err", err, failed)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -118,7 +120,7 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, gp *GasPool, s
 	receipt.TxHash = tx.Hash()
 	receipt.GasUsed = new(big.Int).Set(gas)
 	// receipt.GasUsed = new(big.Int).Set(big.NewInt(0))
-	receipt.Height = header.Height
+	receipt.Height = header.Number.Uint64()
 	receipt.Ret = ret
 	// if the transaction created a contract, store the creation address in the receipt.
 	if msg.To() == nil {

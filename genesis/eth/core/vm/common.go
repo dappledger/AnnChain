@@ -17,7 +17,6 @@
 package vm
 
 import (
-	"bytes"
 	"math"
 	"math/big"
 
@@ -117,10 +116,6 @@ func getData(data []byte, start, size *big.Int) []byte {
 	e := common.BigMin(new(big.Int).Add(s, size), dlen)
 
 	byts := common.RightPadBytes(data[s.Uint64():e.Uint64()], int(size.Uint64()))
-
-	if 0 == size.Cmp(big.NewInt(20)) && 0 == bytes.Compare(byts, ADDRESS20) {
-		byts = ADDRESS32
-	}
 	return byts
 }
 
