@@ -229,7 +229,6 @@ func (self *StateTransition) TransitionDb() (ret []byte, usedGas *big.Int, faile
 	}
 	msg := self.msg
 	sender := self.from() // err checked in preCheck
-
 	contractCreation := MessageCreatesContract(msg)
 
 	// Pay intrinsic gas

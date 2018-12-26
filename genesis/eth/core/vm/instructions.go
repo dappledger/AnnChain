@@ -42,7 +42,7 @@ var (
 
 func opAdd(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	x, y := stack.pop(), stack.peek()
-	U256(y.Sub(x, y))
+	U256(y.Add(x, y))
 
 	interpreter.intPool.put(x)
 	return nil, nil
@@ -611,8 +611,8 @@ func opMload(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory
 func opMstore(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	// pop value of the stack
 	mStart, val := stack.pop(), stack.pop()
-	memory.Set32(mStart.Uint64(), val)
-	//	memory.Set(mStart.Uint64(), 32, common.BigToBytes(val, 256))
+	//	memory.Set32(mStart.Uint64(), val)
+	memory.Set(mStart.Uint64(), 32, common.BigToBytes(val, 256))
 
 	interpreter.intPool.put(mStart, val)
 	return nil, nil
@@ -652,7 +652,8 @@ func opJump(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory 
 }
 func opJumpi(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	pos, cond := stack.pop(), stack.pop()
-	if cond.Sign() != 0 {
+	fmt.Println("*********************opjumpi", pos, cond, cond.Sign())
+	if cond.Cmp(common.BigTrue) >= 0 {
 		if !contract.jumpdests.has(contract.CodeHash, contract.Code, pos) {
 			nop := contract.GetOp(pos.Uint64())
 			return nil, fmt.Errorf("invalid jump destination (%v) %v", nop, pos)
@@ -933,13 +934,18 @@ func makePush(size uint64, pushByteSize *big.Int) executionFunc {
 
 		*pc += size
 		return nil, nil
+
+		//		byts := getData(contract.Code, new(big.Int).SetUint64(*pc+1), pushByteSize)
+		//		stack.push(common.Bytes2Big(byts))
+		//		*pc += size
+		//		return nil, nil
 	}
 }
 
 // make push instruction function
 func makeDup(size int64) executionFunc {
 	return func(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-		stack.dup(int(size))
+		stack.dup(interpreter.intPool, int(size))
 		return nil, nil
 	}
 }

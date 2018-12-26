@@ -22,6 +22,8 @@ import (
 	"math/big"
 	"sync/atomic"
 
+	"github.com/dappledger/AnnChain/genesis/eth/crypto"
+
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/common/math"
 	"github.com/dappledger/AnnChain/genesis/eth/params"
@@ -162,6 +164,11 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		return nil, nil
 	}
 
+	codehash := contract.CodeHash // codehash is used when doing jump dest caching
+	if codehash == (common.Hash{}) {
+		codehash = crypto.Keccak256Hash(contract.Code)
+	}
+
 	var (
 		op    OpCode        // current opcode
 		mem   = NewMemory() // bound memory
@@ -197,10 +204,10 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 	// the execution of one of the operations or until the done flag is set by the
 	// parent context.
 	for atomic.LoadInt32(&in.evm.abort) == 0 {
-		if in.cfg.Debug {
-			// Capture pre-execution values for tracing.
-			logged, pcCopy, gasCopy = false, pc, contract.Gas.Uint64()
-		}
+		//		if in.cfg.Debug {
+		//			// Capture pre-execution values for tracing.
+		//			logged, pcCopy, gasCopy = false, pc, contract.Gas.Uint64()
+		//		}
 
 		// Get the operation from the jump table and validate the stack to ensure there are
 		// enough stack items available to perform the operation.
@@ -222,14 +229,12 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		// the operation
 		if operation.memorySize != nil {
 			memSize, overflow := bigUint64(operation.memorySize(stack))
-			fmt.Println("**************************over1", stack, operation.memorySize(stack).BitLen(), op, overflow)
 			if overflow {
 				return nil, errGasUintOverflow
 			}
 			// memory is expanded in words of 32 bytes. Gas
 			// is also calculated in words.
 			if memorySize, overflow = math.SafeMul(toWordSize(new(big.Int).SetUint64(memSize)).Uint64(), 32); overflow {
-				fmt.Println("**************************over2", overflow)
 				return nil, errGasUintOverflow
 			}
 		}
@@ -250,7 +255,6 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 
 		// execute the operation
 		res, err := operation.execute(&pc, in, contract, mem, stack)
-		fmt.Println("*********************", op, cost, res, contract.UsedGas)
 		// verifyPool is a build flag. Pool verification makes sure the integrity
 		// of the integer pool by comparing values to a default value.
 		if verifyPool {
@@ -258,6 +262,8 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		}
 		// if the operation clears the return data (e.g. it has returning data)
 		// set the last return to the result of the operation.
+
+		fmt.Println("**************************over1", stack, op, operation.returns, res)
 		if operation.returns {
 			in.returnData = res
 		}

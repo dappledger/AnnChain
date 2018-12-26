@@ -163,6 +163,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas,
 	if evm.depth > int(params.CallCreateDepth.Int64()) {
 		return nil, gas, ErrDepth
 	}
+
 	if !evm.Context.CanTransfer(evm.StateDB, caller.Address(), value) {
 		return nil, gas, ErrInsufficientBalance
 	}
@@ -180,19 +181,24 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas,
 	} else {
 		to = evm.StateDB.GetAccount(addr)
 	}
+
 	evm.Transfer(evm.StateDB, caller.Address(), to.Address(), value)
 
 	// initialise a new contract and set the code that is to be used by the
 	// E The contract is a scoped evmironment for this execution context
 	// only.
 	contract := NewContract(caller, to, value, gas)
-
 	contract.SetCallCode(&addr, evm.StateDB.GetCodeHash(addr), evm.StateDB.GetCode(addr))
+
+	fmt.Println("*******************jj", addr)
+	fmt.Println("*******************jj", evm.StateDB.GetCodeHash(addr))
+	fmt.Println("*******************jj", evm.StateDB.GetCode(addr))
 
 	start := time.Now()
 
 	// Capture the tracer start/end events in debug mode
 	if evm.vmConfig.Debug && evm.depth == 0 {
+		fmt.Println("*************************call5")
 		evm.vmConfig.Tracer.CaptureStart(caller.Address(), addr, false, input, gas.Uint64(), value)
 
 		defer func() { // Lazy evaluation of the parameters
@@ -204,6 +210,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas,
 	// When an error was returned by the EVM or when setting the creation code
 	// above we revert to the snapshot and consume any gas remaining. Additionally
 	// when we're in homestead this also counts for code storage gas errors.
+	fmt.Println("*******************call6", ret, err)
 	if err != nil {
 		evm.StateDB.RevertToSnapshot(snapshot)
 		if err != errExecutionReverted {

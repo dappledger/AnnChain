@@ -401,7 +401,7 @@ func NewJumpTable() [256]operation {
 		MSTORE: {
 			execute:       opMstore,
 			gasCost:       gasMStore,
-			validateStack: makeStackFunc(2, 0),
+			validateStack: makeStackFunc(2, -2),
 			memorySize:    memoryMStore,
 			valid:         true,
 		},

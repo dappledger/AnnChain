@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 
@@ -52,6 +53,7 @@ var (
 
 // calculates the memory size required for a step
 func calcMemSize(off, l *big.Int) *big.Int {
+	fmt.Println("*******************calc0", off, l)
 	if l.Cmp(common.Big0) == 0 {
 		return common.Big0
 	}
@@ -110,13 +112,16 @@ func toValue(val *big.Int) interface{} {
 // getData returns a slice from the data based on the start and size and pads
 // up to size with zero's. This function is overflow safe.
 func getData(data []byte, start, size *big.Int) []byte {
-	dlen := big.NewInt(int64(len(data)))
-
-	s := common.BigMin(start, dlen)
-	e := common.BigMin(new(big.Int).Add(s, size), dlen)
-
-	byts := common.RightPadBytes(data[s.Uint64():e.Uint64()], int(size.Uint64()))
-	return byts
+	length := uint64(len(data))
+	if start.Uint64() > length {
+		start = new(big.Int).SetUint64(length)
+	}
+	start.Add(start, size)
+	end := start
+	if end.Uint64() > length {
+		end = new(big.Int).SetUint64(length)
+	}
+	return common.RightPadBytes(data[start.Int64():end.Int64()], int(size.Int64()))
 }
 
 // useGas attempts to subtract the amount of gas and returns whether it was
