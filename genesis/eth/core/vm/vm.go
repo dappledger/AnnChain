@@ -128,7 +128,6 @@ func (evm *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err e
 		if operation.returns {
 			evm.returnData = res
 		}
-
 		switch {
 		case err != nil:
 			return nil, err
