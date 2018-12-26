@@ -363,8 +363,11 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas, value 
 	if err == nil && !maxCodeSizeExceeded {
 		dataGas := big.NewInt(int64(len(ret)))
 		dataGas.Mul(dataGas, params.CreateDataGas)
-		fmt.Println("**********************", contract.UseGas(dataGas), common.ToHex(address.Bytes()))
+		fmt.Println("********************** usegas", contract.UseGas(dataGas), common.ToHex(address.Bytes()))
 		if contract.UseGas(dataGas) {
+			fmt.Println("********************** use code", ret)
+			fmt.Println("********************** use code", contract.Code)
+			fmt.Println("********************** use code", codeAndHash.code)
 			evm.StateDB.SetCode(address, ret, contract.Code)
 		} else {
 			err = ErrCodeStoreOutOfGas
