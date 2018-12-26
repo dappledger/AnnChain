@@ -267,7 +267,6 @@ func (self *StateTransition) TransitionDb() (ret []byte, usedGas *big.Int, faile
 
 	self.refundGas()
 	self.state.AddBalance(self.env.Coinbase, new(big.Int).Mul(self.gasUsed(), self.gasPrice), "")
-	fmt.Println("***************************vmerr", vmerr)
 	return ret, self.gasUsed(), vmerr != nil, err
 }
 

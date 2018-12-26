@@ -18,10 +18,10 @@ package vm
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 
 	"github.com/dappledger/AnnChain/genesis/eth/common"
+	"github.com/dappledger/AnnChain/genesis/eth/common/math"
 	"github.com/dappledger/AnnChain/genesis/eth/params"
 )
 
@@ -53,12 +53,21 @@ var (
 
 // calculates the memory size required for a step
 func calcMemSize(off, l *big.Int) *big.Int {
-	fmt.Println("*******************calc0", off, l)
 	if l.Cmp(common.Big0) == 0 {
 		return common.Big0
 	}
 
 	return new(big.Int).Add(off, l)
+}
+
+// getDataBig returns a slice from the data based on the start and size and pads
+// up to size with zero's. This function is overflow safe.
+func getDataBig(data []byte, start *big.Int, size *big.Int) []byte {
+	dlen := big.NewInt(int64(len(data)))
+
+	s := math.BigMin(start, dlen)
+	e := math.BigMin(new(big.Int).Add(s, size), dlen)
+	return common.RightPadBytes(data[s.Uint64():e.Uint64()], int(size.Uint64()))
 }
 
 // bigUint64 returns the integer casted to a uint64 and returns whether it

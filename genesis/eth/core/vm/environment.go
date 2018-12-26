@@ -190,15 +190,10 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas,
 	contract := NewContract(caller, to, value, gas)
 	contract.SetCallCode(&addr, evm.StateDB.GetCodeHash(addr), evm.StateDB.GetCode(addr))
 
-	fmt.Println("*******************jj", addr)
-	fmt.Println("*******************jj", evm.StateDB.GetCodeHash(addr))
-	fmt.Println("*******************jj", evm.StateDB.GetCode(addr))
-
 	start := time.Now()
 
 	// Capture the tracer start/end events in debug mode
 	if evm.vmConfig.Debug && evm.depth == 0 {
-		fmt.Println("*************************call5")
 		evm.vmConfig.Tracer.CaptureStart(caller.Address(), addr, false, input, gas.Uint64(), value)
 
 		defer func() { // Lazy evaluation of the parameters
@@ -210,7 +205,6 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas,
 	// When an error was returned by the EVM or when setting the creation code
 	// above we revert to the snapshot and consume any gas remaining. Additionally
 	// when we're in homestead this also counts for code storage gas errors.
-	fmt.Println("*******************call6", ret, err)
 	if err != nil {
 		evm.StateDB.RevertToSnapshot(snapshot)
 		if err != errExecutionReverted {
@@ -299,12 +293,10 @@ func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []by
 // Create creates a new contract using code as deployment code.
 func (evm *EVM) Create(caller ContractRef, code []byte, gas *big.Int, value *big.Int) (ret []byte, contractAddr common.Address, leftOverGas *big.Int, err error) {
 	contractAddr = crypto.CreateAddress(caller.Address(), evm.StateDB.GetNonce(caller.Address()))
-	fmt.Println("******************************", contractAddr, common.ToHex(contractAddr.Bytes()))
 	return evm.create(caller, &codeAndHash{code: code}, gas, value, contractAddr)
 }
 
 // Create2 creates a new contract using code as deployment code.
-//
 // The different between Create2 with Create is Create2 uses sha3(0xff ++ msg.sender ++ salt ++ sha3(init_code))[12:]
 // instead of the usual sender-and-nonce-hash as the address where the contract is initialized at.
 func (evm *EVM) Create2(caller ContractRef, code []byte, gas *big.Int, endowment *big.Int, salt *big.Int) (ret []byte, contractAddr common.Address, leftOverGas *big.Int, err error) {
@@ -363,11 +355,7 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas, value 
 	if err == nil && !maxCodeSizeExceeded {
 		dataGas := big.NewInt(int64(len(ret)))
 		dataGas.Mul(dataGas, params.CreateDataGas)
-		fmt.Println("********************** usegas", contract.UseGas(dataGas), common.ToHex(address.Bytes()))
 		if contract.UseGas(dataGas) {
-			fmt.Println("********************** use code", ret)
-			fmt.Println("********************** use code", contract.Code)
-			fmt.Println("********************** use code", codeAndHash.code)
 			evm.StateDB.SetCode(address, ret, contract.Code)
 		} else {
 			err = ErrCodeStoreOutOfGas

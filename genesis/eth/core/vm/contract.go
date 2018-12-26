@@ -42,8 +42,7 @@ type Contract struct {
 	caller        ContractRef
 	self          ContractRef
 
-	//	jumpdests map[common.Hash]bitvec // result of JUMPDEST analysis.
-	jumpdests destinations // result of JUMPDEST analysis.
+	jumpdests map[common.Hash]bitvec // result of JUMPDEST analysis.
 	analysis  bitvec
 
 	Code     []byte
@@ -66,7 +65,7 @@ func NewContract(caller ContractRef, object ContractRef, value, gas *big.Int) *C
 		// Reuse JUMPDEST analysis from parent context if available.
 		c.jumpdests = parent.jumpdests
 	} else {
-		c.jumpdests = make(destinations)
+		c.jumpdests = make(map[common.Hash]bitvec)
 	}
 
 	// Gas should be a pointer so it can safely be reduced through the run
@@ -102,42 +101,39 @@ func (c *Contract) GetByte(n uint64) byte {
 	return 0
 }
 
-//func (c *Contract) validJumpdest(dest *big.Int) bool {
-//	udest := dest.Uint64()
-//	// PC cannot go beyond len(code) and certainly can't be bigger than 63bits.
-//	// Don't bother checking for JUMPDEST in that case.
-//	if dest.BitLen() >= 63 || udest >= uint64(len(c.Code)) {
-//		fmt.Println("*********************validJumpdest-1")
-//		return false
-//	}
-//	// Only JUMPDESTs allowed for destinations
-//	if OpCode(c.Code[udest]) != JUMPDEST {
-//		fmt.Println("*********************validJumpdest-2", c.Code, OpCode(c.Code[udest]))
-//		return false
-//	}
-//	// Do we have a contract hash already?
-//	if c.CodeHash != (common.Hash{}) {
-//		// Does parent context have the analysis?
-//		analysis, exist := c.jumpdests[c.CodeHash]
-//		if !exist {
-//			// Do the analysis and save in parent context
-//			// We do not need to store it in c.analysis
-//			analysis = codeBitmap(c.Code)
-//			c.jumpdests[c.CodeHash] = analysis
-//		}
-//		fmt.Println("*********************validJumpdest-3")
-//		return analysis.codeSegment(udest)
-//	}
-//	// We don't have the code hash, most likely a piece of initcode not already
-//	// in state trie. In that case, we do an analysis, and save it locally, so
-//	// we don't have to recalculate it for every JUMP instruction in the execution
-//	// However, we don't save it within the parent context
-//	if c.analysis == nil {
-//		c.analysis = codeBitmap(c.Code)
-//	}
-//	fmt.Println("*********************validJumpdest-4")
-//	return c.analysis.codeSegment(udest)
-//}
+func (c *Contract) validJumpdest(dest *big.Int) bool {
+	udest := dest.Uint64()
+	// PC cannot go beyond len(code) and certainly can't be bigger than 63bits.
+	// Don't bother checking for JUMPDEST in that case.
+	if dest.BitLen() >= 63 || udest >= uint64(len(c.Code)) {
+		return false
+	}
+	// Only JUMPDESTs allowed for destinations
+	if OpCode(c.Code[udest]) != JUMPDEST {
+		return false
+	}
+	// Do we have a contract hash already?
+	if c.CodeHash != (common.Hash{}) {
+		// Does parent context have the analysis?
+		analysis, exist := c.jumpdests[c.CodeHash]
+		if !exist {
+			// Do the analysis and save in parent context
+			// We do not need to store it in c.analysis
+			analysis = codeBitmap(c.Code)
+			c.jumpdests[c.CodeHash] = analysis
+		}
+		return analysis.codeSegment(udest)
+	}
+	// We don't have the code hash, most likely a piece of initcode not already
+	// in state trie. In that case, we do an analysis, and save it locally, so
+	// we don't have to recalculate it for every JUMP instruction in the execution
+	// However, we don't save it within the parent context
+	if c.analysis == nil {
+		c.analysis = codeBitmap(c.Code)
+	}
+
+	return c.analysis.codeSegment(udest)
+}
 
 // Caller returns the caller of the contract.
 //
@@ -200,9 +196,6 @@ func (c *Contract) SetCodeOptionalHash(addr *common.Address, codeAndHash *codeAn
 	c.Code = codeAndHash.code
 	c.CodeHash = codeAndHash.hash
 	c.CodeAddr = addr
-	fmt.Println("*************************zj", c.CodeAddr)
-	fmt.Println("*************************zj", c.CodeHash)
-	fmt.Println("*************************zj", c.Code)
 }
 
 // EachStorage iterates the contract's storage and calls a method for every key

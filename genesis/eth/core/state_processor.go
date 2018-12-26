@@ -105,7 +105,7 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, gp *GasPool, s
 	vmenv := vm.NewEVM(context, statedb, config, cfg)
 	// Apply the transaction to the current state (included in the env)
 	ret, gas, failed, err := ApplyMessage(vmenv, msg, gp)
-	fmt.Println("*****************err", err, failed)
+	
 	if err != nil {
 		return nil, nil, err
 	}

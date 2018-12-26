@@ -36,7 +36,6 @@ func memoryMStore8(stack *Stack) *big.Int {
 }
 
 func memoryMStore(stack *Stack) *big.Int {
-	fmt.Println("**********************back", stack, stack.data, stack.len()-0-1)
 	return calcMemSize(stack.Back(0), big.NewInt(32))
 }
 

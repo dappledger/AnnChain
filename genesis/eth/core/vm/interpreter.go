@@ -262,8 +262,6 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		}
 		// if the operation clears the return data (e.g. it has returning data)
 		// set the last return to the result of the operation.
-
-		fmt.Println("**************************over1", stack, op, operation.returns, res)
 		if operation.returns {
 			in.returnData = res
 		}

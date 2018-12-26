@@ -44,7 +44,6 @@ func (bits *bitvec) set8(pos uint64) {
 func (d destinations) has(codehash common.Hash, code []byte, dest *big.Int) bool {
 	// PC cannot go beyond len(code) and certainly can't be bigger than 64bits.
 	// Don't bother checking for JUMPDEST in that case.
-	fmt.Println("*******************dest", dest)
 	if dest.Cmp(bigMaxUint64) > 0 {
 		return false
 	}

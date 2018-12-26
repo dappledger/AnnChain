@@ -865,10 +865,6 @@ func (app *GenesisApp) QueryContractExist(address string) at.NewRPCResult {
 	codeBytes := app.state.GetByteCode(contractAccount)
 	app.stateMtx.Unlock()
 
-	fmt.Println("*****************zz", contractAccount)
-	fmt.Println("*****************zz", hashBytes)
-	fmt.Println("*****************zz", codeBytes)
-
 	if len(hashBytes) != ethcmn.HashLength || ethcmn.EmptyHash(hashBytes) {
 		c = &types.QueryContractExist{
 			IsExist: false,
