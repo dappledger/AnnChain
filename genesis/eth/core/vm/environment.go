@@ -145,6 +145,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas,
 	contract := NewContract(caller, to, value, gas)
 
 	contract.SetCallCode(&addr, evm.StateDB.GetCodeHash(addr), evm.StateDB.GetCode(addr))
+
 	defer contract.Finalise()
 
 	ret, err = evm.interpreter.Run(contract, input)
