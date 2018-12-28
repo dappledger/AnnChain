@@ -184,6 +184,7 @@ func (c *ChainConfig) IsHomestead(num *big.Int) bool {
 //
 // The returned GasTable's fields shouldn't, under any circumstances, be changed.
 func (c *ChainConfig) GasTable(num *big.Int) GasTable {
+	fmt.Println("********************GasTable", num, c.EIP158Block, c.EIP150Block)
 	if num == nil {
 		return GasTableHomestead
 	}

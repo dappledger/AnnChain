@@ -356,7 +356,7 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas, value 
 		dataGas := big.NewInt(int64(len(ret)))
 		dataGas.Mul(dataGas, params.CreateDataGas)
 		if contract.UseGas(dataGas) {
-			evm.StateDB.SetCode(address, ret, contract.Code)
+			evm.StateDB.SetCode(address, ret, ret)
 		} else {
 			err = ErrCodeStoreOutOfGas
 		}

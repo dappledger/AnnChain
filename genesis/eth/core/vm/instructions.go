@@ -786,6 +786,7 @@ func opCall(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory 
 	if err == nil || err == errExecutionReverted {
 		memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
+	
 	contract.Gas.Add(contract.Gas, returnGas)
 
 	interpreter.intPool.put(addr, value, inOffset, inSize, retOffset, retSize)

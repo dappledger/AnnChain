@@ -266,19 +266,14 @@ func gasRevert(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, m
 
 func gasCall(gt params.GasTable, env *EVM, contract *Contract, stack *Stack, mem *Memory, memorySize *big.Int) (*big.Int, error) {
 	gas := new(big.Int).Set(gt.Calls)
-
-	transfersValue := stack.Back(2).BitLen() > 0
+	transfersValue := stack.Back(2).Sign() != 0
 	var (
 		address = common.BigToAddress(stack.Back(1))
-		eip158  = env.ChainConfig().IsEIP158(env.BlockNumber)
 	)
-	if eip158 {
-		if env.StateDB.Empty(address) && transfersValue {
-			gas.Add(gas, params.CallNewAccountGas)
-		}
-	} else if !env.StateDB.Exist(address) {
+	if env.StateDB.Empty(address) && transfersValue {
 		gas.Add(gas, params.CallNewAccountGas)
 	}
+
 	if transfersValue {
 		gas.Add(gas, params.CallValueTransferGas)
 	}
@@ -289,40 +284,48 @@ func gasCall(gt params.GasTable, env *EVM, contract *Contract, stack *Stack, mem
 	}
 
 	gas.Add(gas, memGas)
+	env.callGasTemp = callGas(gt, contract.Gas, gas, stack.data[stack.len()-1])
 
-	cg := callGas(gt, contract.Gas, gas, stack.data[stack.len()-1])
 	// Replace the stack item with the new gas calculation. This means that
 	// either the original item is left on the stack or the item is replaced by:
 	// (availableGas - gas) * 63 / 64
 	// We replace the stack item so that it's available when the opCall instruction is
 	// called. This information is otherwise lost due to the dependency on *current*
 	// available gas.
-	stack.data[stack.len()-1] = cg
-
-	return gas.Add(gas, cg), nil
+	//	stack.data[stack.len()-1] = cg
+	return gas.Add(gas, env.callGasTemp), nil
 }
 
 func gasCallCode(gt params.GasTable, env *EVM, contract *Contract, stack *Stack, mem *Memory, memorySize *big.Int) (*big.Int, error) {
+	var (
+		transfersValue = stack.Back(2).Sign() != 0
+		address        = common.BigToAddress(stack.Back(1))
+	)
 	gas := new(big.Int).Set(gt.Calls)
-	if stack.Back(2).BitLen() > 0 {
+	if transfersValue && env.StateDB.Empty(address) {
+		gas.Add(gas, params.CallNewAccountGas)
+	}
+
+	if transfersValue {
 		gas.Add(gas, params.CallValueTransferGas)
 	}
+
 	memGas, err := memoryGasCost(mem, memorySize)
 	if err != nil {
 		return big.NewInt(0), err
 	}
 	gas.Add(gas, memGas)
 
-	cg := callGas(gt, contract.Gas, gas, stack.data[stack.len()-1])
+	env.callGasTemp = callGas(gt, contract.Gas, gas, stack.data[stack.len()-1])
 	// Replace the stack item with the new gas calculation. This means that
 	// either the original item is left on the stack or the item is replaced by:
 	// (availableGas - gas) * 63 / 64
 	// We replace the stack item so that it's available when the opCall instruction is
 	// called. This information is otherwise lost due to the dependency on *current*
 	// available gas.
-	stack.data[stack.len()-1] = cg
+	//	stack.data[stack.len()-1] = cg
 
-	return gas.Add(gas, cg), nil
+	return gas.Add(gas, env.callGasTemp), nil
 }
 
 func gasReturn(gt params.GasTable, env *EVM, contract *Contract, stack *Stack, mem *Memory, memorySize *big.Int) (*big.Int, error) {
@@ -387,15 +390,15 @@ func gasDelegateCall(gt params.GasTable, env *EVM, contract *Contract, stack *St
 	}
 	gas = new(big.Int).Add(gt.Calls, gas)
 
-	cg := callGas(gt, contract.Gas, gas, stack.data[stack.len()-1])
+	env.callGasTemp = callGas(gt, contract.Gas, gas, stack.data[stack.len()-1])
 	// Replace the stack item with the new gas calculation. This means that
 	// either the original item is left on the stack or the item is replaced by:
 	// (availableGas - gas) * 63 / 64
 	// We replace the stack item so that it's available when the opCall instruction is
 	// called.
-	stack.data[stack.len()-1] = cg
+	//	stack.data[stack.len()-1] = cg
 
-	return gas.Add(gas, cg), nil
+	return gas.Add(gas, env.callGasTemp), nil
 }
 
 func gasPush(gt params.GasTable, env *EVM, contract *Contract, stack *Stack, mem *Memory, memorySize *big.Int) (*big.Int, error) {

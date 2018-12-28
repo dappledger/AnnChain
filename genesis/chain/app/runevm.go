@@ -49,7 +49,7 @@ func RunEvm(curHeader *ethtypes.Header, state *ethstate.StateDB, tx *ethtypes.Tr
 	return
 }
 
-func QueryContractExcute(state *ethstate.StateDB, tx *ethtypes.Transaction) (res []byte, gas *big.Int, err error) {
+func QueryContractExcute(curHeader *ethtypes.Header, state *ethstate.StateDB, tx *ethtypes.Transaction) (res []byte, gas *big.Int, err error) {
 
 	mLog := ethvm.NewStructLogger(&ethvm.LogConfig{})
 
@@ -59,7 +59,7 @@ func QueryContractExcute(state *ethstate.StateDB, tx *ethtypes.Transaction) (res
 		ParentHash: ethcmn.HexToHash("0x00"),
 		Difficulty: big.NewInt(0),
 		GasLimit:   ethcmn.MaxBig,
-		Number:     ethparams.MainNetSpuriousDragon,
+		Number:     curHeader.Number,
 		Time:       big.NewInt(time.Now().Unix()),
 	}
 

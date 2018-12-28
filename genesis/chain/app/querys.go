@@ -93,7 +93,7 @@ func (app *GenesisApp) queryDoContract(bs []byte) at.NewRPCResult {
 
 	etx := NewContractTransaction(dupState.GetNonce(tx.GetFrom()), tx.GetFrom(), tx.GetTo(), big.NewInt(0), ethcmn.MaxBig, big.NewInt(0), payload)
 
-	res, _, err := QueryContractExcute(dupState, etx)
+	res, _, err := QueryContractExcute(app.EvmCurrentHeader, dupState, etx)
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InvalidTx, err.Error())
 	}
