@@ -43,7 +43,6 @@ import (
 	"github.com/dappledger/AnnChain/genesis/eth/core/state"
 	ethtypes "github.com/dappledger/AnnChain/genesis/eth/core/types"
 	"github.com/dappledger/AnnChain/genesis/eth/ethdb"
-	ethparams "github.com/dappledger/AnnChain/genesis/eth/params"
 	"github.com/dappledger/AnnChain/genesis/eth/rlp"
 	"github.com/dappledger/AnnChain/genesis/types"
 	"go.uber.org/zap"
@@ -989,8 +988,8 @@ func (app *GenesisApp) makeCurrentHeader(block *at.Block) *ethtypes.Header {
 		ParentHash: ethcmn.HexToHash("0x00"),
 		Difficulty: big.NewInt(0),
 		GasLimit:   ethcmn.MaxBig,
-		Number:     ethparams.MainNetSpuriousDragon,
-		Time:       big.NewInt(block.Header.Time.Unix()),
-		Height:     uint64(block.Height),
+		//		Number:     ethparams.MainNetSpuriousDragon,
+		Time:   big.NewInt(block.Header.Time.Unix()),
+		Number: big.NewInt(int64(block.Height)),
 	}
 }

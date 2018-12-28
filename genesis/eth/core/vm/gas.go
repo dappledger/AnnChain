@@ -49,9 +49,12 @@ func callGas(gasTable params.GasTable, availableGas, base, callCost *big.Int) *b
 		g := new(big.Int).Div(availableGas, n64)
 		g.Sub(availableGas, g)
 
-		if g.Cmp(callCost) < 0 {
+		if callCost.BitLen() > 64 || g.Cmp(callCost) < 0 {
 			return g
 		}
+	}
+	if callCost.BitLen() > 64 {
+		return big.NewInt(0)
 	}
 	return callCost
 }

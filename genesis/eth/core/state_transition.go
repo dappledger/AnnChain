@@ -17,9 +17,8 @@
 package core
 
 import (
-	//	"encoding/hex"
-	//	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/dappledger/AnnChain/genesis/eth/common"
@@ -95,6 +94,7 @@ func IntrinsicGas(data []byte, contractCreation, homestead bool) *big.Int {
 	} else {
 		igas.Set(params.TxGas)
 	}
+	var gas uint64
 	if len(data) > 0 {
 		var nz int64
 		for _, byt := range data {
@@ -102,14 +102,20 @@ func IntrinsicGas(data []byte, contractCreation, homestead bool) *big.Int {
 				nz++
 			}
 		}
-		m := big.NewInt(nz)
-		m.Mul(m, params.TxDataNonZeroGas)
-		igas.Add(igas, m)
-		m.SetInt64(int64(len(data)) - nz)
-		m.Mul(m, params.TxDataZeroGas)
-		igas.Add(igas, m)
+
+		// Make sure we don't exceed uint64 for all data combinations
+		if (math.MaxUint64-igas.Uint64())/params.TxDataNonZeroGas.Uint64() < uint64(nz) {
+			return big.NewInt(0)
+		}
+		gas += uint64(nz * params.TxDataNonZeroGas.Int64())
+
+		z := uint64(len(data)) - uint64(nz)
+		if (math.MaxUint64-gas)/params.TxDataZeroGas.Uint64() < z {
+			return big.NewInt(0)
+		}
+		gas += z * params.TxDataZeroGas.Uint64()
 	}
-	return igas
+	return new(big.Int).SetUint64(gas)
 }
 
 // NewStateTransition initialises and returns a new state transition object.
@@ -197,11 +203,9 @@ func (self *StateTransition) buyGas() error {
 
 func (self *StateTransition) preCheck() (err error) {
 	msg := self.msg
-	sender := self.from()
-
 	// Make sure this transaction's nonce is correct
 	if msg.CheckNonce() {
-		if n := self.state.GetNonce(sender.Address()); n != msg.Nonce() {
+		if n := self.state.GetNonce(self.msg.From()); n != msg.Nonce() {
 			return NonceError(msg.Nonce(), n)
 		}
 	}
@@ -225,15 +229,17 @@ func (self *StateTransition) TransitionDb() (ret []byte, usedGas *big.Int, faile
 	}
 	msg := self.msg
 	sender := self.from() // err checked in preCheck
-
 	contractCreation := MessageCreatesContract(msg)
-	//contractUpgrade := MessageUpgradeContract(msg)
 
 	// Pay intrinsic gas
-	// homestead := self.env.ChainConfig().IsHomestead(self.env.BlockNumber)
+	gas := IntrinsicGas(self.data, contractCreation, true)
 	// Edit by Kyli
-	if err = self.useGas(IntrinsicGas(self.data, contractCreation, true)); err != nil {
+	if err != nil {
 		return nil, big.NewInt(0), false, InvalidTxError(err)
+	}
+
+	if err = self.useGas(gas); err != nil {
+		return nil, big.NewInt(0), false, err
 	}
 
 	var (
@@ -244,44 +250,23 @@ func (self *StateTransition) TransitionDb() (ret []byte, usedGas *big.Int, faile
 		vmerr error
 	)
 	if contractCreation {
-		ret, _, vmerr = vmenv.Create(sender, self.data, self.gas, self.value)
-		/* else if contractUpgrade {
-			fmt.Println("contract upgrading...")
-			//parse parameters
-			var p []string
-			json.Unmarshal(self.data, &p)
-			addr := common.HexToAddress(p[0])
-			rawCode := []byte(p[1])
-			if len(rawCode) >= 2 && rawCode[0] == '0' && (rawCode[1] == 'x' || rawCode[1] == 'X') {
-				rawCode = rawCode[2:]
-			}
-			code := make([]byte, len(rawCode)/2)
-			hex.Decode(code, rawCode)
-
-			// Upgrade contract
-			ret, err = vmenv.Upgrade(sender, addr, code, self.gas, self.value)
-			fmt.Println("contract upgrade excuted")
-		}*/
+		ret, _, self.gas, vmerr = vmenv.Create(sender, self.data, self.gas, self.value)
 	} else {
 		// Increment the nonce for the next transaction
-		//self.state.SetNonce(sender.Address(), self.state.GetNonce(sender.Address())+1)
-		ret, vmerr = vmenv.Call(sender, self.to().Address(), self.data, self.gas, self.value)
+		ret, self.gas, vmerr = vmenv.Call(sender, self.to().Address(), self.data, self.gas, self.value)
 	}
 	if vmerr != nil {
 		glog.V(logger.Core).Infoln("vm returned with error:", err)
 		// The only possible consensus-error would be if there wasn't
 		// sufficient balance to make the transfer happen. The first
 		// balance transfer may never fail.
-		//		if vmerr == vm.ErrInsufficientBalance {
-		return nil, big.NewInt(0), false, InvalidTxError(vmerr)
-		//		}
+		if vmerr == vm.ErrInsufficientBalance {
+			return nil, big.NewInt(0), false, InvalidTxError(vmerr)
+		}
 	}
 
-	// requiredGas = new(big.Int).Set(self.gasUsed())
-	// Edit by: Kyli
 	self.refundGas()
 	self.state.AddBalance(self.env.Coinbase, new(big.Int).Mul(self.gasUsed(), self.gasPrice), "")
-
 	return ret, self.gasUsed(), vmerr != nil, err
 }
 

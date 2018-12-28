@@ -28,7 +28,7 @@ import (
 
 var (
 	chainConfig = &ethparams.ChainConfig{}
-	evmConfig   = ethvm.Config{DisableGasMetering: false, EnableJit: false, ForceJit: false, Debug: false}
+	evmConfig   = ethvm.Config{}
 	ethSigner   = ethtypes.HomesteadSigner{}
 )
 
@@ -71,7 +71,7 @@ func QueryContractExcute(curHeader *ethtypes.Header, state *ethstate.StateDB, tx
 		ParentHash: ethcmn.HexToHash("0x00"),
 		Difficulty: big.NewInt(0),
 		GasLimit:   ethcmn.MaxBig,
-		Number:     new(big.Int).SetUint64(curHeader.Height),
+		Number:     curHeader.Number,
 		Time:       big.NewInt(time.Now().Unix()),
 	}
 
