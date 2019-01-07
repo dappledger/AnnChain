@@ -106,6 +106,11 @@ func (a *ActionBase) GetActionBase() *ActionBase {
 	return a
 }
 
+type ValueCategory struct {
+	Value    string
+	Category string
+}
+
 type (
 	// ActionBase object for app(Action-Base)
 	ActionBase struct {
@@ -137,10 +142,8 @@ type (
 
 	ActionManageData struct {
 		ActionBase
-		Name     string         `json:"name"`
-		Value    string         `json:"value"`
-		Category string         `json:"category"`
-		Source   ethcmn.Address `json:"source_account"`
+		KeyPair map[string]ValueCategory `json:"keypair"`
+		Source  ethcmn.Address           `json:"source_account"`
 	}
 
 	ActionCreateContract struct {
