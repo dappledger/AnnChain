@@ -26,10 +26,10 @@ type DoManageData struct {
 	tx  *types.Transaction
 }
 
-type ValueCategory struct {
-	value    string
-	category string
-}
+//type ValueCategory struct {
+//	value    string
+//	category string
+//}
 
 func (ct *DoManageData) PreCheck() at.Result {
 	return at.NewResultOK([]byte{}, "")
@@ -45,10 +45,6 @@ func (ct *DoManageData) CheckValid(stateDup *stateDup) error {
 func (ct *DoManageData) Apply(stateDup *stateDup) error {
 
 	db := ct.app.dataM
-
-	if len(ct.op.DataName) == 0 {
-		return at.NewError(at.CodeType_InvalidTx, at.CodeType_InvalidTx.String())
-	}
 
 	toAdd := make(map[string]types.ValueCategory)
 
@@ -67,7 +63,17 @@ func (ct *DoManageData) Apply(stateDup *stateDup) error {
 		if err != nil {
 			return at.NewError(at.CodeType_SaveFailed, at.CodeType_SaveFailed.String()+err.Error())
 		}
-		//ct.SetEffects(ct.op.Source, k, v.value, v.category)
+		if len(k) > types.AccDataLength || len(k) == 0 {
+			return at.NewError(at.CodeType_InvalidTx, at.CodeType_InvalidTx.String())
+		}
+
+		if len(v.Value) > types.AccDataLength {
+			return at.NewError(at.CodeType_AccDataLengthError, at.CodeType_AccDataLengthError.String())
+		}
+
+		if len(v.Category) > types.AccCategoryLength {
+			return at.NewError(at.CodeType_AccCategoryLengthError, at.CodeType_AccCategoryLengthError.String())
+		}
 	}
 	ct.SetEffects(ct.op.Source, toAdd)
 	return nil
@@ -83,9 +89,6 @@ func (ct *DoManageData) SetEffects(source ethcmn.Address, toadd map[string]types
 			BaseFee:     ct.tx.BaseFee(),
 			Memo:        ct.tx.Data.Memo,
 		},
-		//		Name:     dataName,
-		//		Value:    data,
-		//		Category: category,
 		KeyPair: toadd,
 		Source:  source,
 	}, []types.EffectObject{})
