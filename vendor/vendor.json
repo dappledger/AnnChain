@@ -33,6 +33,12 @@
 			"revisionTime": "2017-09-21T21:07:44Z"
 		},
 		{
+			"checksumSHA1": "sCa4Ta3yT0gdT7en8Pa6mnvmif0=",
+			"path": "github.com/ethereum/go-ethereum/crypto/bn256/cloudflare",
+			"revision": "ae857e74bfda1f961dc5741441e5b36a2bb9aa93",
+			"revisionTime": "2019-01-07T23:59:00Z"
+		},
+		{
 			"checksumSHA1": "BhMowD2DIKSd9qq8Pzh7Y3mh2/w=",
 			"path": "github.com/gin-contrib/sse",
 			"revision": "22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae",
@@ -319,6 +325,14 @@
 			"path": "golang.org/x/net/context",
 			"revision": "945ddfdd3bb885ce838728b0169bf94ae76970c8",
 			"revisionTime": "2017-07-20T22:15:25Z"
+		},
+		{
+			"path": "golang.org/x/sys",
+			"revision": ""
+		},
+		{
+			"path": "golang.org/x/sys/cpu",
+			"revision": ""
 		},
 		{
 			"checksumSHA1": "lUzceGJS2NB9OSEidWFQ2CKTJf8=",
