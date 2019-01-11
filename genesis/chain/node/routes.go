@@ -282,13 +282,14 @@ func (h *rpcHandler) Info() (interface{}, at.CodeType, error) {
 
 func (h *rpcHandler) BroadcastTxCommit(tx []byte) ([]byte, at.CodeType, error) {
 
-	if ret := h.node.Application.CheckTx(tx); ret.IsErr() {
+	if ret := h.node.Application.CheckTx(tx); ret.Code != at.CodeType_OK {
 		return nil, ret.Code, errors.New(ret.Log)
 	}
+
 	result, err := h.node.Angine.BroadcastTxCommit(tx)
 
 	if err != nil {
-		return nil, result.Code, err
+		return nil, at.CodeType_InvalidTx, err
 	}
 
 	if result.Code != at.CodeType_OK {
@@ -303,7 +304,7 @@ func (h *rpcHandler) QueryNonce(address string) (uint64, at.CodeType, error) {
 	if result.Code != at.CodeType_OK {
 		return 0, result.Code, errors.New(result.Log)
 	}
-	return binary.BigEndian.Uint64(result.Data), at.CodeType_OK, nil
+	return binary.BigEndian.Uint64(result.Data.([]byte)), at.CodeType_OK, nil
 }
 
 func (h *rpcHandler) QueryAccount(address string) (interface{}, at.CodeType, error) {

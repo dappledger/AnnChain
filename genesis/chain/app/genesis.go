@@ -37,7 +37,6 @@ import (
 	"github.com/dappledger/AnnChain/genesis/chain/database"
 	"github.com/dappledger/AnnChain/genesis/chain/database/basesql"
 	"github.com/dappledger/AnnChain/genesis/chain/datamanager"
-	s "github.com/dappledger/AnnChain/genesis/chain/session"
 	"github.com/dappledger/AnnChain/genesis/chain/version"
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/core/state"
@@ -111,10 +110,6 @@ type GenesisApp struct {
 	EvmCurrentHeader *ethtypes.Header
 
 	Init_Accounts []at.InitInfo
-
-	mapTxs map[string]struct{}
-
-	tmpMap *s.Session
 }
 
 var (
@@ -172,7 +167,6 @@ func NewGenesisApp(config cfg.Config, _logger *zap.Logger) *GenesisApp {
 	if app.state, err = state.New(trieRoot, app.chainDb); err != nil {
 		cmn.PanicCrisis(err)
 	}
-	app.tmpMap = s.NewSession(TmpMapCatchTime, TmpMapCheckTime)
 
 	app.blockExeInfo = &blockExeInfo{}
 	lastBlockTotalCoin, _ := big.NewInt(0).SetString(lastBlock.TotalCoin, 10)
@@ -248,7 +242,6 @@ func (app *GenesisApp) Start() {
 func (app *GenesisApp) Stop() {
 	app.chainDb.Close()
 	app.dataM.Close()
-	app.tmpMap.Close()
 }
 
 func (app *GenesisApp) makeTempHeader(block *at.Block) {
@@ -294,38 +287,23 @@ func (app *GenesisApp) checkBeforeExecute(stateDup *stateDup, bs []byte) (*types
 		}
 	}
 
-	if _, ok := app.mapTxs[tx.Hash().Hex()]; ok {
-		return nil, fmt.Errorf("repetition tx")
-	} else {
-		app.mapTxs[tx.Hash().Hex()] = struct{}{}
+	if tx.Nonce() != stateDup.state.GetNonce(tx.GetFrom()) {
+		return nil, fmt.Errorf("bad nonce")
 	}
 
-	// auth checking
-	if result := app.ValidTx(stateDup.state, tx); result.IsErr() {
-		app.tmpMap.SetSession(tx.Hash(), result)
-		logger.Warn("tx "+tx.String()+"auth  check failed", zap.String("err", result.String()))
-		return nil, fmt.Errorf("auth check failed: %s", result)
-	}
 	return tx, nil
 }
 
-func (app *GenesisApp) ValidTx(state *state.StateDB, tx *types.Transaction) at.Result {
-
-	curNonce := state.GetNonce(tx.GetFrom())
-
-	if tx.Nonce() != curNonce {
-		return at.NewError(at.CodeType_BadNonce, fmt.Sprint("bad nonce ,we need ", curNonce))
-	}
-
+func (app *GenesisApp) ValidTx(tx *types.Transaction) at.Result {
 	if err := tx.CheckSig(); err != nil {
 		return at.NewError(at.CodeType_BaseInvalidSignature, err.Error())
 	}
-
 	return app.opM.PreCheck(tx)
 }
 
 // ExecuteTx execute tx one by one in the loop, without lock, so should always be called between Lock() and Unlock() on the *stateDup
 func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
+
 	var (
 		tx *types.Transaction
 	)
@@ -334,6 +312,7 @@ func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
 		return
 	}
 	state := stateDup.state
+
 	// begin db tx
 	if err = app.dataM.OpTxBegin(); err != nil {
 		logger.Warn("Begin database tx failed:" + err.Error())
@@ -400,7 +379,7 @@ func (app *GenesisApp) OnNewRound(height, round int, block *at.Block) (interface
 	for _, st := range app.stateDups {
 		if st.height < height {
 			st.lock.Lock()
-			st.quit <- struct{}{}
+			//st.quit <- struct{}{}
 			delete(app.stateDups, st.key)
 			st.lock.Unlock()
 		}
@@ -410,39 +389,37 @@ func (app *GenesisApp) OnNewRound(height, round int, block *at.Block) (interface
 }
 
 func (app *GenesisApp) OnExecute(height, round int, block *at.Block) (interface{}, error) {
+
 	var (
 		res at.ExecuteResult
 		err error
-
-		sk = stateKey(block, height, round)
+		sk  = stateKey(block, height, round)
 	)
+
 	app.EvmCurrentHeader = app.makeCurrentHeader(block)
 
 	app.stateDupsMtx.Lock()
-	if st, ok := app.stateDups[sk]; ok {
-		res = <-st.execFinish
-	} else {
-		app.stateMtx.Lock()
-		stateDup := newStateDup(app.state, block, height, round)
-		app.stateMtx.Unlock()
 
-		stateDup.lock.Lock()
-		app.makeTempHeader(block)
+	app.stateMtx.Lock()
+	stateDup := newStateDup(app.state, block, height, round)
+	app.stateMtx.Unlock()
 
-		app.mapTxs = make(map[string]struct{}, len(block.Data.Txs))
+	stateDup.lock.Lock()
 
-		for _, tx := range block.Data.Txs {
-			if err := app.ExecuteTx(stateDup, tx); err != nil {
-				res.InvalidTxs = append(res.InvalidTxs, at.ExecuteInvalidTx{Bytes: tx, Error: err})
-			} else {
-				res.ValidTxs = append(res.ValidTxs, tx)
-				app.tempHeader.TxCount++
-			}
+	app.makeTempHeader(block)
+
+	for _, tx := range block.Data.Txs {
+		if err := app.ExecuteTx(stateDup, tx); err != nil {
+			res.InvalidTxs = append(res.InvalidTxs, at.ExecuteInvalidTx{Bytes: tx, Error: err})
+		} else {
+			res.ValidTxs = append(res.ValidTxs, tx)
+			app.tempHeader.TxCount++
 		}
-		stateDup.lock.Unlock()
-
-		app.stateDups[sk] = stateDup
 	}
+	stateDup.lock.Unlock()
+
+	app.stateDups[sk] = stateDup
+
 	app.stateDupsMtx.Unlock()
 
 	return res, err
@@ -650,14 +627,26 @@ func (app *GenesisApp) CheckTx(bs []byte) at.Result {
 
 	tx.SetCreateTime(uint64(time.Now().UnixNano()))
 
-	srcAccount := tx.GetFrom()
-	if !app.state.Exist(srcAccount) {
+	app.stateMtx.Lock()
+
+	curNonce := app.state.GetNonce(tx.GetFrom())
+
+	if tx.Nonce() != curNonce {
+		app.stateMtx.Unlock()
+		return at.NewError(at.CodeType_BadNonce, fmt.Sprint("bad nonce ,we need ", curNonce))
+	}
+
+	if !app.state.Exist(tx.GetFrom()) {
+		app.stateMtx.Unlock()
 		return at.NewError(at.CodeType_BaseUnknownAddress, at.CodeType_BaseUnknownAddress.String())
 	}
 	// Cost checking
-	if !app.checkEnoughFee(srcAccount, tx) {
+	if !app.checkEnoughFee(tx.GetFrom(), tx) {
+		app.stateMtx.Unlock()
 		return at.NewError(at.CodeType_BaseInsufficientFunds, at.CodeType_BaseInsufficientFunds.String())
 	}
+
+	app.stateMtx.Unlock()
 
 	// check base fee
 	if tx.BaseFee() == nil || tx.BaseFee().Cmp(app.currentHeader.BaseFee) < 0 {
@@ -665,9 +654,8 @@ func (app *GenesisApp) CheckTx(bs []byte) at.Result {
 	}
 
 	//tx auth check
-	ret := app.ValidTx(app.state, tx)
+	ret := app.ValidTx(tx)
 	if ret.IsErr() {
-		app.tmpMap.SetSession(tx.Hash(), ret)
 		return ret
 	}
 
@@ -695,20 +683,24 @@ func (app *GenesisApp) Info() (resInfo at.ResultInfo) {
 }
 
 // query account's nonce
-func (app *GenesisApp) QueryNonce(address string) at.Result {
+func (app *GenesisApp) QueryNonce(address string) at.NewRPCResult {
+
 	account := ethcmn.HexToAddress(address)
+
 	app.stateMtx.Lock()
+	defer app.stateMtx.Unlock()
 
 	if !app.state.Exist(account) {
-		app.stateMtx.Unlock()
-		return at.NewError(at.CodeType_BaseUnknownAddress, "unknown address")
+		return at.NewRpcError(at.CodeType_BaseUnknownAddress, "unknown address")
 	}
+
 	nonce := app.state.GetNonce(account)
-	app.stateMtx.Unlock()
 
 	b := make([]byte, 8)
+
 	binary.BigEndian.PutUint64(b, nonce)
-	return at.NewResultOK(b, "")
+
+	return at.NewRpcResultOK(b, "")
 }
 
 // query accout info
@@ -723,8 +715,11 @@ func (app *GenesisApp) QueryAccount(address string) at.NewRPCResult {
 	account := ethcmn.HexToAddress(address)
 
 	app.stateMtx.Lock()
+
 	accountSO := app.state.GetStateObject(account)
+
 	app.stateMtx.Unlock()
+
 	if xlib.CheckItfcNil(accountSO) {
 		return at.NewRpcError(at.CodeType_BaseUnknownAddress, "Unknown address")
 	}
