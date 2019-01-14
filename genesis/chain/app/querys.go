@@ -75,7 +75,9 @@ func (app *GenesisApp) queryDoContract(bs []byte) at.NewRPCResult {
 
 	var err error
 
-	dupState := app.state.DeepCopy()
+	app.stateAppMtx.Lock()
+	dupState := app.stateApp.DeepCopy()
+	app.stateAppMtx.Unlock()
 
 	tx := &types.Transaction{}
 
