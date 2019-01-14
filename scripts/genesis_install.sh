@@ -125,7 +125,7 @@ function InitGenesis()
 #Configuration config.toml
 function ConfigToml()
 {
-    GENESIS_PATH=$HOME/.ann_runtime
+    GENESIS_PATH=$ANN_RUNTIME
     echo -e "Please enter the Chain-ID:\c"
     read -e CHAINID
     sed -i 's/"annchain.*"/"'${CHAINID}'"/g' ${GENESIS_PATH}/genesis.json
