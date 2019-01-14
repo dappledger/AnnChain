@@ -521,56 +521,59 @@ func (app *GenesisApp) SaveDBData() error {
 		app.dataM.QTxRollback()
 		return err
 	}
-	stmt, err := app.dataM.PrepareTransaction()
-	if err != nil {
-		app.dataM.QTxRollback()
-		return err
-	}
+	//	stmt, err := app.dataM.PrepareTransaction()
+	//	if err != nil {
+	//		app.dataM.QTxRollback()
+	//		return err
+	//	}
 	for _, v := range app.blockExeInfo.txDatas {
 		v.LedgerHash = ethcmn.BytesToLedgerHash(app.currentHeader.Hash())
 		v.Height = app.currentHeader.Height
-		err = app.dataM.AddTransactionStmt(stmt, v)
+		//err = app.dataM.AddTransactionStmt(stmt, v)
+		_, err = app.dataM.AddTransaction(v)
 		if err != nil {
 			app.dataM.QTxRollback()
 			return err
 		}
 	}
-	stmt.Close()
+	//stmt.Close()
 
 	//save action
-	stmt, err = app.dataM.PrepareAction()
-	if err != nil {
-		app.dataM.QTxRollback()
-		return err
-	}
+	//	stmt, err = app.dataM.PrepareAction()
+	//	if err != nil {
+	//		app.dataM.QTxRollback()
+	//		return err
+	//	}
 	for _, a := range app.blockExeInfo.effectG {
 		a.Action.GetActionBase().Height = app.currentHeader.Height
-		err = app.dataM.AddActionDataStmt(stmt, a.Action)
+		//err = app.dataM.AddActionDataStmt(stmt, a.Action)
+		_, err = app.dataM.AddActionData(a.Action)
 		if err != nil {
 			app.dataM.QTxRollback()
 			return err
 		}
 	}
-	stmt.Close()
+	//stmt.Close()
 
 	//save effect
-	stmt, err = app.dataM.PrepareEffect()
-	if err != nil {
-		app.dataM.QTxRollback()
-		return err
-	}
+	//	stmt, err = app.dataM.PrepareEffect()
+	//	if err != nil {
+	//		app.dataM.QTxRollback()
+	//		return err
+	//	}
 	for _, a := range app.blockExeInfo.effectG {
 		for _, e := range a.Effects {
 			e.GetEffectBase().Height = app.currentHeader.Height
 			e.GetEffectBase().ActionID = a.ActionID
-			err = app.dataM.AddEffectDataStmt(stmt, e)
+			//err = app.dataM.AddEffectDataStmt(stmt, e)
+			_, err = app.dataM.AddEffectData(e)
 			if err != nil {
 				app.dataM.QTxRollback()
 				return err
 			}
 		}
 	}
-	stmt.Close()
+	//stmt.Close()
 	// commit dbtx
 	err = app.dataM.QTxCommit()
 	if err != nil {
