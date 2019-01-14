@@ -8,7 +8,7 @@
 # Description:This is a test script.
 
 [ -f /etc/init.d/functions ] && source /etc/init.d/functions
-GENESIS_EX_PATH=${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/za-delos/build
+GENESIS_EX_PATH=${GOPATH}/src/github.com/dappledger/AnnChain/genesis/build
 RETURN_VALUE=0
 
 
