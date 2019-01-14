@@ -51,9 +51,9 @@ func (bs *Basesql) Init(dbname string, cfg config.Config, logger *zap.Logger) er
 
 	bs.conn = conn
 
-	//	_, err = bs.conn.Exec("PRAGMA cache_size = 8000;")
-	//	_, err = bs.conn.Exec("PRAGMA synchronous = OFF;")
-	//	_, err = bs.conn.Exec("PRAGMA temp_store = MEMORY;")
+	_, err = bs.conn.Exec("PRAGMA cache_size = 8000;")
+	_, err = bs.conn.Exec("PRAGMA synchronous = OFF;")
+	_, err = bs.conn.Exec("PRAGMA temp_store = MEMORY;")
 
 	bs.logger = logger
 

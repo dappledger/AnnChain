@@ -697,9 +697,10 @@ func (app *GenesisApp) QueryNonce(address string) at.NewRPCResult {
 	account := ethcmn.HexToAddress(address)
 
 	app.stateAppMtx.Lock()
-	defer app.stateAppMtx.Unlock()
+	tmpState := app.stateApp.DeepCopy()
+	app.stateAppMtx.Unlock()
 
-	nonce := app.stateApp.GetNonce(account)
+	nonce := tmpState.GetNonce(account)
 
 	b := make([]byte, 8)
 
