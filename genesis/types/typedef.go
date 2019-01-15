@@ -266,8 +266,6 @@ func (h *AppHeader) Hash() []byte {
 		"Feepool":   h.Feepool,
 	}
 
-	fmt.Println("===app hash==", m)
-
 	return merkle.SimpleHashFromMap(m)
 }
 

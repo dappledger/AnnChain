@@ -92,8 +92,9 @@ type GenesisApp struct {
 
 	chainDb ethdb.Database // Block chain database
 
-	mapStateDups    map[string]*stateDup
-	mapStateDupsMtx sync.RWMutex // protect concurrent changes of app fields
+	//mapStateDups    map[string]*stateDup
+	//mapStateDupsMtx sync.RWMutex // protect concurrent changes of app fields
+	tmpStateDup *stateDup
 
 	AngineHooks at.Hooks
 	opM         OperationManager
@@ -148,8 +149,8 @@ func NewGenesisApp(config cfg.Config, _logger *zap.Logger) *GenesisApp {
 	datadir := config.GetString("db_dir")
 
 	app := GenesisApp{
-		config:       config,
-		mapStateDups: make(map[string]*stateDup),
+		config: config,
+		//mapStateDups: make(map[string]*stateDup),
 	}
 
 	if app.chainDb, err = OpenDatabase(datadir, "chaindata", LDatabaseCache, LDatabaseHandles); err != nil {
@@ -381,17 +382,17 @@ func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
 
 func (app *GenesisApp) OnNewRound(height, round int, block *at.Block) (interface{}, error) {
 
-	app.mapStateDupsMtx.Lock()
+	//	app.mapStateDupsMtx.Lock()
 
-	for _, st := range app.mapStateDups {
-		if st.height < height {
-			st.stateMtx.Lock()
-			delete(app.mapStateDups, st.key)
-			st.stateMtx.Unlock()
-		}
-	}
+	//	for _, st := range app.mapStateDups {
+	//		if st.height < height {
+	//			st.stateMtx.Lock()
+	//			delete(app.mapStateDups, st.key)
+	//			st.stateMtx.Unlock()
+	//		}
+	//	}
 
-	app.mapStateDupsMtx.Unlock()
+	//	app.mapStateDupsMtx.Unlock()
 
 	return at.NewRoundResult{}, nil
 }
@@ -405,29 +406,29 @@ func (app *GenesisApp) OnExecute(height, round int, block *at.Block) (interface{
 
 	app.EvmCurrentHeader = app.makeCurrentHeader(block)
 
-	app.mapStateDupsMtx.Lock()
+	//app.mapStateDupsMtx.Lock()
 
 	app.stateAppMtx.Lock()
-	stateDup := newStateDup(app.stateApp, block, height, round)
+	app.tmpStateDup = newStateDup(app.stateApp, block, height, round)
 	app.stateAppMtx.Unlock()
 
 	app.makeTempHeader(block)
 
-	stateDup.stateMtx.Lock()
+	app.tmpStateDup.stateMtx.Lock()
 
 	for _, tx := range block.Data.Txs {
-		if err := app.ExecuteTx(stateDup, tx); err != nil {
+		if err := app.ExecuteTx(app.tmpStateDup, tx); err != nil {
 			res.InvalidTxs = append(res.InvalidTxs, at.ExecuteInvalidTx{Bytes: tx, Error: err})
 		} else {
 			res.ValidTxs = append(res.ValidTxs, tx)
 			app.tempHeader.TxCount++
 		}
 	}
-	stateDup.stateMtx.Unlock()
+	app.tmpStateDup.stateMtx.Unlock()
 
-	app.mapStateDups[stateKey(block)] = stateDup
+	//	app.mapStateDups[stateKey(block)] = stateDup
 
-	app.mapStateDupsMtx.Unlock()
+	//	app.mapStateDupsMtx.Unlock()
 
 	return res, err
 }
@@ -438,28 +439,28 @@ func (app *GenesisApp) OnCommit(height, round int, block *at.Block) (interface{}
 	var (
 		stateRoot ethcmn.Hash
 		err       error
-		sk        = stateKey(block)
+		//		sk        = stateKey(block)
 	)
 
-	app.mapStateDupsMtx.RLock()
-	dupstate, ok := app.mapStateDups[sk]
-	app.mapStateDupsMtx.RUnlock()
-	if !ok {
+	//	app.mapStateDupsMtx.RLock()
+	//	dupstate, ok := app.mapStateDups[sk]
+	//	app.mapStateDupsMtx.RUnlock()
+	//	if !ok {
 
-		app.SaveLastBlock(app.currentHeader.Hash(), app.currentHeader)
-		return at.CommitResult{AppHash: app.currentHeader.Hash()}, nil
-	}
+	//		app.SaveLastBlock(app.currentHeader.Hash(), app.currentHeader)
+	//		return at.CommitResult{AppHash: app.currentHeader.Hash()}, nil
+	//	}
 
 	// commit levelDB
-	dupstate.stateMtx.Lock()
-	stateRoot, err = dupstate.state.Commit(StateRemoveEmptyObj)
-	dupstate.stateMtx.Unlock()
+	app.tmpStateDup.stateMtx.Lock()
+	stateRoot, err = app.tmpStateDup.state.Commit(StateRemoveEmptyObj)
+	app.tmpStateDup.stateMtx.Unlock()
 	if err != nil {
 		app.SaveLastBlock(app.currentHeader.Hash(), app.currentHeader)
 		return nil, err
 	}
 
-	receiptHash := app.SaveReceipts(dupstate)
+	receiptHash := app.SaveReceipts(app.tmpStateDup)
 
 	app.currentHeader = app.tempHeader
 	app.currentHeader.StateRoot = stateRoot
@@ -473,14 +474,14 @@ func (app *GenesisApp) OnCommit(height, round int, block *at.Block) (interface{}
 	}
 
 	// reset and return
-	app.mapStateDupsMtx.Lock()
-	delete(app.mapStateDups, sk)
-	app.mapStateDupsMtx.Unlock()
+	//	app.mapStateDupsMtx.Lock()
+	//	delete(app.mapStateDups, sk)
+	//	app.mapStateDupsMtx.Unlock()
 
 	app.blockExeInfo = &blockExeInfo{}
 
 	app.stateAppMtx.Lock()
-	app.stateApp, err = dupstate.state.New(stateRoot)
+	app.stateApp, err = app.tmpStateDup.state.New(stateRoot)
 	app.stateAppMtx.Unlock()
 
 	app.currentHeader.PrevHash = ethcmn.BytesToLedgerHash(appHash)
@@ -697,10 +698,8 @@ func (app *GenesisApp) QueryNonce(address string) at.NewRPCResult {
 	account := ethcmn.HexToAddress(address)
 
 	app.stateAppMtx.Lock()
-	tmpState := app.stateApp.DeepCopy()
+	nonce := app.stateApp.GetNonce(account)
 	app.stateAppMtx.Unlock()
-
-	nonce := tmpState.GetNonce(account)
 
 	b := make([]byte, 8)
 
