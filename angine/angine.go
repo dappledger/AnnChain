@@ -441,11 +441,14 @@ func (e *Angine) BroadcastTxCommit(tx []byte) (*types.ResultBroadcastTxCommit, e
 	committed := make(chan types.EventDataTx, 1)
 	eventString := types.EventStringTx(tx)
 	timer := time.NewTimer(60 * 2 * time.Second)
-	types.AddListenerForEvent(*e.eventSwitch, "angine", eventString, func(data types.TMEventData) {
+
+	strTime := fmt.Sprintf("%v", time.Now().UnixNano())
+
+	types.AddListenerForEvent(*e.eventSwitch, strTime, eventString, func(data types.TMEventData) {
 		committed <- data.(types.EventDataTx)
 	})
 	defer func() {
-		(*e.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "angine")
+		(*e.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, strTime)
 	}()
 	select {
 	case c := <-committed:
