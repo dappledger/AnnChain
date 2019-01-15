@@ -92,8 +92,6 @@ type GenesisApp struct {
 
 	chainDb ethdb.Database // Block chain database
 
-	//mapStateDups    map[string]*stateDup
-	//mapStateDupsMtx sync.RWMutex // protect concurrent changes of app fields
 	tmpStateDup *stateDup
 
 	AngineHooks at.Hooks
@@ -150,7 +148,6 @@ func NewGenesisApp(config cfg.Config, _logger *zap.Logger) *GenesisApp {
 
 	app := GenesisApp{
 		config: config,
-		//mapStateDups: make(map[string]*stateDup),
 	}
 
 	if app.chainDb, err = OpenDatabase(datadir, "chaindata", LDatabaseCache, LDatabaseHandles); err != nil {
@@ -317,6 +314,7 @@ func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
 	if tx, err = app.checkBeforeExecute(stateDup, bs); err != nil {
 		return
 	}
+
 	state := stateDup.state
 
 	// begin db tx
@@ -381,19 +379,6 @@ func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
 }
 
 func (app *GenesisApp) OnNewRound(height, round int, block *at.Block) (interface{}, error) {
-
-	//	app.mapStateDupsMtx.Lock()
-
-	//	for _, st := range app.mapStateDups {
-	//		if st.height < height {
-	//			st.stateMtx.Lock()
-	//			delete(app.mapStateDups, st.key)
-	//			st.stateMtx.Unlock()
-	//		}
-	//	}
-
-	//	app.mapStateDupsMtx.Unlock()
-
 	return at.NewRoundResult{}, nil
 }
 
@@ -405,8 +390,6 @@ func (app *GenesisApp) OnExecute(height, round int, block *at.Block) (interface{
 	)
 
 	app.EvmCurrentHeader = app.makeCurrentHeader(block)
-
-	//app.mapStateDupsMtx.Lock()
 
 	app.stateAppMtx.Lock()
 	app.tmpStateDup = newStateDup(app.stateApp, block, height, round)
@@ -426,10 +409,6 @@ func (app *GenesisApp) OnExecute(height, round int, block *at.Block) (interface{
 	}
 	app.tmpStateDup.stateMtx.Unlock()
 
-	//	app.mapStateDups[stateKey(block)] = stateDup
-
-	//	app.mapStateDupsMtx.Unlock()
-
 	return res, err
 }
 
@@ -439,17 +418,7 @@ func (app *GenesisApp) OnCommit(height, round int, block *at.Block) (interface{}
 	var (
 		stateRoot ethcmn.Hash
 		err       error
-		//		sk        = stateKey(block)
 	)
-
-	//	app.mapStateDupsMtx.RLock()
-	//	dupstate, ok := app.mapStateDups[sk]
-	//	app.mapStateDupsMtx.RUnlock()
-	//	if !ok {
-
-	//		app.SaveLastBlock(app.currentHeader.Hash(), app.currentHeader)
-	//		return at.CommitResult{AppHash: app.currentHeader.Hash()}, nil
-	//	}
 
 	// commit levelDB
 	app.tmpStateDup.stateMtx.Lock()
@@ -472,11 +441,6 @@ func (app *GenesisApp) OnCommit(height, round int, block *at.Block) (interface{}
 	if err != nil {
 		logger.Error("Save db data failed:" + err.Error())
 	}
-
-	// reset and return
-	//	app.mapStateDupsMtx.Lock()
-	//	delete(app.mapStateDups, sk)
-	//	app.mapStateDupsMtx.Unlock()
 
 	app.blockExeInfo = &blockExeInfo{}
 
@@ -537,59 +501,56 @@ func (app *GenesisApp) SaveDBData() error {
 		app.dataM.QTxRollback()
 		return err
 	}
-	//	stmt, err := app.dataM.PrepareTransaction()
-	//	if err != nil {
-	//		app.dataM.QTxRollback()
-	//		return err
-	//	}
+	stmt, err := app.dataM.PrepareTransaction()
+	if err != nil {
+		app.dataM.QTxRollback()
+		return err
+	}
 	for _, v := range app.blockExeInfo.txDatas {
 		v.LedgerHash = ethcmn.BytesToLedgerHash(app.currentHeader.Hash())
 		v.Height = app.currentHeader.Height
-		//err = app.dataM.AddTransactionStmt(stmt, v)
-		_, err = app.dataM.AddTransaction(v)
+		err = app.dataM.AddTransactionStmt(stmt, v)
 		if err != nil {
 			app.dataM.QTxRollback()
 			return err
 		}
 	}
-	//stmt.Close()
+	stmt.Close()
 
 	//save action
-	//	stmt, err = app.dataM.PrepareAction()
-	//	if err != nil {
-	//		app.dataM.QTxRollback()
-	//		return err
-	//	}
+	stmt, err = app.dataM.PrepareAction()
+	if err != nil {
+		app.dataM.QTxRollback()
+		return err
+	}
 	for _, a := range app.blockExeInfo.effectG {
 		a.Action.GetActionBase().Height = app.currentHeader.Height
-		//err = app.dataM.AddActionDataStmt(stmt, a.Action)
-		_, err = app.dataM.AddActionData(a.Action)
+		err = app.dataM.AddActionDataStmt(stmt, a.Action)
 		if err != nil {
 			app.dataM.QTxRollback()
 			return err
 		}
 	}
-	//stmt.Close()
+	stmt.Close()
 
 	//save effect
-	//	stmt, err = app.dataM.PrepareEffect()
-	//	if err != nil {
-	//		app.dataM.QTxRollback()
-	//		return err
-	//	}
+	stmt, err = app.dataM.PrepareEffect()
+	if err != nil {
+		app.dataM.QTxRollback()
+		return err
+	}
 	for _, a := range app.blockExeInfo.effectG {
 		for _, e := range a.Effects {
 			e.GetEffectBase().Height = app.currentHeader.Height
 			e.GetEffectBase().ActionID = a.ActionID
-			//err = app.dataM.AddEffectDataStmt(stmt, e)
-			_, err = app.dataM.AddEffectData(e)
+			err = app.dataM.AddEffectDataStmt(stmt, e)
 			if err != nil {
 				app.dataM.QTxRollback()
 				return err
 			}
 		}
 	}
-	//stmt.Close()
+	stmt.Close()
 	// commit dbtx
 	err = app.dataM.QTxCommit()
 	if err != nil {

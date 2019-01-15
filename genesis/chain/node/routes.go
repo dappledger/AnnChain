@@ -97,11 +97,11 @@ func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 		"query_ledger_transactions":         rpc.NewRPCFunc(h.QueryLedgerTransactions, argsWithChainID("height,order,limit,cursor")),
 
 		//Execute RPC
-		"create_account":   rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
-		"payment":          rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
-		"manage_data":      rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
-		"create_contract":  rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
-		"execute_contract": rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
+		"create_account":   rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"payment":          rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"manage_data":      rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"create_contract":  rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"execute_contract": rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
 	}
 }
 
@@ -278,6 +278,19 @@ func (h *rpcHandler) Info() (interface{}, at.CodeType, error) {
 	res := h.node.Application.Info()
 
 	return &res, at.CodeType_OK, nil
+}
+
+func (h *rpcHandler) BroadcastTx(tx []byte) ([]byte, at.CodeType, error) {
+
+	if ret := h.node.Application.CheckTx(tx); ret.Code != at.CodeType_OK {
+		return nil, ret.Code, errors.New(ret.Log)
+	}
+
+	if err := h.node.Angine.BroadcastTx(tx); err != nil {
+		return nil, at.CodeType_InvalidTx, err
+	}
+
+	return nil, at.CodeType_OK, nil
 }
 
 func (h *rpcHandler) BroadcastTxCommit(tx []byte) ([]byte, at.CodeType, error) {
