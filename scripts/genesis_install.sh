@@ -31,7 +31,7 @@
 # https://github.com/dappledger/AnnChain/blob/master/README.md
 ##########################################################################
 
-VERSION=1.0.0
+VERSION=v0.6.1
 TIME_BEGIN=$( date -u +%s )
 
 #install golang
