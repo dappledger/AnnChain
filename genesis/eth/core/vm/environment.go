@@ -317,8 +317,8 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas, value 
 	}
 
 	// Create a new account on the state
-	nonce := evm.StateDB.GetNonce(caller.Address())
-	evm.StateDB.SetNonce(caller.Address(), nonce+1)
+	//	nonce := evm.StateDB.GetNonce(caller.Address())
+	//	evm.StateDB.SetNonce(caller.Address(), nonce+1)
 
 	// Ensure there's no existing contract already at the designated address
 	contractHash := evm.StateDB.GetCodeHash(address)
