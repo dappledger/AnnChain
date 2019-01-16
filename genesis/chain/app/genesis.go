@@ -312,6 +312,7 @@ func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
 	)
 
 	if tx, err = app.checkBeforeExecute(stateDup, bs); err != nil {
+		app.txCache.Delete(string(bs))
 		return
 	}
 
@@ -320,6 +321,7 @@ func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
 	// begin db tx
 	if err = app.dataM.OpTxBegin(); err != nil {
 		logger.Warn("Begin database tx failed:" + err.Error())
+		app.txCache.Delete(string(bs))
 		return
 	}
 
@@ -341,12 +343,14 @@ func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
 	if err != nil {
 		state.RevertToSnapshot(stateSnapshot)
 		app.dataM.OpTxRollback() // error is not important here
+		app.txCache.Delete(string(bs))
 		return
 	}
 
 	// commit db tx
 	if err = app.dataM.OpTxCommit(); err != nil {
 		logger.Error("Commit database tx failed:" + err.Error())
+		app.txCache.Delete(string(bs))
 		return
 	}
 
