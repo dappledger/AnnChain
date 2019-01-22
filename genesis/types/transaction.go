@@ -243,7 +243,7 @@ type Receipt struct {
 	Payload         string         `json:"payload"`
 	GasPrice        string         `json:"gas_price"`
 	GasLimit        string         `json:"gas_limit"`
-	Logs            string         `json:"logs"`
+	Logs            []string       `json:"logs"`
 	OpType          OP_NAME        `json:"optype"`
 	Res             string         `json:"result"`
 }
