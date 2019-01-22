@@ -2,7 +2,6 @@
 
 AnnChain是工信部DAPPLedger开源社区项目之一，Annchain.Genesis是底层为链表式结构的区块链基础协议，致力于快速创建一条高性能、可扩展、可自由配置的区块链基础设施，使得创建去中心化应用更加简单快速，并已在技术社区中应用于数十个实际应用场景。
 
-注：annChain.Genesis的开源协议为GPL3.0，详情参考[LICENSES](https://github.com/dappledger/AnnChain/blob/master/LICENSE)
 
 ### 1.1本项目你能学到什么
 
