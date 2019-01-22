@@ -225,8 +225,7 @@
      	"public": "FA42423DD88109986BA94CA458D639995BD90835E42C3CD320D2DC23B329CC3C",
      	"sigs": "09d938e2aa3087604321cdcf0fc8cea4fdb4cf91a2c270f78cfe51623d119cd0709c5ffbc9e111c2171b18f6a693d35aaa9296a491a304aba3a61588dc0df900",
      	"opcode": "1",
-     	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-     	"rpc_address": "tcp://ip:port",
+     	"rpc_address": "tcp://ip:port"
      }
      ```
 
@@ -256,8 +255,7 @@
      	"public": "FA42423DD88109986BA94CA458D639995BD90835E42C3CD320D2DC23B329CC3C",
      	"sigs": "09d938e2aa3087604321cdcf0fc8cea4fdb4cf91a2c270f78cfe51623d119cd0709c5ffbc9e111c2171b18f6a693d35aaa9296a491a304aba3a61588dc0df900",
      	"opcode": "0",
-     	"from": "1743fe87b946d8aa4f5fd3094386c4cafc98c31c",
-     	"rpc_address": "tcp://ip:port",
+     	"rpc_address": "tcp://ip:port"
      }
      ```
 
