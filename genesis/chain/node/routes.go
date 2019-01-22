@@ -16,17 +16,21 @@ package node
 
 import (
 	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/dappledger/AnnChain/ann-module/lib/go-crypto"
-
 	at "github.com/dappledger/AnnChain/angine/types"
+	"github.com/dappledger/AnnChain/ann-module/lib/go-crypto"
 	rpc "github.com/dappledger/AnnChain/ann-module/lib/go-rpc/server"
+	"github.com/dappledger/AnnChain/ann-module/lib/go-wire"
 	"github.com/dappledger/AnnChain/genesis/chain/version"
+	"github.com/dappledger/AnnChain/genesis/eth/rlp"
+	"github.com/dappledger/AnnChain/genesis/types"
 )
 
 const ChainIDArg = "chainid"
@@ -97,11 +101,12 @@ func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 		"query_ledger_transactions":         rpc.NewRPCFunc(h.QueryLedgerTransactions, argsWithChainID("height,order,limit,cursor")),
 
 		//Execute RPC
-		"create_account":   rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
-		"payment":          rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
-		"manage_data":      rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
-		"create_contract":  rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
-		"execute_contract": rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"create_account":     rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"payment":            rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"manage_data":        rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"create_contract":    rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"execute_contract":   rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"request_special_op": rpc.NewRPCFunc(h.RequestSpecialOP, argsWithChainID("tx")),
 	}
 }
 
@@ -290,6 +295,70 @@ func (h *rpcHandler) BroadcastTx(tx []byte) ([]byte, at.CodeType, error) {
 		return nil, at.CodeType_InvalidTx, err
 	}
 
+	return nil, at.CodeType_OK, nil
+}
+
+func (h *rpcHandler) RequestSpecialOP(tx []byte) ([]byte, at.CodeType, error) {
+
+	var (
+		trans types.Transaction
+		tdata types.SpecialOp
+		power uint64
+	)
+
+	if err := rlp.DecodeBytes(tx, &trans.Data); err != nil {
+		return nil, at.CodeType_WrongRLP, fmt.Errorf("transaction rlp decode error:%s", err.Error())
+	}
+
+	if err := trans.CheckSig(); err != nil {
+		return nil, at.CodeType_BaseInvalidSignature, errors.New("transaction check sig failed")
+	}
+
+	if err := json.Unmarshal(trans.GetOperation(), &tdata); err != nil {
+		return nil, at.CodeType_JsonError, fmt.Errorf("transaction json unmarshal error:%s", err.Error())
+	}
+
+	switch tdata.OpCode {
+	case 1:
+		power = 100
+	case 0:
+		power = 0
+	default:
+		return nil, at.CodeType_InvalidTx, errors.New("specialOp opCode wrong")
+	}
+
+	bytPublic, err := at.StringTo32byte(tdata.Public)
+	if err != nil {
+		return nil, at.CodeType_InvalidTx, fmt.Errorf("transaction public error:%s", err.Error())
+	}
+
+	cmd := &at.SpecialOPCmd{
+		CmdCode: at.SpecialOP,
+		CmdType: at.SpecialOP_ChangeValidator,
+		Msg: wire.JSONBytes(at.ValidatorAttr{
+			PubKey:     crypto.PubKeyEd25519(bytPublic).Bytes(),
+			Power:      power,
+			IsCA:       tdata.IsCA,
+			RPCAddress: tdata.RpcAddress,
+		}),
+		Time: time.Now(),
+	}
+
+	sigb, err := hex.DecodeString(tdata.Sigs)
+	if err != nil {
+		return nil, at.CodeType_InvalidTx, fmt.Errorf("hex decode sigs error:%s", err.Error())
+	}
+
+	cmd.Sigs = append(cmd.Sigs, sigb)
+
+	bytCmd, err := json.Marshal(cmd)
+	if err != nil {
+		return nil, at.CodeType_JsonError, err
+	}
+
+	if err := h.node.Angine.ProcessSpecialOP(at.TagSpecialOPTx(bytCmd)); err != nil {
+		return nil, at.CodeType_InvalidTx, fmt.Errorf("angine process tx is error:%s", err.Error())
+	}
 	return nil, at.CodeType_OK, nil
 }
 
