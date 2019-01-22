@@ -208,6 +208,66 @@
      失败：
      error：不为空
      ```
+     
+- ## 普通节点提升验证节点
+
+  1. 调用方式
+
+     ```
+     curl -d '{"jsonrpc":"2.0","method":"request_special_op","params":[""],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+     ```
+
+  2. 传入参数
+
+     ```
+     {
+     	"isCA": "true",
+     	"public": "FA42423DD88109986BA94CA458D639995BD90835E42C3CD320D2DC23B329CC3C",
+     	"sigs": "09d938e2aa3087604321cdcf0fc8cea4fdb4cf91a2c270f78cfe51623d119cd0709c5ffbc9e111c2171b18f6a693d35aaa9296a491a304aba3a61588dc0df900",
+     	"opcode": "1",
+     	"rpc_address": "tcp://ip:port"
+     }
+     ```
+
+  3. 返回值
+
+     ```
+     成功：
+     result：null
+     error：null
+     失败：
+     error：不为空
+     ```
+
+- ## 验证节点降级普通节点
+
+  1. 调用方式
+
+     ```
+     curl -d '{"jsonrpc":"2.0","method":"request_special_op","params":[""],"id":"1"}' -H "Content-Type:application/json" -X POST "http://localhost:46657"
+     ```
+
+  2. 传入参数
+
+     ```
+     {
+     	"isCA": "false",
+     	"public": "FA42423DD88109986BA94CA458D639995BD90835E42C3CD320D2DC23B329CC3C",
+     	"sigs": "09d938e2aa3087604321cdcf0fc8cea4fdb4cf91a2c270f78cfe51623d119cd0709c5ffbc9e111c2171b18f6a693d35aaa9296a491a304aba3a61588dc0df900",
+     	"opcode": "0",
+     	"rpc_address": "tcp://ip:port"
+     }
+     ```
+
+  3. 返回值
+
+     ```
+     成功：
+     result：null
+     error：null
+     失败：
+     error：不为空
+     ```
 
 - ## 获取nonce值
 
