@@ -19,12 +19,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"go.uber.org/zap"
-
 	at "github.com/dappledger/AnnChain/angine/types"
-
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/types"
+	"go.uber.org/zap"
 )
 
 type OperationManager struct {

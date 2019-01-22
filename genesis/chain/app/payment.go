@@ -38,7 +38,7 @@ func (pay *DoPayment) CheckValid(stateDup *stateDup) error {
 	if pay.op.Source.Hex() == pay.op.Destination.Hex() {
 		return at.NewError(at.CodeType_BaseUnknownAddress, at.CodeType_BaseUnknownAddress.String())
 	}
-	if pay.op.Amount.Cmp(big0) <= 0 {
+	if pay.op.Amount.Cmp(big.NewInt(0)) <= 0 {
 		return at.NewError(at.CodeType_LowBalance, at.CodeType_LowBalance.String())
 	}
 	return nil
@@ -48,7 +48,7 @@ func (pay *DoPayment) Apply(stateDup *stateDup) error {
 
 	balance := stateDup.state.GetBalance(pay.op.Source)
 
-	if new(big.Int).Sub(balance, pay.op.Amount).Cmp(big0) < 0 {
+	if new(big.Int).Sub(balance, pay.op.Amount).Cmp(big.NewInt(0)) < 0 {
 		return at.NewError(at.CodeType_LowBalance, at.CodeType_LowBalance.String())
 	}
 

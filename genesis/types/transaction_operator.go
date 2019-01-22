@@ -49,28 +49,6 @@ func (bp *BaseOp) GetSourceAccount() ethcmn.Address {
 	return bp.Source
 }
 
-//type QueryContract struct {
-//	BaseOp
-//	ContractAddr *ethcmn.Address
-//	FuncData     []byte
-//	Price        string
-//	Amount       string
-//	GasLimit     string
-//	Gas          string
-//}
-
-//func (cop *QueryContract) Type() TYPE_OP {
-//	return OP_QUERY_CONTRACT
-//}
-
-//func (cop *QueryContract) Bytes() []byte {
-//	bys, err := rlp.EncodeToBytes(cop)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//	return bys
-//}
-
 type CreateAccountOp struct {
 	BaseOp
 	TargetAddress ethcmn.Address

@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package database
 
 import (
 	"database/sql"
 	"errors"
 
-	"go.uber.org/zap"
-
 	"github.com/dappledger/AnnChain/ann-module/lib/go-config"
+	"go.uber.org/zap"
 )
 
 const (

@@ -22,8 +22,6 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// type
-
 func TestZap(t *testing.T) {
 
 	env := "production"

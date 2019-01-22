@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package basesql
 
 // GetInitSQLs get database initialize sqls
-//	opt sqls to create operation tables
-//	opi sqls to create operation table-indexs
-//	qt  sqls to create query tables
-//	qi  sqls to create query table-indexs
+// opt sqls to create operation tables
+// opi sqls to create operation table-indexs
+// qt  sqls to create query tables
+// qi  sqls to create query table-indexs
 func (bs *Basesql) GetInitSQLs() (opt, opi, qt, qi []string) {
 	opt = []string{
 		createAccDataSQL,
@@ -81,7 +80,7 @@ const (
 		actionid			INTEGER	PRIMARY KEY	AUTOINCREMENT,
 		typei				INT			NOT NULL,
 		type				VARCHAR(32)	NOT NULL,
-		height			INT			NOT NULL,
+		height				INT			NOT NULL,
 		txhash				VARCHAR(64)	NOT NULL,
 		fromaccount			VARCHAR(66),			-- only used in payment
 		toaccount			VARCHAR(66),			-- only used in payment
@@ -94,7 +93,7 @@ const (
 		effectid          	INTEGER	PRIMARY KEY	AUTOINCREMENT,
 		typei				INT,
 		type				VARCHAR(32)	NOT NULL,
-		height			INT			NOT NULL,
+		height				INT			NOT NULL,
 		txhash				VARCHAR(64)	NOT NULL,
 		actionid			INT			NOT NULL,
 		account				VARCHAR(66)	NOT NULL,
@@ -105,7 +104,7 @@ const (
 	createLedgerSQL = `CREATE TABLE IF NOT EXISTS ledgerheaders
     (
 		ledgerid			INTEGER	PRIMARY KEY	AUTOINCREMENT,
-		height			TEXT 		UNIQUE,
+		height				TEXT 		UNIQUE,
 		hash				VARCHAR(64) NOT NULL,
 		prevhash			VARCHAR(64) NOT NULL,
 		transactioncount	INT			NOT NULL,

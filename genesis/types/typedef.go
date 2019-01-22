@@ -265,6 +265,7 @@ func (h *AppHeader) Hash() []byte {
 		"TotalCoin": h.TotalCoin,
 		"Feepool":   h.Feepool,
 	}
+
 	return merkle.SimpleHashFromMap(m)
 }
 
@@ -364,11 +365,7 @@ const (
 	INFLATION_NUM_WINNERS      = 2000
 	INFLATION_WIN_MIN_PERCENT  = 500000000
 	FIRST_MONDAY               = uint64(time.Hour)*24*4 + 1 // 1970-01-05 00:00:01
-
-	// million : 1 000 000
-	// billion : 1 000 000 000
-	// trillion : 1 000 000 000 000
-	TRILLION = 1000000000000
+	TRILLION                   = 1000000000000
 )
 
 var BIG_BILLION = big.NewInt(1000000000)

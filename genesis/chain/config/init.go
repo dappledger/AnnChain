@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package config
 
 import (
@@ -37,10 +36,6 @@ func LoadDefaultConfig(conf *config.MapConfig) {
 	conf.SetDefault("base_fee", cfg.GetInt("base_fee"))
 	conf.SetDefault("base_reserve", cfg.GetInt("base_reserve"))
 	conf.SetDefault("max_txset_size", cfg.GetInt("max_txset_size"))
-	// conf.SetDefault("base_fee", 0)
-	// conf.SetDefault("base_reserve", 0)
-	// conf.SetDefault("max_txset_size", 5000)
-
 	conf.SetDefault("init_official", true)
 }
 

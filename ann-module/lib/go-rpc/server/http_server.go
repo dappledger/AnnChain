@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"runtime/debug"
+
+	//	"runtime/debug"
 	"strings"
 	"time"
 
 	"go.uber.org/zap"
 
-	. "github.com/dappledger/AnnChain/ann-module/lib/go-common"
+	//. "github.com/dappledger/AnnChain/ann-module/lib/go-common"
 	. "github.com/dappledger/AnnChain/ann-module/lib/go-rpc/types"
 	//"github.com/dappledger/AnnChain/ann-module/lib/go-wire"
 )
@@ -80,33 +81,33 @@ func RecoverAndLogHandler(logger *zap.Logger, handler http.Handler) http.Handler
 		rww.Header().Set("Access-Control-Expose-Headers", "X-Server-Time")
 		rww.Header().Set("X-Server-Time", fmt.Sprintf("%v", begin.Unix()))
 
-		defer func() {
-			// Send a 500 error if a panic happens during a handler.
-			// Without this, Chrome & Firefox were retrying aborted ajax requests,
-			// at least to my localhost.
-			if e := recover(); e != nil {
+		//		defer func() {
+		//			// Send a 500 error if a panic happens during a handler.
+		//			// Without this, Chrome & Firefox were retrying aborted ajax requests,
+		//			// at least to my localhost.
+		//			if e := recover(); e != nil {
 
-				// If RPCResponse
-				if res, ok := e.(RPCResponse); ok {
-					WriteRPCResponseHTTP(rww, res)
-				} else {
-					// For the rest,
-					logger.Sugar().Errorw("Panic in RPC HTTP handler", "error", e, "stack", string(debug.Stack()))
-					rww.WriteHeader(http.StatusInternalServerError)
-					WriteRPCResponseHTTP(rww, NewRPCResponse("", nil, -32000, Fmt("Internal Server Error: %v", e)))
-				}
-			}
+		//				// If RPCResponse
+		//				if res, ok := e.(RPCResponse); ok {
+		//					WriteRPCResponseHTTP(rww, res)
+		//				} else {
+		//					// For the rest,
+		//					logger.Sugar().Errorw("Panic in RPC HTTP handler", "error", e, "stack", string(debug.Stack()))
+		//					rww.WriteHeader(http.StatusInternalServerError)
+		//					WriteRPCResponseHTTP(rww, NewRPCResponse("", nil, -32000, Fmt("Internal Server Error: %v", e)))
+		//				}
+		//			}
 
-			// Finally, log.
-			durationMS := time.Since(begin).Nanoseconds() / 1000000
-			if rww.Status == -1 {
-				rww.Status = 200
-			}
-			logger.Debug("Served RPC HTTP response",
-				zap.String("method", r.Method), zap.Stringer("url", r.URL),
-				zap.Int("status", rww.Status), zap.Int64("duration", durationMS),
-				zap.String("remoteAddr", r.RemoteAddr))
-		}()
+		//			// Finally, log.
+		//			durationMS := time.Since(begin).Nanoseconds() / 1000000
+		//			if rww.Status == -1 {
+		//				rww.Status = 200
+		//			}
+		//			logger.Debug("Served RPC HTTP response",
+		//				zap.String("method", r.Method), zap.Stringer("url", r.URL),
+		//				zap.Int("status", rww.Status), zap.Int64("duration", durationMS),
+		//				zap.String("remoteAddr", r.RemoteAddr))
+		//		}()
 
 		handler.ServeHTTP(rww, r)
 	})

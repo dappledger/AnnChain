@@ -18,7 +18,8 @@ import (
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 )
 
-const AccDataLength = 1000
+const AccDataLength = 256
+const AccCategoryLength = 10
 
 // TypeiUndefined when typei undefined, use 127
 const TypeiUndefined = 127

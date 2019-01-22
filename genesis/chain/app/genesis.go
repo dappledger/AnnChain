@@ -37,13 +37,11 @@ import (
 	"github.com/dappledger/AnnChain/genesis/chain/database"
 	"github.com/dappledger/AnnChain/genesis/chain/database/basesql"
 	"github.com/dappledger/AnnChain/genesis/chain/datamanager"
-	s "github.com/dappledger/AnnChain/genesis/chain/session"
 	"github.com/dappledger/AnnChain/genesis/chain/version"
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/core/state"
 	ethtypes "github.com/dappledger/AnnChain/genesis/eth/core/types"
 	"github.com/dappledger/AnnChain/genesis/eth/ethdb"
-	ethparams "github.com/dappledger/AnnChain/genesis/eth/params"
 	"github.com/dappledger/AnnChain/genesis/eth/rlp"
 	"github.com/dappledger/AnnChain/genesis/types"
 	"go.uber.org/zap"
@@ -55,17 +53,12 @@ const (
 
 	LDatabaseCache   = 128
 	LDatabaseHandles = 1024
-
-	TmpMapCatchTime = 120
-	TmpMapCheckTime = 10
 )
 
 type LastBlockInfo struct {
-	Height    uint64 // may be just for info-show
-	StateRoot []byte
-	AppHash   []byte
-
-	// PrevHash     []byte
+	Height       uint64
+	StateRoot    []byte
+	AppHash      []byte
 	TotalCoin    string
 	Feepool      string
 	InflationSeq uint64
@@ -78,21 +71,19 @@ type blockExeInfo struct {
 }
 
 type stateDup struct {
-	height     int
-	round      int
-	key        string
-	state      *state.StateDB
-	lock       *sync.Mutex
-	execFinish chan at.ExecuteResult
-	quit       chan struct{}
-	receipts   []*types.Receipt
+	height   int
+	round    int
+	key      string
+	state    *state.StateDB
+	stateMtx *sync.Mutex
+	receipts []*types.Receipt
 }
 
 type GenesisApp struct {
 	config cfg.Config
 
-	stateMtx sync.Mutex // protected concurrent changes of app.state
-	state    *state.StateDB
+	stateApp    *state.StateDB
+	stateAppMtx sync.Mutex // protected concurrent changes of app.state
 
 	currentHeader *types.AppHeader
 	tempHeader    *types.AppHeader // for executing tx
@@ -101,8 +92,7 @@ type GenesisApp struct {
 
 	chainDb ethdb.Database // Block chain database
 
-	stateDupsMtx sync.RWMutex // protect concurrent changes of app fields
-	stateDups    map[string]*stateDup
+	tmpStateDup *stateDup
 
 	AngineHooks at.Hooks
 	opM         OperationManager
@@ -114,42 +104,35 @@ type GenesisApp struct {
 	EvmCurrentHeader *ethtypes.Header
 
 	Init_Accounts []at.InitInfo
-
-	mapTxs map[string]struct{}
-
-	tmpMap *s.Session
 }
 
 var (
-	EmptyTrieRoot     = ethcmn.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
-	ContractQueryAddr ethcmn.Address
-	ReceiptsPrefix    = []byte("receipts-")
-	lastBlockKey      = []byte("lastblock")
-	big0              = big.NewInt(0)
-
-	errQuitExecute = fmt.Errorf("quit executing block")
+	EmptyTrieRoot  = ethcmn.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
+	ReceiptsPrefix = []byte("receipts-")
+	lastBlockKey   = []byte("lastblock")
 	logger         *zap.Logger
 )
 
 func init() {}
 
 func newStateDup(state *state.StateDB, block *at.Block, height, round int) *stateDup {
+
 	stateCopy := state.DeepCopy()
+
 	if stateCopy == nil {
 		cmn.PanicCrisis("state deep copy failed")
 	}
+
 	return &stateDup{
-		height:     height,
-		round:      round,
-		key:        stateKey(block, height, round),
-		state:      stateCopy,
-		lock:       &sync.Mutex{},
-		quit:       make(chan struct{}, 1),
-		execFinish: make(chan at.ExecuteResult, 1),
+		height:   height,
+		round:    round,
+		key:      stateKey(block),
+		state:    stateCopy,
+		stateMtx: &sync.Mutex{},
 	}
 }
 
-func stateKey(block *at.Block, height, round int) string {
+func stateKey(block *at.Block) string {
 	return ethcmn.Bytes2Hex(block.Hash())
 }
 
@@ -158,39 +141,45 @@ func OpenDatabase(datadir string, name string, cache int, handles int) (ethdb.Da
 }
 
 func NewGenesisApp(config cfg.Config, _logger *zap.Logger) *GenesisApp {
-	datadir := config.GetString("db_dir")
-	app := GenesisApp{
-		config:    config,
-		stateDups: make(map[string]*stateDup),
-	}
+
 	var err error
+
+	datadir := config.GetString("db_dir")
+
+	app := GenesisApp{
+		config: config,
+	}
+
 	if app.chainDb, err = OpenDatabase(datadir, "chaindata", LDatabaseCache, LDatabaseHandles); err != nil {
 		cmn.PanicCrisis(err)
 	}
 	lastBlock := app.LoadLastBlock()
+
 	trieRoot := EmptyTrieRoot
+
 	if len(lastBlock.StateRoot) > 0 {
 		trieRoot = ethcmn.BytesToHash(lastBlock.StateRoot)
 	}
-	if app.state, err = state.New(trieRoot, app.chainDb); err != nil {
+
+	if app.stateApp, err = state.New(trieRoot, app.chainDb); err != nil {
 		cmn.PanicCrisis(err)
 	}
-	app.tmpMap = s.NewSession(TmpMapCatchTime, TmpMapCheckTime)
 
 	app.blockExeInfo = &blockExeInfo{}
+
 	lastBlockTotalCoin, _ := big.NewInt(0).SetString(lastBlock.TotalCoin, 10)
+
 	lastBlockFeePool, _ := big.NewInt(0).SetString(lastBlock.Feepool, 10)
-	// fill currentheader
+
 	app.currentHeader = &types.AppHeader{
 		PrevHash:  ethcmn.BytesToLedgerHash(lastBlock.AppHash),
 		TotalCoin: lastBlockTotalCoin,
 		Feepool:   lastBlockFeePool,
-
-		// just fill nil
-		Height:  new(big.Int),
-		BaseFee: new(big.Int),
+		Height:    new(big.Int),
+		BaseFee:   new(big.Int),
 	}
-	app.tempHeader = app.currentHeader //first block ?
+
+	app.tempHeader = app.currentHeader
 
 	if app.Init_Accounts, err = dcfg.GetInitialIssueAccount(config); err != nil {
 		cmn.PanicCrisis(fmt.Errorf("fail to setup initial accounts, error: %s", err.Error()))
@@ -199,22 +188,24 @@ func NewGenesisApp(config cfg.Config, _logger *zap.Logger) *GenesisApp {
 	if config.GetBool("init_official") && trieRoot == EmptyTrieRoot {
 		//initial issue lumens to accounts get from initialFile
 		totalcoin := new(big.Int).SetUint64(0)
+
 		for idx := range app.Init_Accounts {
 			addr := ethcmn.HexToAddress(app.Init_Accounts[idx].Address)
-			app.state.CreateAccount(addr)
+			app.stateApp.CreateAccount(addr)
 			amount, succ := new(big.Int).SetString(app.Init_Accounts[idx].StartingBalance, 10)
 			if !succ {
 				cmn.PanicCrisis("fail to convert startingbalance")
 			}
-			app.state.AddBalance(addr, amount, "init account")
+			app.stateApp.AddBalance(addr, amount, "init account")
 			totalcoin.Add(totalcoin, amount)
 		}
 
 		app.currentHeader.TotalCoin = totalcoin
-		if apphash, err := app.state.Commit(StateRemoveEmptyObj); err != nil {
+
+		if apphash, err := app.stateApp.Commit(StateRemoveEmptyObj); err != nil {
 			cmn.PanicCrisis(fmt.Errorf("fail to setup initial funds, error: %s", err.Error()))
 		} else {
-			app.state, _ = app.state.New(apphash)
+			app.stateApp, _ = app.stateApp.New(apphash)
 		}
 
 	}
@@ -237,11 +228,12 @@ func NewGenesisApp(config cfg.Config, _logger *zap.Logger) *GenesisApp {
 		OnExecute:  at.NewHook(app.OnExecute),
 	}
 
-	// app.opM.Init(nil, &app)
 	app.opM.Init(app.dataM, &app)
+
 	app.txCache = cmn.NewCMap()
 
 	logger = _logger
+
 	return &app
 }
 
@@ -252,7 +244,6 @@ func (app *GenesisApp) Start() {
 func (app *GenesisApp) Stop() {
 	app.chainDb.Close()
 	app.dataM.Close()
-	app.tmpMap.Close()
 }
 
 func (app *GenesisApp) makeTempHeader(block *at.Block) {
@@ -276,11 +267,12 @@ func (app *GenesisApp) makeTempHeader(block *at.Block) {
 	}
 }
 
+func (app *GenesisApp) CompatibleWithAngine() {
+}
+
 func (app *GenesisApp) GetAngineHooks() at.Hooks {
 	return app.AngineHooks
 }
-
-func (app *GenesisApp) CompatibleWithAngine() {}
 
 func (app *GenesisApp) checkBeforeExecute(stateDup *stateDup, bs []byte) (*types.Transaction, error) {
 
@@ -298,49 +290,38 @@ func (app *GenesisApp) checkBeforeExecute(stateDup *stateDup, bs []byte) (*types
 		}
 	}
 
-	if _, ok := app.mapTxs[tx.Hash().Hex()]; ok {
-		return nil, fmt.Errorf("repetition tx")
-	} else {
-		app.mapTxs[tx.Hash().Hex()] = struct{}{}
+	if tx.Nonce() != stateDup.state.GetNonce(tx.GetFrom()) {
+		return nil, fmt.Errorf("bad nonce")
 	}
 
-	// auth checking
-	if result := app.ValidTx(stateDup.state, tx); result.IsErr() {
-		app.tmpMap.SetSession(tx.Hash(), result)
-		logger.Warn("tx "+tx.String()+"auth  check failed", zap.String("err", result.String()))
-		return nil, fmt.Errorf("auth check failed: %s", result)
-	}
 	return tx, nil
 }
 
-func (app *GenesisApp) ValidTx(state *state.StateDB, tx *types.Transaction) at.Result {
-
-	curNonce := state.GetNonce(tx.GetFrom())
-
-	if tx.Nonce() != curNonce {
-		return at.NewError(at.CodeType_BadNonce, fmt.Sprint("bad nonce ,we need ", curNonce))
-	}
-
+func (app *GenesisApp) CheckSignTx(tx *types.Transaction) at.Result {
 	if err := tx.CheckSig(); err != nil {
 		return at.NewError(at.CodeType_BaseInvalidSignature, err.Error())
 	}
-
 	return app.opM.PreCheck(tx)
 }
 
 // ExecuteTx execute tx one by one in the loop, without lock, so should always be called between Lock() and Unlock() on the *stateDup
 func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
+
 	var (
 		tx *types.Transaction
 	)
 
 	if tx, err = app.checkBeforeExecute(stateDup, bs); err != nil {
+		app.txCache.Delete(string(bs))
 		return
 	}
+
 	state := stateDup.state
+
 	// begin db tx
 	if err = app.dataM.OpTxBegin(); err != nil {
 		logger.Warn("Begin database tx failed:" + err.Error())
+		app.txCache.Delete(string(bs))
 		return
 	}
 
@@ -362,12 +343,14 @@ func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
 	if err != nil {
 		state.RevertToSnapshot(stateSnapshot)
 		app.dataM.OpTxRollback() // error is not important here
+		app.txCache.Delete(string(bs))
 		return
 	}
 
 	// commit db tx
 	if err = app.dataM.OpTxCommit(); err != nil {
 		logger.Error("Commit database tx failed:" + err.Error())
+		app.txCache.Delete(string(bs))
 		return
 	}
 
@@ -400,82 +383,57 @@ func (app *GenesisApp) ExecuteTx(stateDup *stateDup, bs []byte) (err error) {
 }
 
 func (app *GenesisApp) OnNewRound(height, round int, block *at.Block) (interface{}, error) {
-	app.stateDupsMtx.Lock()
-	for _, st := range app.stateDups {
-		if st.height < height {
-			st.lock.Lock()
-			st.quit <- struct{}{}
-			delete(app.stateDups, st.key)
-			st.lock.Unlock()
-		}
-	}
-	app.stateDupsMtx.Unlock()
 	return at.NewRoundResult{}, nil
 }
 
 func (app *GenesisApp) OnExecute(height, round int, block *at.Block) (interface{}, error) {
+
 	var (
 		res at.ExecuteResult
 		err error
-
-		sk = stateKey(block, height, round)
 	)
 
 	app.EvmCurrentHeader = app.makeCurrentHeader(block)
 
-	app.stateDupsMtx.Lock()
-	if st, ok := app.stateDups[sk]; ok {
-		res = <-st.execFinish
-	} else {
-		app.stateMtx.Lock()
-		stateDup := newStateDup(app.state, block, height, round)
-		app.stateMtx.Unlock()
+	app.stateAppMtx.Lock()
+	app.tmpStateDup = newStateDup(app.stateApp, block, height, round)
+	app.stateAppMtx.Unlock()
 
-		stateDup.lock.Lock()
-		app.makeTempHeader(block)
+	app.makeTempHeader(block)
 
-		app.mapTxs = make(map[string]struct{}, len(block.Data.Txs))
+	app.tmpStateDup.stateMtx.Lock()
 
-		for _, tx := range block.Data.Txs {
-			if err := app.ExecuteTx(stateDup, tx); err != nil {
-				res.InvalidTxs = append(res.InvalidTxs, at.ExecuteInvalidTx{Bytes: tx, Error: err})
-			} else {
-				res.ValidTxs = append(res.ValidTxs, tx)
-				app.tempHeader.TxCount++
-			}
+	for _, tx := range block.Data.Txs {
+		if err := app.ExecuteTx(app.tmpStateDup, tx); err != nil {
+			res.InvalidTxs = append(res.InvalidTxs, at.ExecuteInvalidTx{Bytes: tx, Error: err})
+		} else {
+			res.ValidTxs = append(res.ValidTxs, tx)
+			app.tempHeader.TxCount++
 		}
-		stateDup.lock.Unlock()
-
-		app.stateDups[sk] = stateDup
 	}
-	app.stateDupsMtx.Unlock()
+	app.tmpStateDup.stateMtx.Unlock()
 
 	return res, err
 }
 
-// OnCommit run in a sync way, we don't need to lock stateDupMtx, but stateMtx is still needed
+// OnCommit run in a sync way, we don't need to lock stateDupMtx, but stateAppMtx is still needed
 func (app *GenesisApp) OnCommit(height, round int, block *at.Block) (interface{}, error) {
+
 	var (
 		stateRoot ethcmn.Hash
 		err       error
-
-		sk = stateKey(block, height, round)
 	)
-	dupstate, ok := app.stateDups[sk]
-	if !ok {
-		app.SaveLastBlock(app.currentHeader.Hash(), app.currentHeader)
-		return at.CommitResult{AppHash: app.currentHeader.Hash()}, nil
-	}
+
 	// commit levelDB
-	dupstate.lock.Lock()
-	stateRoot, err = dupstate.state.Commit(StateRemoveEmptyObj)
-	dupstate.lock.Unlock()
+	app.tmpStateDup.stateMtx.Lock()
+	stateRoot, err = app.tmpStateDup.state.Commit(StateRemoveEmptyObj)
+	app.tmpStateDup.stateMtx.Unlock()
 	if err != nil {
 		app.SaveLastBlock(app.currentHeader.Hash(), app.currentHeader)
 		return nil, err
 	}
 
-	receiptHash := app.SaveReceipts(app.stateDups[sk])
+	receiptHash := app.SaveReceipts(app.tmpStateDup)
 
 	app.currentHeader = app.tempHeader
 	app.currentHeader.StateRoot = stateRoot
@@ -488,13 +446,11 @@ func (app *GenesisApp) OnCommit(height, round int, block *at.Block) (interface{}
 		logger.Error("Save db data failed:" + err.Error())
 	}
 
-	// reset and return
-	delete(app.stateDups, sk)
 	app.blockExeInfo = &blockExeInfo{}
 
-	app.stateMtx.Lock()
-	app.state, err = dupstate.state.New(stateRoot)
-	app.stateMtx.Unlock()
+	app.stateAppMtx.Lock()
+	app.stateApp, err = app.tmpStateDup.state.New(stateRoot)
+	app.stateAppMtx.Unlock()
 
 	app.currentHeader.PrevHash = ethcmn.BytesToLedgerHash(appHash)
 
@@ -655,24 +611,26 @@ func (app *GenesisApp) CheckTx(bs []byte) at.Result {
 
 	tx.SetCreateTime(uint64(time.Now().UnixNano()))
 
-	srcAccount := tx.GetFrom()
-	if !app.state.Exist(srcAccount) {
+	app.stateAppMtx.Lock()
+
+	if !app.stateApp.Exist(tx.GetFrom()) {
+		app.stateAppMtx.Unlock()
 		return at.NewError(at.CodeType_BaseUnknownAddress, at.CodeType_BaseUnknownAddress.String())
 	}
 	// Cost checking
-	if !app.checkEnoughFee(srcAccount, tx) {
+	if !app.checkEnoughFee(tx.GetFrom(), tx) {
+		app.stateAppMtx.Unlock()
 		return at.NewError(at.CodeType_BaseInsufficientFunds, at.CodeType_BaseInsufficientFunds.String())
 	}
+
+	app.stateAppMtx.Unlock()
 
 	// check base fee
 	if tx.BaseFee() == nil || tx.BaseFee().Cmp(app.currentHeader.BaseFee) < 0 {
 		return at.NewError(at.CodeType_BaseInsufficientFunds, at.CodeType_BaseInsufficientFunds.String())
 	}
 
-	//tx auth check
-	ret := app.ValidTx(app.state, tx)
-	if ret.IsErr() {
-		app.tmpMap.SetSession(tx.Hash(), ret)
+	if ret := app.CheckSignTx(tx); ret.IsErr() {
 		return ret
 	}
 
@@ -682,8 +640,8 @@ func (app *GenesisApp) CheckTx(bs []byte) at.Result {
 }
 
 func (app *GenesisApp) checkEnoughFee(from ethcmn.Address, tx *types.Transaction) bool {
-	rest := new(big.Int).Sub(app.state.GetBalance(from), tx.BaseFee())
-	if rest.Cmp(big0) < 0 {
+	rest := new(big.Int).Sub(app.stateApp.GetBalance(from), tx.BaseFee())
+	if rest.Cmp(big.NewInt(0)) < 0 {
 		return false
 	}
 	return true
@@ -700,24 +658,24 @@ func (app *GenesisApp) Info() (resInfo at.ResultInfo) {
 }
 
 // query account's nonce
-func (app *GenesisApp) QueryNonce(address string) at.Result {
-	account := ethcmn.HexToAddress(address)
-	app.stateMtx.Lock()
+func (app *GenesisApp) QueryNonce(address string) at.NewRPCResult {
 
-	if !app.state.Exist(account) {
-		app.stateMtx.Unlock()
-		return at.NewError(at.CodeType_BaseUnknownAddress, "unknown address")
-	}
-	nonce := app.state.GetNonce(account)
-	app.stateMtx.Unlock()
+	account := ethcmn.HexToAddress(address)
+
+	app.stateAppMtx.Lock()
+	nonce := app.stateApp.GetNonce(account)
+	app.stateAppMtx.Unlock()
 
 	b := make([]byte, 8)
+
 	binary.BigEndian.PutUint64(b, nonce)
-	return at.NewResultOK(b, "")
+
+	return at.NewRpcResultOK(b, "")
 }
 
 // query accout info
 func (app *GenesisApp) QueryAccount(address string) at.NewRPCResult {
+
 	if !ethcmn.IsHexAddress(address) {
 		return at.NewRpcError(at.CodeType_BaseInvalidInput, "Invalid address")
 	}
@@ -727,9 +685,12 @@ func (app *GenesisApp) QueryAccount(address string) at.NewRPCResult {
 
 	account := ethcmn.HexToAddress(address)
 
-	app.stateMtx.Lock()
-	accountSO := app.state.GetStateObject(account)
-	app.stateMtx.Unlock()
+	app.stateAppMtx.Lock()
+
+	accountSO := app.stateApp.GetStateObject(account)
+
+	app.stateAppMtx.Unlock()
+
 	if xlib.CheckItfcNil(accountSO) {
 		return at.NewRpcError(at.CodeType_BaseUnknownAddress, "Unknown address")
 	}
@@ -875,10 +836,10 @@ func (app *GenesisApp) QueryContractExist(address string) at.NewRPCResult {
 	}
 	contractAccount := ethcmn.HexToAddress(address)
 
-	app.stateMtx.Lock()
-	hashBytes := app.state.GetCodeHash(contractAccount)
-	codeBytes := app.state.GetByteCode(contractAccount)
-	app.stateMtx.Unlock()
+	app.stateAppMtx.Lock()
+	hashBytes := app.stateApp.GetCodeHash(contractAccount)
+	codeBytes := app.stateApp.GetByteCode(contractAccount)
+	app.stateAppMtx.Unlock()
 
 	if len(hashBytes) != ethcmn.HashLength || ethcmn.EmptyHash(hashBytes) {
 		c = &types.QueryContractExist{
@@ -903,9 +864,9 @@ func (app *GenesisApp) QueryReceipt(txhash string) at.NewRPCResult {
 	}
 	key := append(ReceiptsPrefix, hash.Bytes()...)
 
-	app.stateMtx.Lock()
+	app.stateAppMtx.Lock()
 	queryData, err := app.chainDb.Get(key)
-	app.stateMtx.Unlock()
+	app.stateAppMtx.Unlock()
 
 	if err != nil {
 		return at.NewRpcError(at.CodeType_InternalError, "fail to get receipt for tx:"+txhash)
@@ -993,8 +954,8 @@ func (app *GenesisApp) makeCurrentHeader(block *at.Block) *ethtypes.Header {
 		ParentHash: ethcmn.HexToHash("0x00"),
 		Difficulty: big.NewInt(0),
 		GasLimit:   ethcmn.MaxBig,
-		Number:     ethparams.MainNetSpuriousDragon,
-		Time:       big.NewInt(block.Header.Time.Unix()),
-		Height:     uint64(block.Height),
+		//		Number:     ethparams.MainNetSpuriousDragon,
+		Time:   big.NewInt(block.Header.Time.Unix()),
+		Number: big.NewInt(int64(block.Height)),
 	}
 }

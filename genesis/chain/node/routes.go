@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package node
 
 import (
@@ -78,7 +77,7 @@ func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 		"core_version":         rpc.NewRPCFunc(h.CoreVersion, argsWithChainID("")),
 		"info":                 rpc.NewRPCFunc(h.Info, argsWithChainID("")),
 
-		// Query
+		// Query RPC
 		"query_nonce":                       rpc.NewRPCFunc(h.QueryNonce, argsWithChainID("address")),
 		"query_account":                     rpc.NewRPCFunc(h.QueryAccount, argsWithChainID("address")),
 		"query_ledgers":                     rpc.NewRPCFunc(h.QueryLedgers, argsWithChainID("order,limit,cursor")),
@@ -97,12 +96,12 @@ func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 		"query_account_category_managedata": rpc.NewRPCFunc(h.QueryAccountCategoryManagedata, argsWithChainID("address,category")),
 		"query_ledger_transactions":         rpc.NewRPCFunc(h.QueryLedgerTransactions, argsWithChainID("height,order,limit,cursor")),
 
-		//Execute
-		"create_account":   rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
-		"payment":          rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
-		"manage_data":      rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
-		"create_contract":  rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
-		"execute_contract": rpc.NewRPCFunc(h.BroadcastTxCommit, argsWithChainID("tx")),
+		//Execute RPC
+		"create_account":   rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"payment":          rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"manage_data":      rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"create_contract":  rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
+		"execute_contract": rpc.NewRPCFunc(h.BroadcastTx, argsWithChainID("tx")),
 	}
 }
 
@@ -281,15 +280,29 @@ func (h *rpcHandler) Info() (interface{}, at.CodeType, error) {
 	return &res, at.CodeType_OK, nil
 }
 
-func (h *rpcHandler) BroadcastTxCommit(tx []byte) ([]byte, at.CodeType, error) {
+func (h *rpcHandler) BroadcastTx(tx []byte) ([]byte, at.CodeType, error) {
 
-	if ret := h.node.Application.CheckTx(tx); ret.IsErr() {
+	if ret := h.node.Application.CheckTx(tx); ret.Code != at.CodeType_OK {
 		return nil, ret.Code, errors.New(ret.Log)
 	}
+
+	if err := h.node.Angine.BroadcastTx(tx); err != nil {
+		return nil, at.CodeType_InvalidTx, err
+	}
+
+	return nil, at.CodeType_OK, nil
+}
+
+func (h *rpcHandler) BroadcastTxCommit(tx []byte) ([]byte, at.CodeType, error) {
+
+	if ret := h.node.Application.CheckTx(tx); ret.Code != at.CodeType_OK {
+		return nil, ret.Code, errors.New(ret.Log)
+	}
+
 	result, err := h.node.Angine.BroadcastTxCommit(tx)
 
 	if err != nil {
-		return nil, result.Code, err
+		return nil, at.CodeType_InvalidTx, err
 	}
 
 	if result.Code != at.CodeType_OK {
@@ -304,7 +317,7 @@ func (h *rpcHandler) QueryNonce(address string) (uint64, at.CodeType, error) {
 	if result.Code != at.CodeType_OK {
 		return 0, result.Code, errors.New(result.Log)
 	}
-	return binary.BigEndian.Uint64(result.Data), at.CodeType_OK, nil
+	return binary.BigEndian.Uint64(result.Data.([]byte)), at.CodeType_OK, nil
 }
 
 func (h *rpcHandler) QueryAccount(address string) (interface{}, at.CodeType, error) {

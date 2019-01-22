@@ -45,17 +45,6 @@ type LedgerHeaderData struct {
 	MaxTxSetSize     uint64            `json:"max_tx_set_size"`
 }
 
-type LedgerHeaderQueryData struct {
-	Height           *big.Int  `json:"height"`
-	Hash             string    `json:"hash"`
-	PrevHash         string    `json:"prev_hash"`
-	TransactionCount uint64    `json:"transaction_count"`
-	ClosedAt         time.Time `json:"closed_at"`
-	TotalCoins       *big.Int  `json:"total_coins"`
-	BaseFee          *big.Int  `json:"base_fee"`
-	MaxTxSetSize     uint64    `json:"max_tx_set_size"`
-}
-
 // TransactionData object for app
 type TransactionData struct {
 	TxID            uint64            `json:"txid"`
@@ -73,6 +62,23 @@ type TransactionData struct {
 	Memo            string            `json:"memo"`
 }
 
+// ActionData object for app
+type ActionData struct {
+	ActionID uint64
+	JSONData string
+}
+
+type LedgerHeaderQueryData struct {
+	Height           *big.Int  `json:"height"`
+	Hash             string    `json:"hash"`
+	PrevHash         string    `json:"prev_hash"`
+	TransactionCount uint64    `json:"transaction_count"`
+	ClosedAt         time.Time `json:"closed_at"`
+	TotalCoins       *big.Int  `json:"total_coins"`
+	BaseFee          *big.Int  `json:"base_fee"`
+	MaxTxSetSize     uint64    `json:"max_tx_set_size"`
+}
+
 type TransactionQueryData struct {
 	Hash     ethcmn.Hash    `json:"hash"`
 	Height   *big.Int       `json:"height"`
@@ -83,12 +89,6 @@ type TransactionQueryData struct {
 	BaseFee  *big.Int       `json:"basefee"`
 	OpType   string         `json:"optype"`
 	Memo     string         `json:"memo"`
-}
-
-// ActionData object for app
-type ActionData struct {
-	ActionID uint64
-	JSONData string
 }
 
 // ActionObject interface
@@ -106,9 +106,10 @@ func (a *ActionBase) GetActionBase() *ActionBase {
 	return a
 }
 
-// func (a *ActionBase) SetTxhash(txhash ethcmn.Hash) {
-// 	a.TxHash = txhash
-// }
+type ValueCategory struct {
+	Value    string
+	Category string
+}
 
 type (
 	// ActionBase object for app(Action-Base)
@@ -141,10 +142,8 @@ type (
 
 	ActionManageData struct {
 		ActionBase
-		Name     string         `json:"name"`
-		Value    string         `json:"value"`
-		Category string         `json:"category"`
-		Source   ethcmn.Address `json:"source_account"`
+		KeyPair map[string]ValueCategory `json:"keypair"`
+		Source  ethcmn.Address           `json:"source_account"`
 	}
 
 	ActionCreateContract struct {
@@ -175,7 +174,6 @@ type EffectData struct {
 // EffectObject interface
 type EffectObject interface {
 	GetEffectBase() *EffectBase
-	// SetTxhash(txhash ethcmn.Hash)
 }
 
 // GetEffectBase interface impl

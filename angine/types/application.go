@@ -30,7 +30,7 @@ type Application interface {
 	GetAngineHooks() Hooks
 	CompatibleWithAngine()
 	CheckTx([]byte) Result
-	QueryNonce(string) Result
+	QueryNonce(string) NewRPCResult
 	QueryAccount(string) NewRPCResult
 	QueryLedgers(string, uint64, uint64) NewRPCResult
 	QueryLedger(uint64) NewRPCResult

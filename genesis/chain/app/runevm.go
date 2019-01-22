@@ -28,7 +28,7 @@ import (
 
 var (
 	chainConfig = &ethparams.ChainConfig{}
-	evmConfig   = ethvm.Config{DisableGasMetering: false, EnableJit: false, ForceJit: false, Debug: false}
+	evmConfig   = ethvm.Config{}
 	ethSigner   = ethtypes.HomesteadSigner{}
 )
 
@@ -58,12 +58,10 @@ func RunEvm(curHeader *ethtypes.Header, state *ethstate.StateDB, tx *ethtypes.Tr
 		big.NewInt(0),
 		evmConfig)
 
-	//ethvm.StdErrFormat(mLog.StructLogs())
-
 	return
 }
 
-func QueryContractExcute(state *ethstate.StateDB, tx *ethtypes.Transaction) (res []byte, gas *big.Int, err error) {
+func QueryContractExcute(curHeader *ethtypes.Header, state *ethstate.StateDB, tx *ethtypes.Transaction) (res []byte, gas *big.Int, err error) {
 
 	mLog := ethvm.NewStructLogger(&ethvm.LogConfig{})
 
@@ -73,7 +71,7 @@ func QueryContractExcute(state *ethstate.StateDB, tx *ethtypes.Transaction) (res
 		ParentHash: ethcmn.HexToHash("0x00"),
 		Difficulty: big.NewInt(0),
 		GasLimit:   ethcmn.MaxBig,
-		Number:     ethparams.MainNetSpuriousDragon,
+		Number:     curHeader.Number,
 		Time:       big.NewInt(time.Now().Unix()),
 	}
 
@@ -86,8 +84,6 @@ func QueryContractExcute(state *ethstate.StateDB, tx *ethtypes.Transaction) (res
 	gpl := new(ethcore.GasPool).AddGas(ethcmn.MaxBig)
 
 	res, gas, _, err = ethcore.ApplyMessage(vmEnv, txMsg, gpl)
-
-	//ethvm.StdErrFormat(mLog.StructLogs())
 
 	return
 

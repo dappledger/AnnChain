@@ -26,10 +26,10 @@ type DoManageData struct {
 	tx  *types.Transaction
 }
 
-type ValueCategory struct {
-	value    string
-	category string
-}
+//type ValueCategory struct {
+//	value    string
+//	category string
+//}
 
 func (ct *DoManageData) PreCheck() at.Result {
 	return at.NewResultOK([]byte{}, "")
@@ -46,33 +46,40 @@ func (ct *DoManageData) Apply(stateDup *stateDup) error {
 
 	db := ct.app.dataM
 
-	if len(ct.op.DataName) == 0 {
-		return at.NewError(at.CodeType_InvalidTx, at.CodeType_InvalidTx.String())
-	}
-
-	toAdd := make(map[string]ValueCategory)
+	toAdd := make(map[string]types.ValueCategory)
 
 	for idx, r := range ct.op.DataName {
 		if err := db.QueryOneAccData(ct.op.Source, r); err != nil {
 			return at.NewError(at.CodeType_BaseInvalidInput, err.Error())
 		}
-		var vc ValueCategory
-		vc.value = ct.op.Data[idx]
-		vc.category = ct.op.Category[idx]
+		var vc types.ValueCategory
+		vc.Value = ct.op.Data[idx]
+		vc.Category = ct.op.Category[idx]
 		toAdd[r] = vc
 	}
 
 	for k, v := range toAdd {
-		_, err := db.AddAccData(ct.op.Source, k, v.value, v.category)
+		_, err := db.AddAccData(ct.op.Source, k, v.Value, v.Category)
 		if err != nil {
 			return at.NewError(at.CodeType_SaveFailed, at.CodeType_SaveFailed.String()+err.Error())
 		}
-		ct.SetEffects(ct.op.Source, k, v.value, v.category)
+		if len(k) > types.AccDataLength || len(k) == 0 {
+			return at.NewError(at.CodeType_InvalidTx, at.CodeType_InvalidTx.String())
+		}
+
+		if len(v.Value) > types.AccDataLength {
+			return at.NewError(at.CodeType_AccDataLengthError, at.CodeType_AccDataLengthError.String())
+		}
+
+		if len(v.Category) > types.AccCategoryLength {
+			return at.NewError(at.CodeType_AccCategoryLengthError, at.CodeType_AccCategoryLengthError.String())
+		}
 	}
+	ct.SetEffects(ct.op.Source, toAdd)
 	return nil
 }
 
-func (ct *DoManageData) SetEffects(source ethcmn.Address, dataName, data, category string) {
+func (ct *DoManageData) SetEffects(source ethcmn.Address, toadd map[string]types.ValueCategory) {
 	ct.op.SetEffects(&types.ActionManageData{
 		ActionBase: types.ActionBase{
 			Typei:       types.OP_S_MANAGEDATA.OpInt(),
@@ -82,10 +89,8 @@ func (ct *DoManageData) SetEffects(source ethcmn.Address, dataName, data, catego
 			BaseFee:     ct.tx.BaseFee(),
 			Memo:        ct.tx.Data.Memo,
 		},
-		Name:     dataName,
-		Value:    data,
-		Category: category,
-		Source:   source,
+		KeyPair: toadd,
+		Source:  source,
 	}, []types.EffectObject{})
 	return
 }

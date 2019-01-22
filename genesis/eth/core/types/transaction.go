@@ -292,7 +292,7 @@ func (tx *Transaction) Size() common.StorageSize {
 func (tx *Transaction) AsMessage(s Signer) (Message, error) {
 	msg := Message{
 		nonce:      tx.data.AccountNonce,
-		price:      new(big.Int).Set(tx.data.Price),
+		gasPrice:   new(big.Int).Set(tx.data.Price),
 		gasLimit:   new(big.Int).Set(tx.data.GasLimit),
 		to:         tx.data.Recipient,
 		from:       *tx.data.From,
@@ -499,12 +499,12 @@ func (t *TransactionsByPriceAndNonce) Pop() {
 //
 // NOTE: In a future PR this will be removed.
 type Message struct {
-	to                      *common.Address
-	from                    common.Address
-	nonce                   uint64
-	amount, price, gasLimit *big.Int
-	data                    []byte
-	checkNonce              bool
+	to                         *common.Address
+	from                       common.Address
+	nonce                      uint64
+	amount, gasPrice, gasLimit *big.Int
+	data                       []byte
+	checkNonce                 bool
 }
 
 func NewMessage(from common.Address, to *common.Address, nonce uint64, amount, gasLimit, price *big.Int, data []byte, checkNonce bool) Message {
@@ -513,7 +513,7 @@ func NewMessage(from common.Address, to *common.Address, nonce uint64, amount, g
 		to:         to,
 		nonce:      nonce,
 		amount:     amount,
-		price:      price,
+		gasPrice:   price,
 		gasLimit:   gasLimit,
 		data:       data,
 		checkNonce: checkNonce,
@@ -522,7 +522,7 @@ func NewMessage(from common.Address, to *common.Address, nonce uint64, amount, g
 
 func (m Message) From() common.Address { return m.from }
 func (m Message) To() *common.Address  { return m.to }
-func (m Message) GasPrice() *big.Int   { return m.price }
+func (m Message) GasPrice() *big.Int   { return m.gasPrice }
 func (m Message) Value() *big.Int      { return m.amount }
 func (m Message) Gas() *big.Int        { return m.gasLimit }
 func (m Message) Nonce() uint64        { return m.nonce }
