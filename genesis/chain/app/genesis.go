@@ -444,6 +444,7 @@ func (app *GenesisApp) OnCommit(height, round int, block *at.Block) (interface{}
 	err = app.SaveDBData()
 	if err != nil {
 		logger.Error("Save db data failed:" + err.Error())
+		panic(err)
 	}
 
 	app.blockExeInfo = &blockExeInfo{}
