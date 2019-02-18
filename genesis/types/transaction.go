@@ -17,6 +17,7 @@
 package types
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -232,20 +233,20 @@ func (tx *Transaction) GetDBTxData(exeRes error) *TransactionData {
 }
 
 type Receipt struct {
-	Nonce           uint64         `json:"nonce"`
-	TxHash          ethcmn.Hash    `json:"hash"`
-	TxReceiptStatus bool           `json:"tx_receipt_status"`
-	Message         string         `json:"msg"`
-	ContractAddress string         `json:"contract_address"`
-	GasUsed         *big.Int       `json:"gas_used"`
-	Height          uint64         `json:"height"`
-	Source          ethcmn.Address `json:"from"`
-	Payload         string         `json:"payload"`
-	GasPrice        string         `json:"gas_price"`
-	GasLimit        string         `json:"gas_limit"`
-	Logs            []string       `json:"logs"`
-	OpType          OP_NAME        `json:"optype"`
-	Res             string         `json:"result"`
+	Nonce           uint64             `json:"nonce"`
+	TxHash          ethcmn.Hash        `json:"hash"`
+	TxReceiptStatus bool               `json:"tx_receipt_status"`
+	Message         string             `json:"msg"`
+	ContractAddress string             `json:"contract_address"`
+	GasUsed         *big.Int           `json:"gas_used"`
+	Height          uint64             `json:"height"`
+	Source          ethcmn.Address     `json:"from"`
+	Payload         string             `json:"payload"`
+	GasPrice        string             `json:"gas_price"`
+	GasLimit        string             `json:"gas_limit"`
+	Logs            []*json.RawMessage `json:"logs"`
+	OpType          OP_NAME            `json:"optype"`
+	Res             string             `json:"result"`
 }
 
 func (recpt *Receipt) String() string {
