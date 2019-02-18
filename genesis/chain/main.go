@@ -169,7 +169,7 @@ func main() {
 
 func createNode(ctx *cli.Context) {
 	parseFlags(annConf, ctx)
-	dcfg.LoadDefaultConfig(annConf)
+	dcfg.LoadDefaultConfig(annConf, ctx.GlobalString(DataDirFlag))
 	initApp := app.NewGenesisApp(annConf, logger)
 	node.RunNode(logger, annConf, initApp)
 }

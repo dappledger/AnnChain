@@ -25,7 +25,7 @@ var (
 		cli.StringFlag{
 			Name:  "datadir",
 			Usage: "Data directory for the databases and keystore",
-			Value: os.Getenv("HOME") + "/.annchain",
+			Value: os.Getenv("HOME") + "/.ann_runtime",
 		},
 	}
 )

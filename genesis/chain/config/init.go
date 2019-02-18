@@ -25,12 +25,17 @@ import (
 )
 
 // LoadDefaultConfig set default config
-func LoadDefaultConfig(conf *config.MapConfig) {
+func LoadDefaultConfig(conf *config.MapConfig, confPath string) {
 
 	conf.SetDefault("db_type", "sqlite3")
 	conf.SetDefault("db_conn_str", "sqlite3") // some types of database will need this
 
-	root := ac.RuntimeDir("")
+	var root string
+	if confPath != "" {
+		root = confPath
+	} else {
+		root = ac.RuntimeDir("")
+	}
 	cfg := c.LoadConfigFile(path.Join(root, ac.MYCONFIGFILE))
 
 	conf.SetDefault("base_fee", cfg.GetInt("base_fee"))
