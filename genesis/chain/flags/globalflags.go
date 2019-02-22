@@ -15,8 +15,6 @@
 package flags
 
 import (
-	"os"
-
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -25,7 +23,7 @@ var (
 		cli.StringFlag{
 			Name:  "datadir",
 			Usage: "Data directory for the databases and keystore",
-			Value: os.Getenv("HOME") + "./.ann_runtime",
+			Value: "",
 		},
 	}
 )
