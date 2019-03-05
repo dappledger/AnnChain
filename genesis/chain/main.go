@@ -83,6 +83,12 @@ var (
 		Usage:    "init annchain",
 		Category: "Blockchain Commands",
 	}
+	RsetCommand = cli.Command{
+		Name:     "reset",
+		Action:   genreset,
+		Usage:    "Reset Privalidator,clean the data and shards",
+		Category: "Blockchain Commands",
+	}
 	SignCommand = cli.Command{
 		Name:     "sign",
 		Action:   signCA,
@@ -123,6 +129,7 @@ func main() {
 		NodeCommand,
 		VersionCommand,
 		SignCommand,
+		RsetCommand,
 	}
 
 	app.Before = func(ctx *cli.Context) error {
@@ -196,6 +203,11 @@ func prtversion(ctx *cli.Context) {
 func geninit(ctx *cli.Context) {
 	parseFlags(annConf, ctx)
 	start.Initfiles(annConf)
+}
+
+func genreset(ctx *cli.Context) {
+	parseFlags(annConf, ctx)
+	start.Reset_all(logger, annConf)
 }
 
 func parseFlags(conf config.Config, ctx *cli.Context) {
