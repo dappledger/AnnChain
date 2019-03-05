@@ -12,7 +12,7 @@ func makeStackFunc(pop, diff int) stackValidationFunc {
 			return err
 		}
 
-		if int64(stack.len()+diff) > params.StackLimit.Int64() {
+		if int64(stack.len()+diff-pop) > params.StackLimit.Int64() {
 			return fmt.Errorf("stack limit reached %d (%d)", stack.len(), params.StackLimit)
 		}
 		return nil
@@ -20,9 +20,9 @@ func makeStackFunc(pop, diff int) stackValidationFunc {
 }
 
 func makeDupStackFunc(n int) stackValidationFunc {
-	return makeStackFunc(n, 1)
+	return makeStackFunc(n, 1+1)
 }
 
 func makeSwapStackFunc(n int) stackValidationFunc {
-	return makeStackFunc(n, 0)
+	return makeStackFunc(n, n)
 }
