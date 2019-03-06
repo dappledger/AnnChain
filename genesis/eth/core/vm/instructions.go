@@ -24,6 +24,7 @@ import (
 
 	"github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/eth/common/math"
+
 	//	"github.com/dappledger/AnnChain/genesis/eth/core/types"
 	"errors"
 
@@ -286,7 +287,7 @@ func opXor(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *
 }
 func opByte(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	th, val := stack.pop(), stack.peek()
-	if th.Cmp(big.NewInt(32)) < 0 {
+	if th.Cmp(common.Big32) < 0 {
 		b := math.Byte(val, 32, int(th.Int64()))
 		val.SetUint64(uint64(b))
 	} else {
@@ -385,7 +386,8 @@ func opSha3(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory 
 	data := memory.Get(offset.Int64(), size.Int64())
 
 	if interpreter.hasher == nil {
-		interpreter.hasher = sha3.NewKeccak256().(keccakState)
+
+		interpreter.hasher = sha3.NewLegacyKeccak256().(keccakState)
 	} else {
 		interpreter.hasher.Reset()
 	}
@@ -410,8 +412,7 @@ func opAddress(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memo
 
 func opBalance(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	slot := stack.peek()
-	addr := common.BigToAddress(slot)
-	slot.Set(interpreter.evm.StateDB.GetBalance(addr))
+	slot.Set(interpreter.evm.StateDB.GetBalance(common.BigToAddress(slot)))
 	return nil, nil
 }
 
@@ -430,25 +431,25 @@ func opCallValue(pc *uint64, interpreter *EVMInterpreter, contract *Contract, me
 	return nil, nil
 }
 
-func opCalldataLoad(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
+func opCallDataLoad(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	stack.push(interpreter.intPool.get().SetBytes(getDataBig(contract.Input, stack.pop(), big32)))
 	return nil, nil
 }
 
-func opCalldataSize(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
+func opCallDataSize(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	stack.push(interpreter.intPool.get().SetInt64(int64(len(contract.Input))))
 	return nil, nil
 }
 
-func opCalldataCopy(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
+func opCallDataCopy(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	var (
-		mOff = stack.pop()
-		cOff = stack.pop()
-		l    = stack.pop()
+		memOffset  = stack.pop()
+		dataOffset = stack.pop()
+		length     = stack.pop()
 	)
-	memory.Set(mOff.Uint64(), l.Uint64(), getDataBig(contract.Input, cOff, l))
+	memory.Set(memOffset.Uint64(), length.Uint64(), getDataBig(contract.Input, dataOffset, length))
 
-	interpreter.intPool.put(mOff, mOff, l)
+	interpreter.intPool.put(memOffset, dataOffset, length)
 	return nil, nil
 }
 func opReturnDataSize(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
@@ -489,29 +490,28 @@ func opCodeSize(pc *uint64, interpreter *EVMInterpreter, contract *Contract, mem
 
 func opCodeCopy(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	var (
-		mOff = stack.pop()
-		cOff = stack.pop()
-		l    = stack.pop()
+		memOffset  = stack.pop()
+		codeOffset = stack.pop()
+		length     = stack.pop()
 	)
-	codeCopy := getDataBig(contract.Code, cOff, l)
+	codeCopy := getDataBig(contract.Code, codeOffset, length)
+	memory.Set(memOffset.Uint64(), length.Uint64(), codeCopy)
 
-	memory.Set(mOff.Uint64(), l.Uint64(), codeCopy)
-	interpreter.intPool.put(mOff, cOff, l)
+	interpreter.intPool.put(memOffset, codeOffset, length)
 	return nil, nil
 }
 
 func opExtCodeCopy(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	var (
-		addr = common.BigToAddress(stack.pop())
-		mOff = stack.pop()
-		cOff = stack.pop()
-		l    = stack.pop()
+		addr       = common.BigToAddress(stack.pop())
+		memOffset  = stack.pop()
+		codeOffset = stack.pop()
+		length     = stack.pop()
 	)
-	codeCopy := getData(interpreter.evm.StateDB.GetCode(addr), cOff, l)
+	codeCopy := getDataBig(interpreter.evm.StateDB.GetCode(addr), codeOffset, length)
+	memory.Set(memOffset.Uint64(), length.Uint64(), codeCopy)
 
-	memory.Set(mOff.Uint64(), l.Uint64(), codeCopy)
-
-	interpreter.intPool.put(mOff, cOff, l)
+	interpreter.intPool.put(memOffset, codeOffset, length)
 	return nil, nil
 }
 
@@ -920,7 +920,7 @@ func makeLog(size int) executionFunc {
 			// core/state doesn't know the current block number.
 			BlockNumber: interpreter.evm.BlockNumber.Uint64(),
 		})
-
+		interpreter.intPool.put(mStart, mSize)
 		return nil, nil
 	}
 }
@@ -930,14 +930,14 @@ func makePush(size uint64, pushByteSize *big.Int) executionFunc {
 	return func(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 		codeLen := len(contract.Code)
 
-		startMin := codeLen
-		if int(*pc+1) < startMin {
-			startMin = int(*pc + 1)
+		startMin := int64(codeLen)
+		if int64(*pc+1) < startMin {
+			startMin = int64(*pc + 1)
 		}
 
-		endMin := codeLen
-		if startMin+int(pushByteSize.Int64()) < endMin {
-			endMin = startMin + int(pushByteSize.Int64())
+		endMin := int64(codeLen)
+		if startMin+pushByteSize.Int64() < endMin {
+			endMin = startMin + pushByteSize.Int64()
 		}
 
 		integer := interpreter.intPool.get()
@@ -964,7 +964,7 @@ func makeDup(size int64) executionFunc {
 // make swap instruction function
 func makeSwap(size int64) executionFunc {
 	// switch n + 1 otherwise n would be swapped with n
-	size += 1
+	size++
 	return func(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 		stack.swap(int(size))
 		return nil, nil

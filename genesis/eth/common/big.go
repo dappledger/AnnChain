@@ -87,10 +87,7 @@ func U256(x *big.Int) *big.Int {
 	//if x.Cmp(Big0) < 0 {
 	//		return new(big.Int).Add(tt256, x)
 	//	}
-
-	x.And(x, tt256m1)
-
-	return x
+	return x.And(x, tt256m1)
 }
 
 func S256(x *big.Int) *big.Int {

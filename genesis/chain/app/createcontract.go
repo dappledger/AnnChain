@@ -42,11 +42,8 @@ func (ca *DoCreateContract) CheckValid(stateDup *stateDup) error {
 	}
 
 	r, ok := new(big.Int).SetString(ca.op.GasLimit, 10)
-	if !ok {
-		panic("invalid hex in source file: " + ca.op.GasLimit)
-	}
 
-	if r.Cmp(types.MAX_GASLIMIT) > 0 {
+	if r.Cmp(types.MAX_GASLIMIT) > 0 || !ok {
 		return at.NewError(at.CodeType_BadLimit, at.CodeType_BadLimit.String())
 	}
 
