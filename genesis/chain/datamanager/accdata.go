@@ -16,7 +16,6 @@ package datamanager
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/dappledger/AnnChain/genesis/chain/database"
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
@@ -144,7 +143,7 @@ func (m *DataManager) QueryAccountManagedata(accid ethcmn.Address, category stri
 	}
 
 	datas = make(map[string]types.ManageDataCategory, len(result))
-	fmt.Println(result)
+
 	for _, r := range result {
 		managedatacategory.Category = r.Category
 		managedatacategory.Value = r.DataValue

@@ -35,6 +35,8 @@ func New384() hash.Hash { return &state{rate: 104, outputLen: 48, dsbyte: 0x06} 
 // and 256 bits against collision attacks.
 func New512() hash.Hash { return &state{rate: 72, outputLen: 64, dsbyte: 0x06} }
 
+func NewLegacyKeccak256() hash.Hash { return &state{rate: 136, outputLen: 32, dsbyte: 0x01} }
+
 // Sum224 returns the SHA3-224 digest of the data.
 func Sum224(data []byte) (digest [28]byte) {
 	h := New224()

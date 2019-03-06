@@ -200,7 +200,7 @@ func (m *DataManager) QueryHeightTxs(height string, cursor, limit uint64, order 
 
 	tmpheight, err := strconv.ParseUint(height, 10, 64)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	where = append(where, database.Where{Name: "height", Value: tmpheight})
 
