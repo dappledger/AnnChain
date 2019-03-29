@@ -28,6 +28,7 @@ type Signature interface {
 	IsZero() bool
 	String() string
 	Equals(Signature) bool
+	KeyString() string
 }
 
 // Types of Signature implementations
@@ -69,6 +70,10 @@ func (sig SignatureEd25519) Equals(other Signature) bool {
 	}
 }
 
+func (sig SignatureEd25519) KeyString() string {
+	return fmt.Sprintf("%X", sig[:])
+}
+
 //-------------------------------------
 
 // Implements Signature
@@ -88,4 +93,8 @@ func (sig SignatureSecp256k1) Equals(other Signature) bool {
 	} else {
 		return false
 	}
+}
+
+func (sig SignatureSecp256k1) KeyString() string {
+	return fmt.Sprintf("%X", sig[:])
 }
