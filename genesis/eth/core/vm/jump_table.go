@@ -299,19 +299,19 @@ func NewJumpTable() [256]operation {
 			valid:         true,
 		},
 		CALLDATALOAD: {
-			execute:       opCalldataLoad,
+			execute:       opCallDataLoad,
 			gasCost:       constGasFunc(GasFastestStep),
 			validateStack: makeStackFunc(1, 1),
 			valid:         true,
 		},
 		CALLDATASIZE: {
-			execute:       opCalldataSize,
+			execute:       opCallDataSize,
 			gasCost:       constGasFunc(GasQuickStep),
 			validateStack: makeStackFunc(0, 1),
 			valid:         true,
 		},
 		CALLDATACOPY: {
-			execute:       opCalldataCopy,
+			execute:       opCallDataCopy,
 			gasCost:       gasCalldataCopy,
 			validateStack: makeStackFunc(3, 0),
 			memorySize:    memoryCalldataCopy,
