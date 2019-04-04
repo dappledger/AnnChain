@@ -80,8 +80,10 @@ func (m *OperationManager) NewOperator(tx *types.Transaction) (DoOperatorItfc, e
 		if err := json.Unmarshal(tx.GetOperation(), opCreateAccount); err != nil {
 			return nil, err
 		}
-
-		startBalance, _ := big.NewInt(0).SetString(opCreateAccount.StartingBalance, 10)
+		startBalance, err := big.NewInt(0).SetString(opCreateAccount.StartingBalance, 10)
+		if err != nil {
+			return nil, err
+		}
 
 		createAccountOp := &types.CreateAccountOp{
 			TargetAddress: tx.GetTo(),
@@ -106,7 +108,10 @@ func (m *OperationManager) NewOperator(tx *types.Transaction) (DoOperatorItfc, e
 			return nil, err
 		}
 
-		amount, _ := big.NewInt(0).SetString(opPayment.Amount, 10)
+		amount, err := big.NewInt(0).SetString(opPayment.Amount, 10)
+		if err != nil {
+			return nil, err
+		}
 
 		paymentOp := &types.PaymentOp{
 			Destination: tx.GetTo(),

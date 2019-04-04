@@ -43,7 +43,7 @@ func (ca *DoExcuteContract) CheckValid(stateDup *stateDup) error {
 
 	r, ok := new(big.Int).SetString(ca.op.GasLimit, 10)
 
-	if r.Cmp(types.MAX_GASLIMIT) > 0 || !ok {
+	if !ok || r.Cmp(types.MAX_GASLIMIT) > 0 {
 		return at.NewError(at.CodeType_BadLimit, at.CodeType_BadLimit.String())
 	}
 
