@@ -16,6 +16,7 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -80,8 +81,10 @@ func (m *OperationManager) NewOperator(tx *types.Transaction) (DoOperatorItfc, e
 		if err := json.Unmarshal(tx.GetOperation(), opCreateAccount); err != nil {
 			return nil, err
 		}
-
-		startBalance, _ := big.NewInt(0).SetString(opCreateAccount.StartingBalance, 10)
+		startBalance, ok := big.NewInt(0).SetString(opCreateAccount.StartingBalance, 10)
+		if !ok {
+			return nil, errors.New("params error")
+		}
 
 		createAccountOp := &types.CreateAccountOp{
 			TargetAddress: tx.GetTo(),
@@ -106,7 +109,10 @@ func (m *OperationManager) NewOperator(tx *types.Transaction) (DoOperatorItfc, e
 			return nil, err
 		}
 
-		amount, _ := big.NewInt(0).SetString(opPayment.Amount, 10)
+		amount, ok := big.NewInt(0).SetString(opPayment.Amount, 10)
+		if !ok {
+			return nil, errors.New("params error")
+		}
 
 		paymentOp := &types.PaymentOp{
 			Destination: tx.GetTo(),

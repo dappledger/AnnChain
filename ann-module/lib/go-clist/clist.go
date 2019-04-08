@@ -1,17 +1,3 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package clist
 
 /*
@@ -25,36 +11,54 @@ to ensure garbage collection of removed elements.
 
 import (
 	"sync"
-	"sync/atomic"
-	"unsafe"
 )
 
-// CElement is an element of a linked-list
-// Traversal from a CElement are goroutine-safe.
+/*
+CElement is an element of a linked-list
+Traversal from a CElement is goroutine-safe.
+We can't avoid using WaitGroups or for-loops given the documentation
+spec without re-implementing the primitives that already exist in
+golang/sync. Notice that WaitGroup allows many go-routines to be
+simultaneously released, which is what we want. Mutex doesn't do
+this. RWMutex does this, but it's clumsy to use in the way that a
+WaitGroup would be used -- and we'd end up having two RWMutex's for
+prev/next each, which is doubly confusing.
+sync.Cond would be sort-of useful, but we don't need a write-lock in
+the for-loop. Use sync.Cond when you need serial access to the
+"condition". In our case our condition is if `next != nil || removed`,
+and there's no reason to serialize that condition for goroutines
+waiting on NextWait() (since it's just a read operation).
+*/
 type CElement struct {
-	prev    unsafe.Pointer
-	prevWg  *sync.WaitGroup
-	next    unsafe.Pointer
-	nextWg  *sync.WaitGroup
-	removed uint32
-	Value   interface{}
+	mtx        sync.RWMutex
+	prev       *CElement
+	prevWg     *sync.WaitGroup
+	prevWaitCh chan struct{}
+	next       *CElement
+	nextWg     *sync.WaitGroup
+	nextWaitCh chan struct{}
+	removed    bool
+
+	Value interface{} // immutable
 }
 
 // Blocking implementation of Next().
 // May return nil iff CElement was tail and got removed.
 func (e *CElement) NextWait() *CElement {
 	for {
-		e.nextWg.Wait()
-		next := e.Next()
-		if next == nil {
-			if e.Removed() {
-				return nil
-			} else {
-				continue
-			}
-		} else {
+		e.mtx.RLock()
+		next := e.next
+		nextWg := e.nextWg
+		removed := e.removed
+		e.mtx.RUnlock()
+
+		if next != nil || removed {
 			return next
 		}
+
+		nextWg.Wait()
+		// e.next doesn't necessarily exist here.
+		// That's why we need to continue a for-loop.
 	}
 }
 
@@ -62,82 +66,137 @@ func (e *CElement) NextWait() *CElement {
 // May return nil iff CElement was head and got removed.
 func (e *CElement) PrevWait() *CElement {
 	for {
-		e.prevWg.Wait()
-		prev := e.Prev()
-		if prev == nil {
-			if e.Removed() {
-				return nil
-			} else {
-				continue
-			}
-		} else {
+		e.mtx.RLock()
+		prev := e.prev
+		prevWg := e.prevWg
+		removed := e.removed
+		e.mtx.RUnlock()
+
+		if prev != nil || removed {
 			return prev
 		}
+
+		prevWg.Wait()
 	}
+}
+
+// PrevWaitChan can be used to wait until Prev becomes not nil. Once it does,
+// channel will be closed.
+func (e *CElement) PrevWaitChan() <-chan struct{} {
+	e.mtx.RLock()
+	defer e.mtx.RUnlock()
+
+	return e.prevWaitCh
+}
+
+// NextWaitChan can be used to wait until Next becomes not nil. Once it does,
+// channel will be closed.
+func (e *CElement) NextWaitChan() <-chan struct{} {
+	e.mtx.RLock()
+	defer e.mtx.RUnlock()
+
+	return e.nextWaitCh
 }
 
 // Nonblocking, may return nil if at the end.
 func (e *CElement) Next() *CElement {
-	return (*CElement)(atomic.LoadPointer(&e.next))
+	e.mtx.RLock()
+	defer e.mtx.RUnlock()
+
+	return e.next
 }
 
 // Nonblocking, may return nil if at the end.
 func (e *CElement) Prev() *CElement {
-	return (*CElement)(atomic.LoadPointer(&e.prev))
+	e.mtx.RLock()
+	defer e.mtx.RUnlock()
+
+	return e.prev
 }
 
 func (e *CElement) Removed() bool {
-	return atomic.LoadUint32(&(e.removed)) > 0
+	e.mtx.RLock()
+	defer e.mtx.RUnlock()
+
+	return e.removed
 }
 
 func (e *CElement) DetachNext() {
 	if !e.Removed() {
 		panic("DetachNext() must be called after Remove(e)")
 	}
-	atomic.StorePointer(&e.next, nil)
+	e.mtx.Lock()
+	defer e.mtx.Unlock()
+
+	e.next = nil
 }
 
 func (e *CElement) DetachPrev() {
 	if !e.Removed() {
 		panic("DetachPrev() must be called after Remove(e)")
 	}
-	atomic.StorePointer(&e.prev, nil)
+	e.mtx.Lock()
+	defer e.mtx.Unlock()
+
+	e.prev = nil
 }
 
-func (e *CElement) setNextAtomic(next *CElement) {
-	for {
-		oldNext := atomic.LoadPointer(&e.next)
-		if !atomic.CompareAndSwapPointer(&(e.next), oldNext, unsafe.Pointer(next)) {
-			continue
-		}
-		if next == nil && oldNext != nil { // We for-loop in NextWait() so race is ok
-			e.nextWg.Add(1)
-		}
-		if next != nil && oldNext == nil {
-			e.nextWg.Done()
-		}
-		return
+// NOTE: This function needs to be safe for
+// concurrent goroutines waiting on nextWg.
+func (e *CElement) SetNext(newNext *CElement) {
+	e.mtx.Lock()
+	defer e.mtx.Unlock()
+
+	oldNext := e.next
+	e.next = newNext
+	if oldNext != nil && newNext == nil {
+		// See https://golang.org/pkg/sync/:
+		//
+		// If a WaitGroup is reused to wait for several independent sets of
+		// events, new Add calls must happen after all previous Wait calls have
+		// returned.
+		e.nextWg = waitGroup1() // WaitGroups are difficult to re-use.
+		e.nextWaitCh = make(chan struct{})
+	}
+	if oldNext == nil && newNext != nil {
+		e.nextWg.Done()
+		close(e.nextWaitCh)
 	}
 }
 
-func (e *CElement) setPrevAtomic(prev *CElement) {
-	for {
-		oldPrev := atomic.LoadPointer(&e.prev)
-		if !atomic.CompareAndSwapPointer(&(e.prev), oldPrev, unsafe.Pointer(prev)) {
-			continue
-		}
-		if prev == nil && oldPrev != nil { // We for-loop in PrevWait() so race is ok
-			e.prevWg.Add(1)
-		}
-		if prev != nil && oldPrev == nil {
-			e.prevWg.Done()
-		}
-		return
+// NOTE: This function needs to be safe for
+// concurrent goroutines waiting on prevWg
+func (e *CElement) SetPrev(newPrev *CElement) {
+	e.mtx.Lock()
+	defer e.mtx.Unlock()
+
+	oldPrev := e.prev
+	e.prev = newPrev
+	if oldPrev != nil && newPrev == nil {
+		e.prevWg = waitGroup1() // WaitGroups are difficult to re-use.
+		e.prevWaitCh = make(chan struct{})
+	}
+	if oldPrev == nil && newPrev != nil {
+		e.prevWg.Done()
+		close(e.prevWaitCh)
 	}
 }
 
-func (e *CElement) setRemovedAtomic() {
-	atomic.StoreUint32(&(e.removed), 1)
+func (e *CElement) SetRemoved() {
+	e.mtx.Lock()
+	defer e.mtx.Unlock()
+
+	e.removed = true
+
+	// This wakes up anyone waiting in either direction.
+	if e.prev == nil {
+		e.prevWg.Done()
+		close(e.prevWaitCh)
+	}
+	if e.next == nil {
+		e.nextWg.Done()
+		close(e.nextWaitCh)
+	}
 }
 
 //--------------------------------------------------------------------------------
@@ -146,17 +205,20 @@ func (e *CElement) setRemovedAtomic() {
 // The zero value for CList is an empty list ready to use.
 // Operations are goroutine-safe.
 type CList struct {
-	mtx  sync.Mutex
-	wg   *sync.WaitGroup
-	head *CElement // first element
-	tail *CElement // last element
-	len  int       // list length
+	mtx    sync.RWMutex
+	wg     *sync.WaitGroup
+	waitCh chan struct{}
+	head   *CElement // first element
+	tail   *CElement // last element
+	len    int       // list length
 }
 
 func (l *CList) Init() *CList {
 	l.mtx.Lock()
 	defer l.mtx.Unlock()
+
 	l.wg = waitGroup1()
+	l.waitCh = make(chan struct{})
 	l.head = nil
 	l.tail = nil
 	l.len = 0
@@ -166,49 +228,65 @@ func (l *CList) Init() *CList {
 func New() *CList { return new(CList).Init() }
 
 func (l *CList) Len() int {
-	l.mtx.Lock()
-	defer l.mtx.Unlock()
+	l.mtx.RLock()
+	defer l.mtx.RUnlock()
+
 	return l.len
 }
 
 func (l *CList) Front() *CElement {
-	l.mtx.Lock()
-	defer l.mtx.Unlock()
+	l.mtx.RLock()
+	defer l.mtx.RUnlock()
+
 	return l.head
 }
 
 func (l *CList) FrontWait() *CElement {
+	// Loop until the head is non-nil else wait and try again
 	for {
-		l.mtx.Lock()
+		l.mtx.RLock()
 		head := l.head
 		wg := l.wg
-		l.mtx.Unlock()
-		if head == nil {
-			wg.Wait()
-		} else {
+		l.mtx.RUnlock()
+
+		if head != nil {
 			return head
 		}
+		wg.Wait()
+		// NOTE: If you think l.head exists here, think harder.
 	}
 }
 
 func (l *CList) Back() *CElement {
-	l.mtx.Lock()
-	defer l.mtx.Unlock()
+	l.mtx.RLock()
+	defer l.mtx.RUnlock()
+
 	return l.tail
 }
 
 func (l *CList) BackWait() *CElement {
 	for {
-		l.mtx.Lock()
+		l.mtx.RLock()
 		tail := l.tail
 		wg := l.wg
-		l.mtx.Unlock()
-		if tail == nil {
-			wg.Wait()
-		} else {
+		l.mtx.RUnlock()
+
+		if tail != nil {
 			return tail
 		}
+		wg.Wait()
+		// l.tail doesn't necessarily exist here.
+		// That's why we need to continue a for-loop.
 	}
+}
+
+// WaitChan can be used to wait until Front or Back becomes not nil. Once it
+// does, channel will be closed.
+func (l *CList) WaitChan() <-chan struct{} {
+	l.mtx.Lock()
+	defer l.mtx.Unlock()
+
+	return l.waitCh
 }
 
 func (l *CList) PushBack(v interface{}) *CElement {
@@ -217,27 +295,31 @@ func (l *CList) PushBack(v interface{}) *CElement {
 
 	// Construct a new element
 	e := &CElement{
-		prev:   nil,
-		prevWg: waitGroup1(),
-		next:   nil,
-		nextWg: waitGroup1(),
-		Value:  v,
+		prev:       nil,
+		prevWg:     waitGroup1(),
+		prevWaitCh: make(chan struct{}),
+		next:       nil,
+		nextWg:     waitGroup1(),
+		nextWaitCh: make(chan struct{}),
+		removed:    false,
+		Value:      v,
 	}
 
 	// Release waiters on FrontWait/BackWait maybe
 	if l.len == 0 {
 		l.wg.Done()
+		close(l.waitCh)
 	}
-	l.len += 1
+	l.len++
 
 	// Modify the tail
 	if l.tail == nil {
 		l.head = e
 		l.tail = e
 	} else {
-		l.tail.setNextAtomic(e)
-		e.setPrevAtomic(l.tail)
-		l.tail = e
+		e.SetPrev(l.tail) // We must init e first.
+		l.tail.SetNext(e) // This will make e accessible.
+		l.tail = e        // Update the list.
 	}
 
 	return e
@@ -264,69 +346,29 @@ func (l *CList) Remove(e *CElement) interface{} {
 
 	// If we're removing the only item, make CList FrontWait/BackWait wait.
 	if l.len == 1 {
-		l.wg.Add(1)
+		l.wg = waitGroup1() // WaitGroups are difficult to re-use.
+		l.waitCh = make(chan struct{})
 	}
-	l.len -= 1
+
+	// Update l.len
+	l.len--
 
 	// Connect next/prev and set head/tail
 	if prev == nil {
 		l.head = next
 	} else {
-		prev.setNextAtomic(next)
+		prev.SetNext(next)
 	}
 	if next == nil {
 		l.tail = prev
 	} else {
-		next.setPrevAtomic(prev)
+		next.SetPrev(prev)
 	}
 
 	// Set .Done() on e, otherwise waiters will wait forever.
-	e.setRemovedAtomic()
-	if prev == nil {
-		e.prevWg.Done()
-	}
-	if next == nil {
-		e.nextWg.Done()
-	}
+	e.SetRemoved()
 
 	return e.Value
-}
-
-// TODO whatif one of l2's element is waiting
-// for efficient, don't want to check every element
-func (l *CList) AppendList(l2 *CList) {
-	l2.mtx.Lock()
-	defer l2.mtx.Unlock()
-	if l2.len == 0 {
-		return
-	}
-
-	l.mtx.Lock()
-	defer l.mtx.Unlock()
-
-	e := l2.head
-	if l.len == 0 {
-		l.wg.Done()
-	}
-	l.len += l2.len
-	if l.tail != nil {
-		l.tail.setNextAtomic(e)
-		e.setPrevAtomic(l.tail)
-	} else {
-		l.head = e
-	}
-	l.tail = l2.tail
-}
-
-func (l *CList) Clear() {
-	l.mtx.Lock()
-	defer l.mtx.Unlock()
-
-	l.wg.Wait() // warning
-	l.wg.Add(1)
-	l.head = nil
-	l.tail = nil
-	l.len = 0
 }
 
 func waitGroup1() (wg *sync.WaitGroup) {
