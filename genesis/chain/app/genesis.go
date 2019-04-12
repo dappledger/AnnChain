@@ -614,7 +614,7 @@ func (app *GenesisApp) CheckTx(bs []byte) at.Result {
 
 	app.stateAppMtx.Lock()
 
-	if !app.stateApp.Exist(tx.GetFrom()) {
+	if !app.stateApp.Exist(tx.GetFrom()) || !app.stateApp.Exist(tx.GetTo()) {
 		app.stateAppMtx.Unlock()
 		return at.NewError(at.CodeType_BaseUnknownAddress, at.CodeType_BaseUnknownAddress.String())
 	}
@@ -622,6 +622,11 @@ func (app *GenesisApp) CheckTx(bs []byte) at.Result {
 	if !app.checkEnoughFee(tx.GetFrom(), tx) {
 		app.stateAppMtx.Unlock()
 		return at.NewError(at.CodeType_BaseInsufficientFunds, at.CodeType_BaseInsufficientFunds.String())
+	}
+
+	if app.stateApp.GetNonce(tx.GetFrom()) > tx.Nonce() {
+		app.stateAppMtx.Unlock()
+		return at.NewError(at.CodeType_BadNonce, at.CodeType_BadNonce.String())
 	}
 
 	app.stateAppMtx.Unlock()
@@ -653,8 +658,8 @@ func (app *GenesisApp) Info() (resInfo at.ResultInfo) {
 	lb := app.LoadLastBlock()
 	resInfo.LastBlockAppHash = lb.AppHash
 	resInfo.LastBlockHeight = lb.Height
-	resInfo.Version = "alpha 0.1"
-	resInfo.Data = "default app with evm-1.5.9"
+	resInfo.Version = "0.6.1_beta"
+	resInfo.Data = "default app with evm-1.8"
 	return
 }
 
