@@ -23,7 +23,6 @@ import (
 	at "github.com/dappledger/AnnChain/angine/types"
 	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/types"
-	"go.uber.org/zap"
 )
 
 type OperationManager struct {
@@ -37,10 +36,13 @@ func (m *OperationManager) Init(db types.OperationDBItfc, app *GenesisApp) {
 }
 
 func (m *OperationManager) PreCheck(tx *types.Transaction) at.Result {
+
 	_, err := m.NewOperator(tx)
+
 	if err != nil {
 		return at.NewError(at.CodeType_BaseInvalidInput, err.Error())
 	}
+
 	return at.NewResultOK([]byte{}, "")
 }
 
@@ -52,12 +54,10 @@ func (m *OperationManager) ExecTx(stateDup *stateDup, tx *types.Transaction) err
 	}
 
 	if err = operator.CheckValid(stateDup); err != nil {
-		logger.Debug("[operation],checkvalid err", zap.String("type:", tx.GetOpName()), zap.String("err:", err.Error()))
 		return err
 	}
 
 	if err = operator.Apply(stateDup); err != nil {
-		logger.Debug("[operation],apply err", zap.String("type:", tx.GetOpName()), zap.String("err:", err.Error()))
 		return err
 	}
 
