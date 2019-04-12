@@ -43,7 +43,7 @@ func (ca *DoCreateAccount) CheckValid(stateDup *stateDup) error {
 	var isInitAddr bool = false
 
 	for _, initAddr := range ca.app.Init_Accounts {
-		addr := ethcmn.HexToAddress(initAddr.Address)
+		addr := ethcmn.HexToAddress(initAddr.Address) //string  to address
 		if addr.Hex() == ca.op.Source.Hex() {
 			isInitAddr = true
 			break

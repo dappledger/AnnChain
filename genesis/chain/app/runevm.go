@@ -46,7 +46,7 @@ func RunEvm(curHeader *ethtypes.Header, state *ethstate.StateDB, tx *ethtypes.Tr
 
 	evmConfig.Tracer = mLog
 
-	gp := new(ethcore.GasPool).AddGas(ethcmn.MaxBig)
+	gp := new(ethcore.GasPool).AddGas(ethcmn.MaxBig) //GasPool 是一个块中执行事务所需的gas消耗。
 
 	receipt, gas, err = ethcore.ApplyTransaction(
 		chainConfig,
