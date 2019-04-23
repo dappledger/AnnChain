@@ -614,7 +614,7 @@ func (app *GenesisApp) CheckTx(bs []byte) at.Result {
 
 	app.stateAppMtx.Lock()
 
-	if !app.stateApp.Exist(tx.GetFrom()) || !app.stateApp.Exist(tx.GetTo()) {
+	if !app.stateApp.Exist(tx.GetFrom()) {
 		app.stateAppMtx.Unlock()
 		return at.NewError(at.CodeType_BaseUnknownAddress, at.CodeType_BaseUnknownAddress.String())
 	}
