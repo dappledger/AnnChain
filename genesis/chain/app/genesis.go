@@ -624,6 +624,11 @@ func (app *GenesisApp) CheckTx(bs []byte) at.Result {
 		return at.NewError(at.CodeType_BaseInsufficientFunds, at.CodeType_BaseInsufficientFunds.String())
 	}
 
+	if app.stateApp.GetNonce(tx.GetFrom()) > tx.Nonce() {
+		app.stateAppMtx.Unlock()
+		return at.NewError(at.CodeType_BadNonce, at.CodeType_BadNonce.String())
+	}
+
 	app.stateAppMtx.Unlock()
 
 	// check base fee
@@ -653,8 +658,8 @@ func (app *GenesisApp) Info() (resInfo at.ResultInfo) {
 	lb := app.LoadLastBlock()
 	resInfo.LastBlockAppHash = lb.AppHash
 	resInfo.LastBlockHeight = lb.Height
-	resInfo.Version = "alpha 0.1"
-	resInfo.Data = "default app with evm-1.5.9"
+	resInfo.Version = "0.6.1_beta"
+	resInfo.Data = "default app with evm-1.8"
 	return
 }
 
