@@ -95,7 +95,8 @@ annChain.Genesis常见问题，可参见[常见问题](https://github.com/dapple
 
 微信群：添加群管理员微信号，拉您进入annchain官方技术交流群。
 
-群管理员微信二维码：![](https://github.com/dappledger/AnnChain/blob/master/doc/annChain.Genesis.png)
+群管理员微信二维码：
+![](https://github.com/dappledger/AnnChain/blob/master/doc/annChain.Genesis.png)
 
 
 
