@@ -1,0 +1,56 @@
+[
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "Id",
+				"type": "uint256"
+			},
+			{
+				"name": "Amount",
+				"type": "uint256"
+			}
+		],
+		"name": "createCheckInfos",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "Id",
+				"type": "uint256"
+			}
+		],
+		"name": "getPremiumInfos",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "Id",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "Amount",
+				"type": "uint256"
+			}
+		],
+		"name": "InputLog",
+		"type": "event"
+	}
+]

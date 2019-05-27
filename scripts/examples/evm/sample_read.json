@@ -1,0 +1,7 @@
+{
+  "contract" : "0xb001c1da1e0491a7abe8b0e1d55c4874df62dd28",
+  "function" : "getPremiumInfos",
+  "params":[
+    1
+  ]
+}

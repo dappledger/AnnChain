@@ -1,0 +1,8 @@
+{
+  "contract" : "0xe12025dd2f2373e30c2ecf920c992da40311cd48",
+  "privkey" : "9f24af64906c916fae5a07f33005149a89a22d5ca97bdfbfbbdddbba39c49796",
+  "function" : "createCheckInfos",
+  "params":[
+    1, 100
+  ]
+}
