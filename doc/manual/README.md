@@ -16,8 +16,8 @@
 |   内存   |   1GB    |                     4GB                      |
 |   核数   |   2核    |                     4核                      |
 |   带宽   |   1Mb    |                     5Mb                      |
+|   磁盘   |   100G   |                     500G                     |
 | 操作系统 |          | CentOS（7以上 64位）或者Ubuntu（16.04 64位） |
-|          |          |                                              |
 
 ### 1.2软件工具
 
@@ -60,52 +60,35 @@ Ubuntu:
 
 配置环境变量
 
-`echo "GOPATH=\~/go" >> ~/.bash_profile`
+`echo "export GOPATH=/root/goproject" >> ~/.bash_profile`
+
+`echo "export GOROOT=/usr/local/go">> ~/.bash_profile`
+
+`echo "export PATH=$GOROOT/bin:$PATH" >> ~/.bash_profile`
 
 变量生效
 
 `source ~/.bash_profile`
-
-### 1.6安装Docker及Docker-compose
-
-Windows:
-
-[download](https://docs.docker.com/docker-for-windows/install/)
-
-Ubuntu:
-
-```
-#wget -qO- https://get.docker.com/ | sh
-#sudo service docker start
-#sudo curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-```
-
-Mac:
-
-`brew cask install docker`
-
-`brew install docker-compose`
 
 ## 第二章 工程环境配置及编译
 
 ### 2.1克隆工程
 
 ```
-git clone https://github.com/dappledger/AnnChain.git ${GOPATH}/src/github.com/dappledger/AnnChain
-cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis
+git clone https://github.com/dappledger/AnnChain.git 
 ```
 
 ### 2.2编译工程
 
-编译成功，在./genesis/build目录中看到生成的二进制命令文件。
+编译成功，在./AnnChain/bin目录中看到生成的二进制命令文件。
 
-`make`
+`./build.sh`
 
 ### 2.3编译环境变量
 
 将编译成功后的命令目录配置到系统环境中，以便在后续操作过程的命令窗口调用。
 
-`echo "export PATH=\$PATH:\$GOPATH/src/github.com/dappledger/AnnChain/genesis/build/genesis" >> ~/.bash_profile`
+`echo "export PATH=\$PATH:\$GOPATH/src/github.com/dappledger/AnnChain/bin/genesis" >> ~/.bash_profile`
 
 `source ~/.bash_profile`
 
@@ -119,56 +102,66 @@ cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis
 
 同2.2
 
-### 3.3配置运行目录
-
-```
-echo export ANN_RUNTIME=/data/genesis >> /etc/profile  //path customize
-source /etc/profile
-```
-
-### 3.4初始化链节点
+### 3.3初始化链节点
 
 `./genesis init `
 
 初始化目录结构
 
 ```
-[root@bogon .ann_runtime]# pwd    //default run dir
-/root/.ann_runtime
-[root@bogon .ann_runtime]# tree -L 2
+[root@bogon .genesis]# pwd
+/root/.genesis
+[root@bogon .genesis]# tree -L 2
 .
-├── addrbook.json
-├── addrbook.json.bak
-├── config.json
 ├── config.toml
 ├── data
+│   ├── archive
+│   ├── archive.db
 │   ├── blockstore.db
 │   ├── chaindata
 │   ├── cs.wal
-│   ├── genesisop.db
-│   ├── genesisquety.db
+│   ├── evm.db
 │   ├── mempool.wal
+│   ├── query_cache
 │   ├── refuse_list.db
-│   └── state.db
+│   ├── state.db
+│   └── votechannel.db
 ├── genesis.json
 ├── priv_validator.json
 └── priv_validator.json.bak
 
-7 directories, 9 files
+12 directories, 4 files
 ```
 
-### 3.5配置创世节点
+### 3.4配置创世节点
 
 - config.toml
 
   ```
-  environment = "production"  //指定环境
-  node_laddr = "tcp://0.0.0.0:80"  //p2p地址
-  rpc_laddr = "tcp://0.0.0.0:81"   //rpc地址
-  moniker = "anonymous"  //p2p匿名连接
-  fast_sync = true  //快速同步数据
-  db_backend = "leveldb" //链底层数据库
-  seeds = "127.0.0.1:80,127.0.0.1:80"  //节点之间p2p连接
+  app_name = "evm"
+  auth_by_ca = true
+  block_size = 2000
+  db_backend = "leveldb"
+  environment = "production"
+  fast_sync = true
+  log_path = ""
+  moniker = "anonymous"
+  non_validator_auth_by_ca = false
+  non_validator_node_auth = false
+  p2p_laddr = "tcp://x.x.x.x:46656"
+  rpc_laddr = "tcp://0.0.0.0:46657"
+  seeds = "x.x.x.x:46656,x.x.x.x:46656,x.x.x.x:46656,x.x.x.x:46656,x.x.x.x:46656,x.x.x.x:46656,x.x.x.x:46656"
+  signbyca = "8B27A3BDAF3FD47E4C143303BD030D6D02EECC6925C539031D8A5B157D4FC07B9E77D7E63EA795ECADDB39D7EA4511BE712210EB6D91D087A22717EFA1D2FA00"
+  skip_upnp = true
+  threshold_blocks = 0
+  timeout_commit = 2000
+  timeout_precommit = 2000
+  timeout_precommit_delta = 1000
+  timeout_prevote = 2000
+  timeout_prevote_delta = 1000
+  timeout_propose = 3000
+  timeout_propose_delta = 1000
+  tracerouter_msg_ttl = 5
   ```
 
 - priv_validator.json
@@ -236,354 +229,9 @@ source /etc/profile
   }
   ```
 
-### 3.6启动链节点
+### 3.5启动链节点
 
 - 命令行启动
 
-  `nohup ./genesis node &`
+  `nohup ./genesis run & //更多参数请查看 ./genesis -h` 
 
-- 脚本启动
-
-  `./Genesis_service.sh start`
-
-  ```
-  Please enter the Chain-ID:test
-  Please enter the P2P Listen on port:80
-  Please enter the RPC Listen on port:81
-  Please enter the SEEDS P2P NODE format(IP:PORT):127.0.0.1:80
-  
-               _                  ____            _     _
-              / \    |\    |\    |    \|    |    / \    |\    |
-             /   \   | \   | \   |     |    |   /   \   | \   |
-            / ___ \  |  \  |  \  |     |____|  /_____\  |  \  |
-           /       \ |   \ |   \ |     |    | /       \ |   \ |
-          /         \|    \|    \|____/|    |/         \|    \|
-  
-  
-          Genesis has been successfully built. 00:11:19
-  
-          To verify your installation run the following commands:
-          For more information:
-          AnnChain website: www.annchain.io/#/
-          AnnChain Telegram channel @ www.annchain.io/#/news
-          AnnChain resources: https://github.com/dappledger/AnnChain
-          AnnChain Stack Exchange: https://...
-          AnnChain wiki: https://github.com/dappledger/AnnChain/blob/master/README.md
-  ```
-
-## 第四章 Docker部署链节点
-
-### 4.1配置Dockerfile文件
-
-```
-#Build Genesis in a stock Go builder container
-FROM golang:latest as builder
-MAINTAINER lvguoxin "lvguoxinlinux@163.com"
-RUN apt-get update \
-    && apt-get -y install net-tools \
-    && apt-get -y install vim
-WORKDIR $GOPATH/src/github.com/dappledger/AnnChain/genesis
-ADD . $GOPATH/src/github.com/dappledger/AnnChain/genesis
-RUN make
-RUN ./build/genesis init
-
-EXPOSE 46656 46657 46658
-
-ENTRYPOINT [ "./build/genesis" ]
-```
-
-### 4.2制作docker镜像
-
-`docker build -t annchain.io/genesis:v1.0 .`
-
-### 4.3运行docker节点
-
-`docker run --name node1 -d annchain.io/genesis:v1.0 node`
-
-### 4.4查看docker运行状态
-
-```
-[root@bogon goproject]# docker ps
-CONTAINER ID        IMAGE                         COMMAND                  CREATED             STATUS              PORTS               NAMES
-b002176a0962        annchain.io/genesis:v1.0   "./build/genesis node -..."   8 days ago          Up 21 minutes       46656-46658/tcp     node1
-```
-
-## 第五章 自动化脚本部署链节点
-
-`./Genesis_install.sh`
-
-```
-#!/bin/bash
-
-##########################################################################
-# This is the annChain.Genesis automated install script for Linux and Mac OS.
-# This file was downloaded from https://github.com/dappledger/AnnChain
-#
-# Copyright (c) 2018, Respective Authors all rights reserved.
-#
-# After December 1, 2018 this software is available under the following terms:
-# 
-# The MIT License
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-# https://github.com/dappledger/AnnChain/blob/master/README.md
-##########################################################################
-
-VERSION=1.0.0
-TIME_BEGIN=$( date -u +%s )
-
-#install golang
-function InstallGo()
-{
-    source /etc/os-release
-    case $ID in
-    debian|ubuntu|devuan)
-        sudo apt-get install curl
-        ;;
-    centos|fedora|rhel)
-        yumdnf="yum"
-        if test "$(echo "$VERSION_ID >= 22" | bc)" -ne 0;then
-            yumdnf="dnf"
-        fi
-        $yumdnf install -y curl
-        ;;
-    *)
-        exit 1
-        ;;
-    esac
-
-    echo -e "Please enter the genesis requirements above go 1.9:\c"
-    read -e go_version
-
-    curl -SL -o go.tar.gz https://www.golangtc.com/static/go/${go_version}/go${go_version}.linux-amd64.tar.gz && \
-    tar -C  /usr/local/ -zxf go.tar.gz && \
-    rm -rf go.tar.gz
-    
-    #GOPATH
-    echo -e "Please enter the GOPATH dir:\c"
-    read -e GOPATHDIR
-    mkdir -p ${GOPATHDIR}
-#config env
-cat <<EOF >> /etc/profile
-export GOROOT=/usr/local/go
-export GOPATH=${GOPATHDIR}
-export PATH=\$GOROOT/bin:\$PATH
-EOF
-    source /etc/profile
-    go env
-    go version
-}
-
-#install git 
-function InstallGit()
-{
-    source /etc/os-release
-    case $ID in
-    debian|ubuntu|devuan)
-        sudo apt-get install git
-        ;;
-    centos|fedora|rhel)
-        yumdnf="yum"
-        if test "$(echo "$VERSION_ID >= 22" | bc)" -ne 0;then
-            yumdnf="dnf"
-        fi
-        $yumdnf install -y git
-        ;;
-    *)
-        exit 1
-        ;;
-    esac 
-}
-
-#Determine if the command was executed successfully
-function ExIsOk()
-{
-    if [ $? -ne 0 ];then
-        echo "Command execution failed"
-        exit 1
-    fi
-}
-
-#build Genesis
-function BuildGenesis()
-{
-    git clone https://github.com/dappledger/AnnChain.git ${GOPATH}/src/github.com/dappledger/AnnChain
-    cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis
-    printf "\\n\\tBeginning build version: %s\\n" "${VERSION}"
-    make
-}
-
-#init Genesis
-function InitGenesis()
-{
-    cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis/build
-    ./genesis init >/dev/null 2>&1 &
-}
-
-#Configuration config.toml
-function ConfigToml()
-{
-    GENESIS_PATH=$HOME/.ann_runtime
-    echo -e "Please enter the Chain-ID:\c"
-    read -e CHAINID
-    sed -i 's/"annchain.*"/"'${CHAINID}'"/g' ${GENESIS_PATH}/genesis.json
-
-    echo -e "Please enter the P2P Listen on port:\c"
-    read -e NODE_LADDR
-    sed -i "s/46656/${NODE_LADDR}/g" ${GENESIS_PATH}/config.toml
-
-    echo -e "Please enter the RPC Listen on port:\c"
-    read -e RPC_LADDR
-    sed -i "s/46657/${RPC_LADDR}/g" ${GENESIS_PATH}/config.toml
-
-    echo -e "Please enter the SEEDS P2P NODE format(IP:PORT):\c"
-    read -e SEEDS
-    sed -i 's/seeds = ""/seeds = "'${SEEDS}'"/g' ${GENESIS_PATH}/config.toml
-    
-}
-
-#Run Genesis
-function RunGenesis()
-{
-    cd ${GOPATH}/src/github.com/dappledger/AnnChain/genesis/build
-    nohup ./genesis node >/dev/null 2>&1  &
-}
-
-#Check that the Genesis process is successful
-function CheckGenesisIsOK()
-{
-    txtbld=$(tput bold)
-    bldred=${txtbld}$(tput setaf 2)
-    txtrst=$(tput sgr0)
-    TIME_END=$(( $(date -u +%s) - ${TIME_BEGIN} ))
-    SERVICE_STATUS=`ps -ef | grep genesis | grep -v grep|wc -l`
-    if [ $SERVICE_STATUS -gt 0 ];then
-	#printf "\t#####################################################\v"
-	printf "${bldred}\n"
-        printf "\t     _                  ____            _     _\n"     
-	printf "\t    / \    |\    |\    |    \|    |    / \    |\    |\n"
-	printf "\t   /   \   | \   | \   |     |    |   /   \   | \   |\n"
-	printf "\t  / ___ \  |  \  |  \  |     |____|  /_____\  |  \  |\n"
-	printf "\t /       \ |   \ |   \ |     |    | /       \ |   \ |\n"
-	printf "\t/         \|    \|    \|____/|    |/         \|    \|\n${txtrst}\n"
-	#printf "\t#####################################################\v"
-	printf "\\n\\tGenesis has been successfully built. %02d:%02d:%02d\\n\\n" $(($TIME_END/3600)) $(($TIME_END%3600/60)) $(($TIME_END%60))
-	printf "\\tTo verify your installation run the following commands:\\n"
-	printf "\\tFor more information:\\n"
-	printf "\\tAnnChain website: www.annchain.io/#/\\n"
-	printf "\\tAnnChain Telegram channel @ www.annchain.io/#/news\\n"
-	printf "\\tAnnChain resources: https://github.com/dappledger/AnnChain\\n"
-	printf "\\tAnnChain Stack Exchange: https://...\\n"
-	printf "\\tAnnChain wiki: https://github.com/dappledger/AnnChain/blob/master/README.md\\n\\n\\n"
-				
-    else 
-	echo "service not ok"
-    fi
-}
-
-if ! [ -x "$(command -v git)" ];then
-    InstallGit
-else
-    echo "Git has been installed!!!!"
-fi
-
-if ! [ -x "$(command -v go)" ];then
-    InstallGo
-else 
-    echo "Golang has been installed !!!"
-fi
-
-BuildGenesis
-InitGenesis
-ConfigToml
-RunGenesis
-CheckGenesisIsOK
-
-```
-## 第六章 链启停脚本
-
-`./Genesis_service.sh`
-
-```
-#!/bin/sh
-# chkconfig: 2345 64 36
-# description: AnnChain.genesis startup
-# Author:lvguoxin
-# Time:2018-10-30 15:39:34
-# Name:annchainService.sh
-# Version:V1.0
-# Description:This is a test script.
-
-[ -f /etc/init.d/functions ] && source /etc/init.d/functions
-GENESIS_EX_PATH=${GOPATH}/src/gitlab.zhonganinfo.com/tech_bighealth/za-delos/build
-RETURN_VALUE=0
-
-
-#log failure output func
-function LogFailureMsg()
-{
-    echo "Genesis service ERROR!$@"
-}
-
-#log success output func
-function LogSuccessMsg()
-{
-    echo "Genesis service SUCCESS!$@"
-}
-
-#Genesis start service
-function start()
-{
-    cd ${GENESIS_EX_PATH}
-    echo "start Genesis service"
-    nohup ./genesis node >/dev/null 2>&1  &
-    if [ $? -ne 0 ];then
-        LogFailureMsg
-    else
-        LogSuccessMsg
-    fi
-}
-
-#Genesis stop service
-function stop()
-{   
-    echo "Stop Genesis service"
-    kill `ps -ef | grep genesis | grep -v grep|awk '{print $2}'`  >/dev/null 2>&1 &
-    if [ $? -ne 0 ];then
-        LogFailureMsg
-    else
-        LogSuccessMsg
-    fi
-}
-
-
-case "$1" in
-    start)
-        start
-        ;;
-    stop)
-        stop
-        ;;
-    *)
-	echo "Usage:$0{start|stop|restart}"
-        exit 1
-esac
-exit $RETURN_VALUE
-```
