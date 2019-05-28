@@ -48,11 +48,9 @@
 
 ### 2.2安装说明
 
-如果您想快速体验annChain.Genesis,我们提供了[一键快速安装部署](https://github.com/dappledger/AnnChain/blob/master/scripts)工具。
-
-如果您希望使用Docker进行安装部署，可以参阅[使用Docker安装部署annChain.Genesis指南](https://github.com/dappledger/AnnChain/tree/master/docker)。
-
 如果您想编译源码并亲自动手配置，搭建annChain.Genesis,请参考[annChain.Genesis操作手册v1.0](https://github.com/dappledger/AnnChain/tree/master/doc/manual)。
+
+如果您希望使用Docker进行安装部署，可以参阅[使用Docker安装部署](https://github.com/dappledger/AnnChain/blob/master/docker-compose.yaml)。
 
 ## 三、特性介绍
 
