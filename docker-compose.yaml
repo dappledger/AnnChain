@@ -1,0 +1,224 @@
+version: '3'
+services:
+  mgo:
+    image: mongo:3.2
+    ports:
+      - '27017:27017'
+    command: mongod
+    restart: always
+    networks:
+      app_net:
+        ipv4_address: 192.168.10.7
+  block-browser:
+    image: registry.cn-shanghai.aliyuncs.com/anlink/block-browser:latest
+    ports:
+      - '9090:9090'
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo 'appname = hubble
+              httpport = 9090
+              runmode ="dev"
+
+              # blockchain's api ,not app's api
+              api_addr = "validator-0:47000"
+              chain_id = "1024"
+
+              mogo_addr = "192.168.10.7:27017"
+              #mogo_user = hzc
+              #mogo_pwd = 123456
+
+              mogo_db = "ann-browser"
+              sync_job = 1
+              sync_from_height = 0' > conf/app.conf
+        block-browser
+    restart: always
+    networks:
+      app_net:
+        ipv4_address: 192.168.10.8
+  rendez-api:
+    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez-api:latest
+    ports:
+      - '8800:8800'
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo '{"ListenAddress": ":8800", "RPCAddress": "tcp://validator-0:47000", "GasLimit" : 10000000000 }' > api.conf
+        rendez-api -f api.conf
+    restart: always
+    networks:
+      app_net:
+        ipv4_address: 192.168.10.9
+  validator-0:
+    hostname: validator-0
+    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez:latest
+    ports:
+      - '46000:46000'
+      - '47000:47000'
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p logs
+        mkdir -p /rendez
+        rendez init --runtime="/rendez" --log_path="logs/rendez.log" --app="evm" --chainid=9102
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /rendez/genesis.json
+        echo 'app_name = "evm"
+              auth_by_ca = false
+              block_size = 5000
+              crypto_type = "ZA"
+              db_backend = "leveldb"
+              db_conn_str = "sqlite3"
+              db_type = "sqlite3"
+              environment = "production"
+              fast_sync = true
+              log_path = ""
+              moniker = "anonymous"
+              non_validator_auth_by_ca = false
+              non_validator_node_auth = false
+              p2p_laddr = "tcp://0.0.0.0:46000"
+              rpc_laddr = "tcp://0.0.0.0:47000"
+              seeds = "192.168.10.10:46000,192.168.10.11:46001,192.168.10.12:46002,192.168.10.13:46003"
+              signbyca = ""
+              skip_upnp = true
+              threshold_blocks = 0
+              tracerouter_msg_ttl = 5
+              network_rate_limit = 1024' > /rendez/config.toml
+        echo '{"address":"6E57A5F704E94151714650DCFC52D220595D912B","pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"C8A5E8E93D58D4AD26DDB6BA9D14BA1941E3AE26E39E9B71F70855C9E391A0E01C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"]}' > /rendez/priv_validator.json
+        rendez run --runtime="/rendez"
+    networks:
+      app_net:
+        ipv4_address: 192.168.10.10
+    restart: always
+  validator-1:
+    hostname: validator-1
+    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez:latest
+    ports:
+      - '46001:46001'
+      - '47001:47001'
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p logs
+        mkdir -p /rendez
+        rendez init --runtime="/rendez" --log_path="logs/rendez.log" --app="evm" --chainid=9102
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /rendez/genesis.json
+        echo 'app_name = "evm"
+              auth_by_ca = false
+              block_size = 5000
+              crypto_type = "ZA"
+              db_backend = "leveldb"
+              db_conn_str = "sqlite3"
+              db_type = "sqlite3"
+              environment = "production"
+              fast_sync = true
+              log_path = ""
+              moniker = "anonymous"
+              non_validator_auth_by_ca = false
+              non_validator_node_auth = false
+              p2p_laddr = "tcp://0.0.0.0:46001"
+              rpc_laddr = "tcp://0.0.0.0:47001"
+              seeds = "192.168.10.10:46000,192.168.10.11:46001,192.168.10.12:46002,192.168.10.13:46003"
+              signbyca = ""
+              skip_upnp = true
+              threshold_blocks = 0
+              tracerouter_msg_ttl = 5
+              network_rate_limit = 1024' > /rendez/config.toml
+        echo '{"address":"AE4EC0F626FFE71D013C8E8F5137B710F5DC715F","pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"D95D969B03943B9509CD624CFA600739393BB3A2A38E869E4077F949415159399C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"]}' > /rendez/priv_validator.json
+        rendez run --runtime="/rendez"
+    networks:
+      app_net:
+        ipv4_address: 192.168.10.11
+    restart: always
+  validator-2:
+    hostname: validator-2
+    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez:latest
+    ports:
+      - '46002:46002'
+      - '47002:47002'
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p logs
+        mkdir -p /rendez
+        rendez init --runtime="/rendez" --log_path="logs/rendez.log" --app="evm" --chainid=9102
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /rendez/genesis.json
+        echo 'app_name = "evm"
+              auth_by_ca = false
+              block_size = 5000
+              crypto_type = "ZA"
+              db_backend = "leveldb"
+              db_conn_str = "sqlite3"
+              db_type = "sqlite3"
+              environment = "production"
+              fast_sync = true
+              log_path = ""
+              moniker = "anonymous"
+              non_validator_auth_by_ca = false
+              non_validator_node_auth = false
+              p2p_laddr = "tcp://0.0.0.0:46002"
+              rpc_laddr = "tcp://0.0.0.0:47002"
+              seeds = "192.168.10.10:46000,192.168.10.11:46001,192.168.10.12:46002,192.168.10.13:46003"
+              signbyca = ""
+              skip_upnp = true
+              threshold_blocks = 0
+              tracerouter_msg_ttl = 5
+              network_rate_limit = 1024' > /rendez/config.toml
+        echo '{"address":"DC884FC7E6311D49652A2ADE1906BBE8145DEB05","pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"E5A3EFBAEAC9725F5ED36C13492C423F541056A53F37473C7BDEBD7BAA038D8A0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"]}' > /rendez/priv_validator.json
+        rendez run --runtime="/rendez"
+    networks:
+      app_net:
+        ipv4_address: 192.168.10.12
+    restart: always
+  validator-3:
+    hostname: validator-3
+    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez:latest
+    ports:
+      - '46003:46003'
+      - '47003:47003'
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p logs
+        mkdir -p /rendez
+        rendez init --runtime="/rendez" --log_path="logs/rendez.log" --app="evm" --chainid=9102
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /rendez/genesis.json
+        echo 'app_name = "evm"
+              auth_by_ca = false
+              block_size = 5000
+              crypto_type = "ZA"
+              db_backend = "leveldb"
+              db_conn_str = "sqlite3"
+              db_type = "sqlite3"
+              environment = "production"
+              fast_sync = true
+              log_path = ""
+              moniker = "anonymous"
+              non_validator_auth_by_ca = false
+              non_validator_node_auth = false
+              p2p_laddr = "tcp://0.0.0.0:46003"
+              rpc_laddr = "tcp://0.0.0.0:47003"
+              seeds = "192.168.10.10:46000,192.168.10.11:46001,192.168.10.12:46002,192.168.10.13:46003"
+              signbyca = ""
+              skip_upnp = true
+              threshold_blocks = 0
+              tracerouter_msg_ttl = 5
+              network_rate_limit = 1024' > /rendez/config.toml
+        echo '{"address":"7CE2DED89377BA0C2742CF4C0CF0F3687BBC3C32","pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"B578B7B45316454F8198BEB760C9460A4C5617417B99F587777C0FF9A54BA195576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"]}' > /rendez/priv_validator.json
+        rendez run --runtime="/rendez"
+    networks:
+      app_net:
+        ipv4_address: 192.168.10.13
+    restart: always
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 192.168.10.0/24
