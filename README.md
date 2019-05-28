@@ -54,10 +54,6 @@
 
 如果您想编译源码并亲自动手配置，搭建annChain.Genesis,请参考[annChain.Genesis操作手册v1.0](https://github.com/dappledger/AnnChain/tree/master/doc/manual)。
 
-### 2.3实践指引
-
-[API接口](https://github.com/dappledger/AnnChain/blob/master/JSON-API/JSON-API.md)，后续更新。
-
 ## 三、特性介绍
 
 - PBFT快速共识
@@ -69,7 +65,8 @@
 
 ## 四、应用案例
 
-民生电商项目、穗银项目。
+某银行电商项目
+某企业供应链项目
 
 ## 五、其他
 
