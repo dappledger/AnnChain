@@ -47,17 +47,17 @@ AnnChain是工信部DAPPLedger开源社区项目之一，Annchain.Genesis是底�
 
 ### 2.2安装说明
 
-如果您想快速体验annChain.Genesis,我们提供了[一键快速安装部署](https://github.com/dappledger/AnnChain/blob/master/scripts)工具。
+如果您想快速体验annChain.Genesis,我们提供了[一键快速安装部署](https://github.com/dappledger/AnnChain/blob/v0.6.2_stable/scripts)工具。
 
-如果您希望使用Docker进行安装部署，可以参阅[使用Docker安装部署annChain.Genesis指南](https://github.com/dappledger/AnnChain/tree/master/docker)。
+如果您希望使用Docker进行安装部署，可以参阅[使用Docker安装部署annChain.Genesis指南](https://github.com/dappledger/AnnChain/tree/v0.6.2_stable/docker)。
 
-如果您想编译源码并亲自动手配置，搭建annChain.Genesis,请参考[annChain.Genesis操作手册v1.0](https://github.com/dappledger/AnnChain/tree/master/doc/manual)。
+如果您想编译源码并亲自动手配置，搭建annChain.Genesis,请参考[annChain.Genesis操作手册v1.0](https://github.com/dappledger/AnnChain/tree/v0.6.2_stable/doc/manual)。
 
 ### 2.3实践指引
 
 - [API接口](https://github.com/dappledger/AnnChain/tree/v0.6.2_stable/JSON-RPC)
-- [错误码清单](https://github.com/dappledger/AnnChain/blob/master/doc/genesis%E9%94%99%E8%AF%AF%E8%BF%94%E5%9B%9E%E7%A0%81%E6%B8%85%E5%8D%95.md)
-- [Genesis指南](https://github.com/dappledger/AnnChain/blob/master/doc/Genesis%E6%8C%87%E5%8D%97.md)
+- [错误码清单](https://github.com/dappledger/AnnChain/blob/v0.6.2_stable/doc/genesis%E9%94%99%E8%AF%AF%E8%BF%94%E5%9B%9E%E7%A0%81%E6%B8%85%E5%8D%95.md)
+- [Genesis指南](https://github.com/dappledger/AnnChain/blob/v0.6.2_stable/doc/Genesis%E6%8C%87%E5%8D%97.md)
 
 ## 三、特性介绍
 
@@ -99,7 +99,7 @@ aboutOne应用开发中，后续更新。
 
 ### 6.2常见问题
 
-annChain.Genesis常见问题，可参见[常见问题](https://github.com/dappledger/AnnChain/tree/master/doc)。
+annChain.Genesis常见问题，可参见[常见问题](https://github.com/dappledger/AnnChain/tree/v0.6.2_stable/doc)。
 
 也欢迎爱好者互相讨论、一起交流，请进入[提问专区](https://github.com/dappledger/AnnChain/issues)。
 
