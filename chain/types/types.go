@@ -46,4 +46,5 @@ const (
 	QueryType_Existence QueryType = 4
 	QueryType_PayLoad   QueryType = 5
 	QueryTxLimit        QueryType = 9
+	QueryType_BlockHash QueryType = 10
 )
