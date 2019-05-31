@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math/big"
 	"unsafe"
 
 	"github.com/dappledger/AnnChain/eth/common"
@@ -30,8 +31,8 @@ import (
 //go:generate gencodec -type Receipt -field-override receiptMarshaling -out gen_receipt_json.go
 
 var (
-	receiptStatusFailedRLP     = []byte{}
-	receiptStatusSuccessfulRLP = []byte{0x01}
+	receiptStatusFailedRLP            = []byte{}
+	receiptStatusSuccessfulRLP        = []byte{0x01}
 	receiptStatusFailedEVMOutOfGasRLP = []byte{0x02}
 )
 
@@ -49,6 +50,11 @@ const (
 // Receipt represents the results of a transaction.
 type Receipt struct {
 	// Consensus fields
+	Height    uint64         `json:"height"`
+	Timestamp *big.Int       `json:"Timestamp"`
+	From      common.Address `json:"from"`
+	To        common.Address `json:"to"`
+
 	PostState         []byte `json:"root"`
 	Status            uint64 `json:"status"`
 	CumulativeGasUsed uint64 `json:"cumulativeGasUsed" gencodec:"required"`
@@ -70,6 +76,10 @@ type receiptMarshaling struct {
 
 // receiptRLP is the consensus encoding of a receipt.
 type receiptRLP struct {
+	Height            uint64
+	Timestamp         *big.Int
+	From              common.Address
+	To                common.Address
 	PostStateOrStatus []byte
 	CumulativeGasUsed uint64
 	Bloom             Bloom
@@ -77,6 +87,10 @@ type receiptRLP struct {
 }
 
 type receiptStorageRLP struct {
+	Height            uint64
+	Timestamp         *big.Int
+	From              common.Address
+	To                common.Address
 	PostStateOrStatus []byte
 	CumulativeGasUsed uint64
 	Bloom             Bloom
@@ -100,7 +114,7 @@ func NewReceipt(root []byte, failed bool, cumulativeGasUsed uint64) *Receipt {
 // EncodeRLP implements rlp.Encoder, and flattens the consensus fields of a receipt
 // into an RLP stream. If no post state is present, byzantium fork is assumed.
 func (r *Receipt) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, &receiptRLP{r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs})
+	return rlp.Encode(w, &receiptRLP{r.Height, r.Timestamp, r.From, r.To, r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs})
 }
 
 // DecodeRLP implements rlp.Decoder, and loads the consensus fields of a receipt
@@ -113,7 +127,7 @@ func (r *Receipt) DecodeRLP(s *rlp.Stream) error {
 	if err := r.setStatus(dec.PostStateOrStatus); err != nil {
 		return err
 	}
-	r.CumulativeGasUsed, r.Bloom, r.Logs = dec.CumulativeGasUsed, dec.Bloom, dec.Logs
+	r.Height, r.Timestamp, r.From, r.To, r.CumulativeGasUsed, r.Bloom, r.Logs = dec.Height, dec.Timestamp, dec.From, dec.To, dec.CumulativeGasUsed, dec.Bloom, dec.Logs
 	return nil
 }
 
@@ -167,6 +181,10 @@ type ReceiptForStorage Receipt
 // into an RLP stream.
 func (r *ReceiptForStorage) EncodeRLP(w io.Writer) error {
 	enc := &receiptStorageRLP{
+		Height:            r.Height,
+		Timestamp:         r.Timestamp,
+		From:              r.From,
+		To:                r.To,
 		PostStateOrStatus: (*Receipt)(r).statusEncoding(),
 		CumulativeGasUsed: r.CumulativeGasUsed,
 		Bloom:             r.Bloom,
@@ -198,7 +216,7 @@ func (r *ReceiptForStorage) DecodeRLP(s *rlp.Stream) error {
 		r.Logs[i] = (*Log)(log)
 	}
 	// Assign the implementation fields
-	r.TxHash, r.ContractAddress, r.GasUsed = dec.TxHash, dec.ContractAddress, dec.GasUsed
+	r.Height, r.Timestamp, r.From, r.To, r.TxHash, r.ContractAddress, r.GasUsed = dec.Height, dec.Timestamp, dec.From, dec.To, dec.TxHash, dec.ContractAddress, dec.GasUsed
 	return nil
 }
 
