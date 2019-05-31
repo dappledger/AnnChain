@@ -21,6 +21,7 @@ import (
 	"math/big"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -299,7 +300,12 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 			if err != nil {
 				return err
 			}
-
+			fmt.Println("zzz=========:", tx.To())
+			if tx.To() != nil {
+				receipt.To = *(tx.To())
+			}
+			receipt.Height = app.currentHeader.Number.Uint64()
+			receipt.Timestamp = new(big.Int).SetInt64(time.Now().Unix())
 			temReceipt = append(temReceipt, receipt)
 			temTxHash = append(temTxHash, txhash)
 

@@ -8,13 +8,13 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	ac "github.com/dappledger/AnnChain/gemmill/modules/go-common"
-	cl "github.com/dappledger/AnnChain/gemmill/rpc/client"
-	agtypes "github.com/dappledger/AnnChain/gemmill/types"
 	"github.com/dappledger/AnnChain/cmd/client/commons"
 	"github.com/dappledger/AnnChain/eth/common"
 	ethtypes "github.com/dappledger/AnnChain/eth/core/types"
 	"github.com/dappledger/AnnChain/eth/rlp"
+	ac "github.com/dappledger/AnnChain/gemmill/modules/go-common"
+	cl "github.com/dappledger/AnnChain/gemmill/rpc/client"
+	agtypes "github.com/dappledger/AnnChain/gemmill/types"
 )
 
 var (
@@ -113,7 +113,7 @@ func queryReceipt(ctx *cli.Context) error {
 		return cli.NewExitError(err.Error(), 127)
 	}
 
-	receiptForStorage := new(ethtypes.ReceiptForStorage)
+	receiptForStorage := new(ethtypes.AnnReceiptForStorage)
 
 	err = rlp.DecodeBytes(rpcResult.Result.Data, receiptForStorage)
 	if err != nil {

@@ -96,6 +96,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	}
 	// Set the receipt logs and create a bloom for filtering
 	// Edit by zhongan
+	receipt.From = msg.From()
 	receipt.Logs = statedb.GetLogs(receipt.TxHash)
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
