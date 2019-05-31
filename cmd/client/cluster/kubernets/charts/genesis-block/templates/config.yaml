@@ -1,0 +1,12 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "{{ template "fullname" . }}"
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+    environment: {{ template "environment" . }}
+data:
+{{ $path := .Values.genesisFileName }}
+{{ (.Files.Glob $path).AsConfig | indent 2 }}

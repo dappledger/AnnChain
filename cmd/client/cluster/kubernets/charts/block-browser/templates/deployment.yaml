@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "block-browser.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "block-browser.name" . }}
+    helm.sh/chart: {{ include "block-browser.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "block-browser.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "block-browser.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh","-c"]
+          args:
+          - |
+            echo 'appname = hubble
+                  httpport = 9090
+                  runmode ="dev"
+
+                  # blockchain's api ,not app's api
+                  api_addr = {{ .Values.config.api }}
+                  chain_id = "1024"
+
+                  #mogo_addr = {{ .Values.config.mongo.addr}}
+                  #mogo_user = hzc
+                  #mogo_pwd = 123456
+
+                  #mogo_db = {{ .Values.config.mongo.db}}
+                  sync_job = 1
+                  sync_from_height = 0' > conf/app.conf
+            block-browser
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecretName }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
