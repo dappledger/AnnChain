@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.app }}
+  labels:
+    app.kubernetes.io/name: {{ include "validator.name" . }}
+    helm.sh/chart: {{ include "validator.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.rendez.rpc }}
+      targetPort: {{ .Values.rendez.rpc }}
+      protocol: TCP
+      name: rpc
+    - port: {{ .Values.rendez.peer }}
+      targetPort: {{ .Values.rendez.peer }}
+      protocol: TCP
+      name: peer
+  selector:
+    app: {{ .Values.app }}

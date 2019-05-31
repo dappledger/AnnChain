@@ -1,0 +1,18 @@
+{
+  "genesis_time": "0001-01-01T00:00:00.000Z",
+  "chain_id": "9102",
+  "validators": [
+    {
+      "pub_key": [
+        1,
+        "1146E1719DB6B3599835480B9952814A5131B1C8395E146A8CE3786BA116F67B"
+      ],
+      "amount": 100,
+      "name": "",
+      "is_ca": true,
+      "rpc": ""
+    }
+  ],
+  "app_hash": "",
+  "plugins": "specialop,querycache"
+}

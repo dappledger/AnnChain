@@ -1,0 +1,1 @@
+Genesis block for {{ template "environment" . }} is deployed.
