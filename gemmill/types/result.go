@@ -31,6 +31,7 @@ type NewRoundResult struct {
 type CommitResult struct {
 	AppHash      []byte
 	ReceiptsHash []byte
+	BlockHash    []byte
 }
 
 type ExecuteInvalidTx struct {

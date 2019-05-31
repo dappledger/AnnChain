@@ -56,6 +56,7 @@ type BlockChainEvm struct {
 	db ethdb.Database
 }
 
+type Hashs []ethcmn.Hash
 type BeginExecFunc func() (ExecFunc, EndExecFunc)
 type ExecFunc func(index int, raw []byte, tx *ethtypes.Transaction) error
 type EndExecFunc func(bs []byte, err error) bool
@@ -74,7 +75,8 @@ func (bc *BlockChainEvm) GetHeader(hash ethcmn.Hash, number uint64) *ethtypes.He
 }
 
 var (
-	ReceiptsPrefix = []byte("receipts-")
+	ReceiptsPrefix  = []byte("receipts-")
+	BlockHashPrefix = []byte("blockhash-")
 )
 
 type LastBlockInfo struct {
@@ -99,8 +101,10 @@ type EVMApp struct {
 	state        *ethstate.StateDB
 	currentState *ethstate.StateDB
 
-	receipts ethtypes.Receipts
-	Signer   ethtypes.Signer
+	receipts    ethtypes.Receipts
+	valid_hashs Hashs
+
+	Signer ethtypes.Signer
 }
 
 const (
@@ -268,6 +272,7 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 		state := app.currentState
 		stateSnapshot := state.Snapshot()
 		temReceipt := make([]*ethtypes.Receipt, 0)
+		temTxHash := make([]ethcmn.Hash, 0)
 
 		execFunc := func(txIndex int, raw []byte, tx *ethtypes.Transaction) error {
 			gp := new(ethcore.GasPool).AddGas(math.MaxBig256.Uint64())
@@ -276,8 +281,8 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 			if err != nil {
 				return err
 			}
-			txhash := atypes.Tx(txBytes).Hash()
-			state.Prepare(ethcmn.BytesToHash(txhash), blockHash, txIndex)
+			txhash := ethcmn.BytesToHash(atypes.Tx(txBytes).Hash())
+			state.Prepare(txhash, blockHash, txIndex)
 
 			bc := NewBlockChain(app.stateDb)
 			receipt, _, err := ethcore.ApplyTransaction(
@@ -294,7 +299,10 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 			if err != nil {
 				return err
 			}
+
 			temReceipt = append(temReceipt, receipt)
+			temTxHash = append(temTxHash, txhash)
+
 			return nil
 		}
 
@@ -303,11 +311,14 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 				log.Warn("[evm execute],apply transaction", zap.Error(err))
 				state.RevertToSnapshot(stateSnapshot)
 				temReceipt = nil
+				temTxHash = nil
 				res.InvalidTxs = append(res.InvalidTxs, atypes.ExecuteInvalidTx{Bytes: raw, Error: err})
 				return true
 			}
 			app.receipts = append(app.receipts, temReceipt...)
+			app.valid_hashs = append(app.valid_hashs, temTxHash...)
 			res.ValidTxs = append(res.ValidTxs, raw)
+
 			return true
 		}
 		return execFunc, endFunc
@@ -325,16 +336,6 @@ func (app *EVMApp) OnExecute(height, round int64, block *atypes.Block) (interfac
 	}
 	exeWithCPUSerialVeirfy(nil, block.Data.Txs, app.genExecFun(block, &res))
 
-	m := make(map[string]int)
-	for _, tx := range block.Data.Txs {
-		m[string(tx)]++
-	}
-	dups := 0
-	for _, v := range m {
-		if v > 1 {
-			dups++
-		}
-	}
 	return res, err
 }
 
@@ -358,13 +359,16 @@ func (app *EVMApp) OnCommit(height, round int64, block *atypes.Block) (interface
 
 	app.SaveLastBlock(LastBlockInfo{Height: height, AppHash: appHash.Bytes()})
 	rHash := app.SaveReceipts()
+	bHash := app.SaveBlocks(block.Hash())
 	app.receipts = nil
+	app.valid_hashs = nil
 
 	log.Info("application save to db", zap.String("appHash", fmt.Sprintf("%X", appHash.Bytes())), zap.String("receiptHash", fmt.Sprintf("%X", rHash)))
 
 	return atypes.CommitResult{
 		AppHash:      appHash.Bytes(),
 		ReceiptsHash: rHash,
+		BlockHash:    bHash,
 	}, nil
 }
 
@@ -396,6 +400,33 @@ func (app *EVMApp) CheckTx(bs []byte) error {
 		}
 		return nil
 	})
+}
+
+func (app *EVMApp) SaveBlocks(blockHash []byte) []byte {
+
+	blockBatch := app.stateDb.NewBatch()
+
+	storageBlockBytes, err := rlp.EncodeToBytes(app.valid_hashs)
+	if err != nil {
+		fmt.Println("wrong rlp encode:" + err.Error())
+		return nil
+	}
+
+	key := append(BlockHashPrefix, blockHash...)
+
+	if err := blockBatch.Put(key, storageBlockBytes); err != nil {
+		fmt.Println("batch block failed:" + err.Error())
+		return nil
+	}
+
+	if err := blockBatch.Write(); err != nil {
+		fmt.Println("persist block failed:" + err.Error())
+		return nil
+	}
+
+	bHash := merkle.SimpleHashFromBinaries([]interface{}{app.valid_hashs})
+
+	return bHash
 }
 
 func (app *EVMApp) SaveReceipts() []byte {
@@ -461,6 +492,8 @@ func (app *EVMApp) Query(query []byte) atypes.Result {
 		res = app.queryContractExistence(load)
 	case rtypes.QueryType_PayLoad:
 		res = app.queryPayLoad(load)
+	case rtypes.QueryType_BlockHash:
+		res = app.queryBlockHash(load)
 	default:
 		res = atypes.NewError(atypes.CodeType_BaseInvalidInput, "unimplemented query")
 	}
@@ -549,6 +582,15 @@ func (app *EVMApp) queryReceipt(txHashBytes []byte) atypes.Result {
 	data, err := app.stateDb.Get(key)
 	if err != nil {
 		return atypes.NewError(atypes.CodeType_InternalError, "fail to get receipt for tx:"+string(key))
+	}
+	return atypes.NewResultOK(data, "")
+}
+
+func (app *EVMApp) queryBlockHash(blockHashBytes []byte) atypes.Result {
+	key := append(BlockHashPrefix, blockHashBytes...)
+	data, err := app.stateDb.Get(key)
+	if err != nil {
+		return atypes.NewError(atypes.CodeType_InternalError, "fail to get txs for blockhash:"+string(key))
 	}
 	return atypes.NewResultOK(data, "")
 }
