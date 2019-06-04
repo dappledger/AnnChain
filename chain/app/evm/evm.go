@@ -300,7 +300,7 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 			if err != nil {
 				return err
 			}
-			fmt.Println("zzz=========:", tx.To())
+
 			if tx.To() != nil {
 				receipt.To = *(tx.To())
 			}
