@@ -113,7 +113,7 @@ func queryReceipt(ctx *cli.Context) error {
 		return cli.NewExitError(err.Error(), 127)
 	}
 
-	receiptForStorage := new(ethtypes.AnnReceiptForStorage)
+	receiptForStorage := new(ethtypes.ReceiptForStorage)
 
 	err = rlp.DecodeBytes(rpcResult.Result.Data, receiptForStorage)
 	if err != nil {
