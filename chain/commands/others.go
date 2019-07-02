@@ -17,10 +17,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dappledger/AnnChain/gemmill"
-	gtypes "github.com/dappledger/AnnChain/gemmill/types"
 	glb "github.com/dappledger/AnnChain/chain/commands/global"
 	"github.com/dappledger/AnnChain/chain/types"
+	"github.com/dappledger/AnnChain/gemmill"
+	gtypes "github.com/dappledger/AnnChain/gemmill/types"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,7 +47,8 @@ func NewPubkeyCommand() *cobra.Command {
 		Short: "print this node's public key",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			ang, err := gemmill.NewAngine(&gemmill.Tunes{Runtime: viper.GetString("runtime")})
+			//ang, err := gemmill.NewAngine(&gemmill.Tunes{Runtime: viper.GetString("runtime")})
+			ang, err := gemmill.NewAngine(nil, &gemmill.Tunes{Runtime: viper.GetString("runtime")})
 			if err != nil {
 				cmd.Println("Create angine error: " + err.Error())
 				os.Exit(1)

@@ -82,7 +82,8 @@ func NewNode(conf *viper.Viper, runtime, appName string) (*Node, error) {
 
 	// new angine
 	tune := &gemmill.Tunes{Conf: conf, Runtime: runtime}
-	newAngine, err := gemmill.NewAngine(tune)
+	//newAngine, err := gemmill.NewAngine(tune)
+	newAngine, err := gemmill.NewAngine(initApp, tune)
 	if err != nil {
 		return nil, fmt.Errorf("new angine err", err)
 	}

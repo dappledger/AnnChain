@@ -26,7 +26,7 @@ import (
 
 	bc "github.com/dappledger/AnnChain/gemmill/blockchain"
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
-	mempl "github.com/dappledger/AnnChain/gemmill/mempool"
+	//	mempl "github.com/dappledger/AnnChain/gemmill/mempool"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	sm "github.com/dappledger/AnnChain/gemmill/state"
@@ -245,7 +245,8 @@ type ConsensusState struct {
 
 	config     *viper.Viper
 	blockStore *bc.BlockStore
-	mempool    *mempl.Mempool
+	//	mempool    *mempl.Mempool
+	mempool types.TxPool
 
 	conR *ConsensusReactor
 
@@ -277,11 +278,13 @@ type ConsensusState struct {
 	// badvoteCollector types.IBadVoteCollector
 }
 
-func NewConsensusState(conf *viper.Viper, state *sm.State, blockStore *bc.BlockStore, mempool *mempl.Mempool) *ConsensusState {
+//func NewConsensusState(conf *viper.Viper, state *sm.State, blockStore *bc.BlockStore, mempool *mempl.Mempool) *ConsensusState {
+func NewConsensusState(conf *viper.Viper, state *sm.State, blockStore *bc.BlockStore, pool types.TxPool) *ConsensusState {
 	cs := &ConsensusState{
-		config:           conf,
-		blockStore:       blockStore,
-		mempool:          mempool,
+		config:     conf,
+		blockStore: blockStore,
+		//		mempool:          mempool,
+		mempool:          pool,
 		peerMsgQueue:     make(chan msgInfo, msgQueueSize),
 		internalMsgQueue: make(chan msgInfo, msgQueueSize),
 		timeoutTicker:    NewTimeoutTicker(),
