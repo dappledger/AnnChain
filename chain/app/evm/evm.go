@@ -373,7 +373,16 @@ func (app *EVMApp) OnCommit(height, round int64, block *atypes.Block) (interface
 	bHash := app.SaveBlocks(block.Hash())
 	app.receipts = nil
 	app.valid_hashs = nil
-
+	log.Info("1111111111", zap.String("txpool:pending", fmt.Sprintf("%v", app.pool.pending)))
+	log.Info("2222222222", zap.String("txpool:waiting", fmt.Sprintf("%v", app.pool.waiting)))
+	log.Info("3333333333", zap.String("txpool:waitingBeats", fmt.Sprintf("%v", app.pool.waitingBeats)))
+	log.Info("4444444444", zap.String("txpool:broadcastQueue", fmt.Sprintf("%v", app.pool.broadcastQueue)))
+	log.Info("5555555555", zap.String("txpool:all", fmt.Sprintf("%+v", app.pool.all)))
+	log.Info("6666666666", zap.String("txpool:app", fmt.Sprintf("%+v", app.pool.app)))
+	log.Info("7777777777", zap.String("txpool:waitingLifeTime", fmt.Sprintf("%v", app.pool.waitingLifeTime)))
+	log.Info("8888888888", zap.String("txpool:waitingLimit", fmt.Sprintf("%v", app.pool.waitingLimit)))
+	log.Info("9999999999", zap.String("txpool:pendingLimit", fmt.Sprintf("%v", app.pool.pendingLimit)))
+	log.Info("0000000000", zap.String("txpool:height", fmt.Sprintf("%v", app.pool.height)))
 	app.pool.updateToState()
 
 	log.Info("application save to db", zap.String("appHash", fmt.Sprintf("%X", appHash.Bytes())), zap.String("receiptHash", fmt.Sprintf("%X", rHash)))
