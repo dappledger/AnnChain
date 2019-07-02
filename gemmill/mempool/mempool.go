@@ -35,9 +35,9 @@ var (
 )
 
 // anyone impplements IFilter can be register as a tx filter
-type IFilter interface {
-	CheckTx(types.Tx) (bool, error)
-}
+//type IFilter interface {
+//	CheckTx(types.Tx) (bool, error)
+//}
 
 type Mempool struct {
 	config  *viper.Viper
@@ -53,7 +53,8 @@ type Mempool struct {
 
 	txLimit int
 
-	txFilters []IFilter
+	//	txFilters []IFilter
+	txFilters []types.IFilter
 }
 
 func NewMempool(conf *viper.Viper) *Mempool {
@@ -69,7 +70,8 @@ func NewMempool(conf *viper.Viper) *Mempool {
 	return mempool
 }
 
-func (mem *Mempool) RegisterFilter(filter IFilter) {
+//func (mem *Mempool) RegisterFilter(filter IFilter) {
+func (mem *Mempool) RegisterFilter(filter types.IFilter) {
 	mem.txFilters = append(mem.txFilters, filter)
 }
 
@@ -109,7 +111,8 @@ func (mem *Mempool) TxsFrontWait() *clist.CElement {
 // cb: A callback from the CheckTx command.
 //     It gets called from another goroutine.
 // CONTRACT: Either cb will get called, or err returned.
-func (mem *Mempool) CheckTx(tx types.Tx) (err error) {
+//func (mem *Mempool) CheckTx(tx types.Tx) (err error) {
+func (mem *Mempool) ReceiveTx(tx types.Tx) (err error) {
 	if mem.cache.Exists(tx) {
 		return ErrTxInCache
 	}
@@ -171,8 +174,11 @@ func (mem *Mempool) collectTxs(maxTxs int) []types.Tx {
 	}
 	txs := make([]types.Tx, 0, maxTxs)
 	for e := mem.txs.Front(); e != nil && len(txs) < maxTxs; e = e.Next() {
-		memTx := e.Value.(*mempoolTx)
-		txs = append(txs, memTx.tx)
+		//		memTx := e.Value.(*mempoolTx)
+		//		txs = append(txs, memTx.tx)
+		memTx := e.Value.(*types.TxInPool)
+		txs = append(txs, memTx.Tx)
+
 	}
 	return txs
 }
@@ -182,16 +188,21 @@ func (mem *Mempool) refreshMempoolTxs(blockTxsMap map[string]struct{}) {
 	index := 0
 	for e := mem.txs.Front(); e != nil && index < txsLen; e = e.Next() {
 		index++
-		memTx := e.Value.(*mempoolTx)
+		//		memTx := e.Value.(*mempoolTx)
+		memTx := e.Value.(*types.TxInPool)
 		// Remove the tx if it's alredy in a block, or rechecking fails
-		if _, ok := blockTxsMap[string(memTx.tx)]; ok {
+		//		if _, ok := blockTxsMap[string(memTx.tx)]; ok {
+		if _, ok := blockTxsMap[string(memTx.Tx)]; ok {
 			mem.txs.Remove(e)
 			e.DetachPrev()
-			mem.cache.Remove(memTx.tx)
-		} else if err := mem.recheckTx(memTx.tx); err != nil {
+			//			mem.cache.Remove(memTx.tx)
+			//		} else if err := mem.recheckTx(memTx.tx); err != nil {
+			mem.cache.Remove(memTx.Tx)
+		} else if err := mem.recheckTx(memTx.Tx); err != nil {
 			mem.txs.Remove(e)
 			e.DetachPrev()
-			mem.cache.Remove(memTx.tx)
+			//			mem.cache.Remove(memTx.tx)
+			mem.cache.Remove(memTx.Tx)
 		}
 	}
 }
@@ -243,10 +254,14 @@ func (mem *Mempool) checkAndAdd(tx types.Tx) error {
 
 func (mem *Mempool) _addToTxs(tx types.Tx) {
 	nc := atomic.AddInt64(&mem.counter, 1)
-	memTx := &mempoolTx{
-		counter: nc,
-		height:  atomic.LoadInt64(&mem.height),
-		tx:      tx,
+	//	memTx := &mempoolTx{
+	//		counter: nc,
+	//		height:  atomic.LoadInt64(&mem.height),
+	//		tx:      tx,
+	memTx := &types.TxInPool{
+		Counter: nc,
+		Height:  atomic.LoadInt64(&mem.height),
+		Tx:      tx,
 	}
 	mem.txs.PushBack(memTx)
 }
@@ -261,15 +276,32 @@ func (mem *Mempool) _checkTx(tx types.Tx) error {
 //--------------------------------------------------------------------------------
 
 // A transaction that successfully ran
-type mempoolTx struct {
-	counter int64    // a simple incrementing counter
-	height  int64    // height that this tx had been validated in
-	tx      types.Tx //
-}
+//type mempoolTx struct {
+//	counter int64    // a simple incrementing counter
+//	height  int64    // height that this tx had been validated in
+//	tx      types.Tx //
+//}
 
-func (memTx *mempoolTx) Height() int64 {
-	return atomic.LoadInt64(&memTx.height)
-}
+//func (mem *Mempool) _addToTxs(tx types.Tx) {
+//	nc := atomic.AddInt64(&mem.counter, 1)
+//	memTx := &types.TxInPool{
+//		Counter: nc,
+//		Height:  atomic.LoadInt64(&mem.height),
+//		Tx:      tx,
+//	}
+//	mem.txs.PushBack(memTx)
+//}
+
+//func (memTx *mempoolTx) Height() int64 {
+//	return atomic.LoadInt64(&memTx.height)
+//}
+
+//func (mem *Mempool) _checkTx(tx types.Tx) error {
+//	if err := mem.checkTxWithFilters(tx); err != nil {
+//		return errors.New("plugin checktx failed with error: " + err.Error())
+//	}
+//	return nil
+//}
 
 //--------------------------------------------------------------------------------
 

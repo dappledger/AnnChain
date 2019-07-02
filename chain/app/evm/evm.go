@@ -85,6 +85,7 @@ type LastBlockInfo struct {
 }
 
 type EVMApp struct {
+	pool *ethTxPool
 	atypes.BaseApplication
 	AngineHooks atypes.Hooks
 
@@ -171,7 +172,7 @@ func NewEVMApp(config *viper.Viper) (*EVMApp, error) {
 		log.Error("OpenDatabase error", zap.Error(err))
 		return nil, errors.Wrap(err, "app error")
 	}
-
+	app.pool = NewEthTxPool(app, config)
 	return app, nil
 }
 
@@ -219,6 +220,7 @@ func (app *EVMApp) Start() (err error) {
 		trieRoot = ethcmn.BytesToHash(lastBlock.AppHash)
 	}
 
+	app.pool.Start(lastBlock.Height)
 	if app.state, err = ethstate.New(trieRoot, ethstate.NewDatabase(app.stateDb)); err != nil {
 		app.Stop()
 		log.Error("fail to new ethstate", zap.Error(err))
@@ -240,6 +242,10 @@ func (app *EVMApp) getLastAppHash() ethcmn.Hash {
 		return ethcmn.BytesToHash(lastBlock.AppHash)
 	}
 	return EmptyTrieRoot
+}
+
+func (app *EVMApp) GetTxPool() atypes.TxPool {
+	return app.pool
 }
 
 func (app *EVMApp) Stop() {
@@ -367,6 +373,8 @@ func (app *EVMApp) OnCommit(height, round int64, block *atypes.Block) (interface
 	bHash := app.SaveBlocks(block.Hash())
 	app.receipts = nil
 	app.valid_hashs = nil
+
+	app.pool.updateToState()
 
 	log.Info("application save to db", zap.String("appHash", fmt.Sprintf("%X", appHash.Bytes())), zap.String("receiptHash", fmt.Sprintf("%X", rHash)))
 

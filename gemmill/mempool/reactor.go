@@ -39,12 +39,14 @@ const (
 // MempoolReactor handles mempool tx broadcasting amongst peers.
 type MempoolReactor struct {
 	p2p.BaseReactor
-	config  *viper.Viper
-	Mempool *Mempool
+	config *viper.Viper
+	//Mempool *Mempool
+	Mempool types.TxPool
 	evsw    types.EventSwitch
 }
 
-func NewMempoolReactor(conf *viper.Viper, mempool *Mempool) *MempoolReactor {
+//func NewMempoolReactor(conf *viper.Viper, mempool *Mempool) *MempoolReactor {
+func NewTxReactor(conf *viper.Viper, mempool types.TxPool) *MempoolReactor {
 	memR := &MempoolReactor{
 		config:  conf,
 		Mempool: mempool,
@@ -57,8 +59,9 @@ func NewMempoolReactor(conf *viper.Viper, mempool *Mempool) *MempoolReactor {
 func (memR *MempoolReactor) GetChannels() []*p2p.ChannelDescriptor {
 	return []*p2p.ChannelDescriptor{
 		&p2p.ChannelDescriptor{
-			ID:       MempoolChannel,
-			Priority: 5,
+			ID: MempoolChannel,
+			//			Priority: 5,
+			Priority: 1,
 		},
 	}
 }
@@ -84,7 +87,8 @@ func (memR *MempoolReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 
 	switch msg := msg.(type) {
 	case *TxMessage:
-		if err := memR.Mempool.CheckTx(msg.Tx); err != nil {
+		//		if err := memR.Mempool.CheckTx(msg.Tx); err != nil {
+		if err := memR.Mempool.ReceiveTx(msg.Tx); err != nil {
 			// Bad, seen, or conflicting tx.
 			// log.Debug("Could not add tx", zap.ByteString("tx", msg.Tx))
 			return
@@ -97,9 +101,9 @@ func (memR *MempoolReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 }
 
 // Just an alias for CheckTx since broadcasting happens in peer routines
-func (memR *MempoolReactor) BroadcastTx(tx types.Tx) error {
-	return memR.Mempool.CheckTx(tx)
-}
+//func (memR *MempoolReactor) BroadcastTx(tx types.Tx) error {
+//	return memR.Mempool.CheckTx(tx)
+//}
 
 type PeerState interface {
 	GetHeight() int64
@@ -130,9 +134,11 @@ func (memR *MempoolReactor) broadcastTxRoutine(peer Peer) {
 			// Go ahead and start from the beginning.
 			next = memR.Mempool.TxsFrontWait() // Wait until a tx is available
 		}
-		memTx := next.Value.(*mempoolTx)
+		//		memTx := next.Value.(*mempoolTx)
+		memTx := next.Value.(*types.TxInPool)
 		// make sure the peer is up to date
-		height := memTx.Height()
+		//		height := memTx.Height()
+		height := memTx.GetHeight()
 		if peerState := peer.Get(types.PeerStateKey); peerState != nil {
 			pState := peerState.(PeerState)
 			if pState.GetHeight() < height-1 { // Allow for a lag of 1 block
@@ -141,7 +147,8 @@ func (memR *MempoolReactor) broadcastTxRoutine(peer Peer) {
 			}
 		}
 		// send memTx
-		msg := &TxMessage{Tx: memTx.tx}
+		//msg := &TxMessage{Tx: memTx.tx}
+		msg := &TxMessage{Tx: memTx.Tx}
 		success := peer.Send(MempoolChannel, struct{ MempoolMessage }{msg})
 		if !success {
 			time.Sleep(peerCatchupSleepIntervalMS * time.Millisecond)

@@ -25,6 +25,11 @@ import (
 
 var lastBlockKey = []byte("lastblock")
 
+type TxPoolApplication interface {
+	Application
+	GetTxPool() TxPool
+}
+
 type Application interface {
 	GetAngineHooks() Hooks
 	CompatibleWithAngine()
