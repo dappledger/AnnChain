@@ -70,19 +70,18 @@ type Angine struct {
 	blockstore    *blockchain.BlockStore
 	dataArchive   *archive.Archive
 	conf          *viper.Viper
-	//mempool       *mempool.Mempool
-	txPool       types.TxPool
-	consensus    *consensus.ConsensusState
-	traceRouter  *trace.Router
-	stateMachine *state.State
-	p2pSwitch    *p2p.Switch
-	eventSwitch  *types.EventSwitch
-	refuseList   *refuse_list.RefuseList
-	p2pHost      string
-	p2pPort      uint16
-	genesis      *types.GenesisDoc
-	addrBook     *p2p.AddrBook
-	plugins      []plugin.IPlugin
+	txPool        types.TxPool
+	consensus     *consensus.ConsensusState
+	traceRouter   *trace.Router
+	stateMachine  *state.State
+	p2pSwitch     *p2p.Switch
+	eventSwitch   *types.EventSwitch
+	refuseList    *refuse_list.RefuseList
+	p2pHost       string
+	p2pPort       uint16
+	genesis       *types.GenesisDoc
+	addrBook      *p2p.AddrBook
+	plugins       []plugin.IPlugin
 
 	getSpecialVote func([]byte, *types.Validator) ([]byte, error)
 
@@ -104,7 +103,6 @@ func Initialize(tune *Tunes, chainId string) {
 }
 
 // NewAngine makes and returns a new angine, which can be used directly after being imported
-//func NewAngine(tune *Tunes) (angine *Angine, err error) {
 func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 	var conf *viper.Viper
 	if tune.Conf == nil {
@@ -270,8 +268,6 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	blockStore := blockchain.NewBlockStore(ang.dbs["blockstore"], ang.dbs["archive"])
 	_, stateLastHeight, _ := stateM.GetLastBlockInfo()
 	bcReactor := blockchain.NewBlockchainReactor(conf, stateLastHeight, blockStore, fastSync, ang.dataArchive)
-	//	mem := mempool.NewMempool(conf)
-	//	memReactor := mempool.NewMempoolReactor(conf, mem)
 
 	var txPool types.TxPool
 	if txPoolApp, isType := ang.app.(types.TxPoolApplication); isType {
@@ -283,7 +279,6 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	}
 	memReactor := mempool.NewTxReactor(conf, txPool)
 
-	//consensusState := consensus.NewConsensusState(conf, stateM, blockStore, mem)
 	consensusState := consensus.NewConsensusState(conf, stateM, blockStore, txPool)
 	consensusState.SetPrivValidator(ang.privValidator)
 	consensusReactor := consensus.NewConsensusReactor(consensusState, fastSync)
@@ -294,7 +289,6 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	})
 	bcReactor.SetBlockExecuter(func(blk *types.Block, pst *types.PartSet, c *types.Commit) error {
 		blockStore.SaveBlock(blk, pst, c)
-		//if err := stateM.ApplyBlock(*ang.eventSwitch, blk, pst.Header(), mem, -1); err != nil {
 		if err := stateM.ApplyBlock(*ang.eventSwitch, blk, pst.Header(), txPool, -1); err != nil {
 			log.Error("bc,ApplyBlock err", zap.Int64("height", blk.Height), zap.Error(err))
 			return err
@@ -329,7 +323,6 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 
 	ang.blockstore = blockStore
 	ang.consensus = consensusState
-	//ang.mempool = mem
 	ang.txPool = txPool
 	ang.traceRouter = spRouter
 	ang.stateMachine = stateM
@@ -339,7 +332,6 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 
 	ang.InitPlugins()
 	for _, p := range ang.plugins {
-		//mem.RegisterFilter(NewMempoolFilter(p.CheckTx))
 		txPool.RegisterFilter(types.NewTxpoolFilter(p.CheckTx))
 	}
 }
@@ -579,12 +571,10 @@ func (ang *Angine) Destroy() {
 }
 
 func (e *Angine) BroadcastTx(tx []byte) error {
-	//	return e.mempool.CheckTx(tx)
 	return e.txPool.ReceiveTx(tx)
 }
 
 func (e *Angine) BroadcastTxCommit(tx []byte) (err error) {
-	//if err = e.mempool.CheckTx(tx); err != nil {
 	if err = e.txPool.ReceiveTx(tx); err != nil {
 		return
 	}
@@ -615,7 +605,6 @@ func (e *Angine) BroadcastTxCommit(tx []byte) (err error) {
 }
 
 func (e *Angine) FlushMempool() {
-	//	e.mempool.Flush()
 	e.txPool.Flush()
 }
 
@@ -658,12 +647,10 @@ func (e *Angine) GetConsensusStateInfo() (string, []string) {
 }
 
 func (e *Angine) GetNumUnconfirmedTxs() int {
-	//	return e.mempool.Size()
 	return e.txPool.Size()
 }
 
 func (e *Angine) GetUnconfirmedTxs() []types.Tx {
-	//	return e.mempool.Reap(-1)
 	return e.txPool.Reap(-1)
 }
 
@@ -1088,17 +1075,6 @@ func (m MockMempool) Update(height int64, txs []types.Tx) {}
 type ITxCheck interface {
 	CheckTx(types.Tx) (bool, error)
 }
-
-//type MempoolFilter struct {
-//	cb func([]byte) (bool, error)
-//}
-
-//func (m MempoolFilter) CheckTx(tx types.Tx) (bool, error) {
-//	return m.cb(tx)
-//}
-//func NewMempoolFilter(f func([]byte) (bool, error)) MempoolFilter {
-//	return MempoolFilter{cb: f}
-//}
 
 const (
 	TIME_OUT_HEALTH = int64(time.Second * 60)
