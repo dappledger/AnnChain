@@ -658,7 +658,7 @@ func (app *GenesisApp) Info() (resInfo at.ResultInfo) {
 	lb := app.LoadLastBlock()
 	resInfo.LastBlockAppHash = lb.AppHash
 	resInfo.LastBlockHeight = lb.Height
-	resInfo.Version = "0.6.4_beta"
+	resInfo.Version = "0.6.4_stable"
 	resInfo.Data = "default app with evm-1.8"
 	return
 }

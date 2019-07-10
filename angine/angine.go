@@ -45,7 +45,7 @@ import (
 	"github.com/dappledger/AnnChain/ann-module/lib/go-wire"
 )
 
-const version = "0.6.4_beta"
+const version = "0.6.4_stable"
 
 type (
 	// Angine is a high level abstraction of all the state, consensus, mempool blah blah...
