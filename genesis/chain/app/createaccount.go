@@ -15,7 +15,6 @@
 package app
 
 import (
-	ethcmn "github.com/dappledger/AnnChain/genesis/eth/common"
 	"github.com/dappledger/AnnChain/genesis/types"
 
 	at "github.com/dappledger/AnnChain/angine/types"
@@ -40,18 +39,6 @@ func (ca *DoCreateAccount) PreCheck() at.Result {
 
 func (ca *DoCreateAccount) CheckValid(stateDup *stateDup) error {
 
-	var isInitAddr bool = false
-
-	for _, initAddr := range ca.app.Init_Accounts {
-		addr := ethcmn.HexToAddress(initAddr.Address) //string  to address
-		if addr.Hex() == ca.op.Source.Hex() {
-			isInitAddr = true
-			break
-		}
-	}
-	if !isInitAddr {
-		return at.NewError(at.CodeType_BaseUnknownAddress, at.CodeType_BaseUnknownAddress.String())
-	}
 	if stateDup.state.Exist(ca.op.TargetAddress) {
 		return at.NewError(at.CodeType_BaseUnknownAddress, at.CodeType_BaseUnknownAddress.String())
 	}
