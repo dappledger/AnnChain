@@ -47,7 +47,6 @@ func NewPubkeyCommand() *cobra.Command {
 		Short: "print this node's public key",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			//ang, err := gemmill.NewAngine(&gemmill.Tunes{Runtime: viper.GetString("runtime")})
 			ang, err := gemmill.NewAngine(nil, &gemmill.Tunes{Runtime: viper.GetString("runtime")})
 			if err != nil {
 				cmd.Println("Create angine error: " + err.Error())
