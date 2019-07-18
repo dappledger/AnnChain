@@ -51,7 +51,7 @@ const (
 type Receipt struct {
 	// Consensus fields
 	Height    uint64         `json:"height"`
-	Timestamp *big.Int       `json:"Timestamp"`
+	Timestamp *big.Int       `json:"timestamp"`
 	From      common.Address `json:"from"`
 	To        common.Address `json:"to"`
 
