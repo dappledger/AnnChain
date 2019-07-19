@@ -54,6 +54,7 @@ type Receipt struct {
 	Timestamp *big.Int       `json:"timestamp"`
 	From      common.Address `json:"from"`
 	To        common.Address `json:"to"`
+	Result    []byte         `json:"result"`
 
 	PostState         []byte `json:"root"`
 	Status            uint64 `json:"status"`
@@ -80,6 +81,7 @@ type receiptRLP struct {
 	Timestamp         *big.Int
 	From              common.Address
 	To                common.Address
+	Result            []byte
 	PostStateOrStatus []byte
 	CumulativeGasUsed uint64
 	Bloom             Bloom
@@ -91,6 +93,7 @@ type receiptStorageRLP struct {
 	Timestamp         *big.Int
 	From              common.Address
 	To                common.Address
+	Result            []byte
 	PostStateOrStatus []byte
 	CumulativeGasUsed uint64
 	Bloom             Bloom
@@ -115,7 +118,7 @@ func NewReceipt(root []byte, failed bool, cumulativeGasUsed uint64) *Receipt {
 // EncodeRLP implements rlp.Encoder, and flattens the consensus fields of a receipt
 // into an RLP stream. If no post state is present, byzantium fork is assumed.
 func (r *Receipt) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, &receiptRLP{r.Height, r.Timestamp, r.From, r.To, r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs})
+	return rlp.Encode(w, &receiptRLP{r.Height, r.Timestamp, r.From, r.To, r.Result, r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs})
 }
 
 // DecodeRLP implements rlp.Decoder, and loads the consensus fields of a receipt
@@ -128,7 +131,7 @@ func (r *Receipt) DecodeRLP(s *rlp.Stream) error {
 	if err := r.setStatus(dec.PostStateOrStatus); err != nil {
 		return err
 	}
-	r.Height, r.Timestamp, r.From, r.To, r.CumulativeGasUsed, r.Bloom, r.Logs = dec.Height, dec.Timestamp, dec.From, dec.To, dec.CumulativeGasUsed, dec.Bloom, dec.Logs
+	r.Height, r.Timestamp, r.From, r.To, r.Result, r.CumulativeGasUsed, r.Bloom, r.Logs = dec.Height, dec.Timestamp, dec.From, dec.To, dec.Result, dec.CumulativeGasUsed, dec.Bloom, dec.Logs
 	return nil
 }
 
@@ -186,6 +189,7 @@ func (r *ReceiptForStorage) EncodeRLP(w io.Writer) error {
 		Timestamp:         r.Timestamp,
 		From:              r.From,
 		To:                r.To,
+		Result:            r.Result,
 		PostStateOrStatus: (*Receipt)(r).statusEncoding(),
 		CumulativeGasUsed: r.CumulativeGasUsed,
 		Bloom:             r.Bloom,
@@ -218,7 +222,7 @@ func (r *ReceiptForStorage) DecodeRLP(s *rlp.Stream) error {
 		r.Logs[i] = (*Log)(log)
 	}
 	// Assign the implementation fields
-	r.Height, r.Timestamp, r.From, r.To, r.TxHash, r.ContractAddress, r.GasUsed = dec.Height, dec.Timestamp, dec.From, dec.To, dec.TxHash, dec.ContractAddress, dec.GasUsed
+	r.Height, r.Timestamp, r.From, r.To, r.Result, r.TxHash, r.ContractAddress, r.GasUsed = dec.Height, dec.Timestamp, dec.From, dec.To, dec.Result, dec.TxHash, dec.ContractAddress, dec.GasUsed
 	return nil
 }
 
