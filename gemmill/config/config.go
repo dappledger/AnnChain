@@ -212,7 +212,7 @@ func setMempoolDefaults(conf *viper.Viper) {
 func setConsensusDefaults(conf *viper.Viper) {
 	conf.SetDefault("cs_wal_dir", path.Join(conf.GetString("runtime"), DATADIR, "cs.wal"))
 	conf.SetDefault("cs_wal_light", false)
-	conf.SetDefault("block_size", 2000)       // max number of txs
+	conf.SetDefault("block_size", 5000)       // max number of txs
 	conf.SetDefault("block_part_size", 65536) // part size 64K
 	conf.SetDefault("disable_data_hash", false)
 	conf.SetDefault("timeout_propose", 3000)
@@ -257,7 +257,7 @@ func DefaultConfig() (conf *viper.Viper) {
 	conf.Set("non_validator_node_auth", false)
 	conf.SetDefault("tracerouter_msg_ttl", 5)
 	conf.Set("threshold_blocks", 0)
-	conf.SetDefault("block_size", 2000)
+	conf.SetDefault("block_size", 5000)
 
 	conf.SetDefault("timeout_propose", 3000)
 	conf.SetDefault("timeout_propose_delta", 1000)
