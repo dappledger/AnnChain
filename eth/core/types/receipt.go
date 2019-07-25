@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"time"
+	//	"time"
 	"unsafe"
 
 	"github.com/dappledger/AnnChain/eth/common"
@@ -60,13 +60,6 @@ type Receipt struct {
 	TxHash          common.Hash    `json:"transactionHash" gencodec:"required"`
 	ContractAddress common.Address `json:"contractAddress"`
 	GasUsed         uint64         `json:"gasUsed" gencodec:"required"`
-
-	TxIndex      uint64         `json:"transactionIndex" gencodec:"required"`
-	Height       uint64         `json:"height"`
-	BlockHashHex string         `json:"blockHash"`
-	From         common.Address `json:"from"`
-	To           common.Address `json:"to"`
-	Timestamp    time.Time      `json:"timestamp"`
 }
 
 type receiptMarshaling struct {
