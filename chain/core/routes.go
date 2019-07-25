@@ -84,6 +84,8 @@ func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 		"querytx": rpc.NewRPCFunc(h.QueryTx, "query"),
 		"info":    rpc.NewRPCFunc(h.Info, ""),
 
+		"transaction": rpc.NewRPCFunc(h.GetTransactionByHash, "tx"),
+
 		// control API
 		"unsafe_flush_mempool": rpc.NewRPCFunc(h.UnsafeFlushMempool, ""),
 
@@ -236,6 +238,11 @@ func (h *rpcHandler) QueryTx(query []byte) (*gtypes.ResultNumLimitTx, error) {
 }
 
 func (h *rpcHandler) Query(query []byte) (*gtypes.ResultQuery, error) {
+	return &gtypes.ResultQuery{Result: h.node.Application.Query(query)}, nil
+}
+
+func (h *rpcHandler) GetTransactionByHash(hash []byte) (*gtypes.ResultQuery, error) {
+	query := append([]byte{types.QueryType_TxRaw, gtypes.QueryTx}, hash...)
 	return &gtypes.ResultQuery{Result: h.node.Application.Query(query)}, nil
 }
 

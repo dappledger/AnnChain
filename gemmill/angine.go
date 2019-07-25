@@ -682,43 +682,47 @@ func (ang *Angine) Query(queryType byte, load []byte) (interface{}, error) {
 	return nil, errors.Errorf("[Angine Query] no such query type: %v", queryType)
 }
 
-func (ang *Angine) QueryPayLoad(load []byte) (interface{}, error) {
+func (ang *Angine) QueryTransaction(load []byte) (interface{}, error) {
+
 	for _, p := range ang.plugins {
+
 		if qc, ok := p.(*plugin.QueryCachePlugin); ok {
-			info := &types.TxExecutionResult{}
+
 			info, err := qc.ExecutionResult(load)
 			if err != nil {
 				return nil, err
 			}
 
-			block, _, err := ang.GetBlock(info.Height)
+			block, _, err := ang.GetBlock(int64(info.Height))
 			if err != nil {
-				return nil, fmt.Errorf("[Angine Query] fail to get block")
+				return nil, fmt.Errorf("[Angine Query] fail to get block:%v", err)
 			}
 
-			txsMap := make(map[string]int)
-			txs := block.Data.Txs
-
-			i := 0
-			for _, tx := range txs {
-				txhash := tx.Hash()
-				txsMap[string(txhash)] = i
-				i = i + 1
+			if int(info.Index) >= len(block.Txs) {
+				return nil, fmt.Errorf("[Angine Query] fail to get block, invalid tx index")
 			}
+			tx := block.Data.Txs[info.Index]
 
-			txHash := string(load)
-			index := txsMap[txHash]
-			txData := txs[index]
-
-			data, err := ang.queryPayLoadTxParser(txData)
-			if err != nil {
-				return nil, err
+			t := types.ResultTransaction{
+				BlockHash:        info.BlockHash,
+				BlockHeight:      info.Height,
+				TransactionIndex: info.Index,
+				RawTransaction:   []byte(tx),
 			}
-
-			return data, nil
+			return &t, err
 		}
 	}
-	return nil, nil
+	return nil, errors.New("not found")
+}
+
+func (ang *Angine) QueryPayLoad(load []byte) (interface{}, error) {
+	tx, err := ang.QueryTransaction(load)
+	if err != nil {
+		return nil, err
+	}
+	rawTx := tx.(*types.ResultTransaction)
+	return ang.queryPayLoadTxParser(rawTx.RawTransaction)
+
 }
 
 // Recover world status
