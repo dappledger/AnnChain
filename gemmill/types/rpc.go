@@ -108,6 +108,7 @@ type ResultTransaction struct {
 	BlockHeight      uint64 `json:"block_height"`
 	TransactionIndex uint64 `json:"transaction_index"`
 	RawTransaction   []byte `json:"raw_transaction"`
+	Timestamp        uint64 `json:"timestamp"`
 }
 
 type ResultUnconfirmedTxs struct {
