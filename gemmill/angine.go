@@ -677,6 +677,8 @@ func (ang *Angine) Query(queryType byte, load []byte) (interface{}, error) {
 		}
 
 		return data, nil
+	case types.QueryTx:
+		return ang.QueryTransaction(load)
 	}
 
 	return nil, errors.Errorf("[Angine Query] no such query type: %v", queryType)
@@ -702,12 +704,14 @@ func (ang *Angine) QueryTransaction(load []byte) (interface{}, error) {
 				return nil, fmt.Errorf("[Angine Query] fail to get block, invalid tx index")
 			}
 			tx := block.Data.Txs[info.Index]
+			timestamp := block.Header.Time.UnixNano()
 
 			t := types.ResultTransaction{
 				BlockHash:        info.BlockHash,
 				BlockHeight:      info.Height,
 				TransactionIndex: info.Index,
 				RawTransaction:   []byte(tx),
+				Timestamp:        uint64(timestamp),
 			}
 			return &t, err
 		}

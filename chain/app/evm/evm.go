@@ -302,12 +302,6 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 			if err != nil {
 				return err
 			}
-
-			if tx.To() != nil {
-				receipt.To = *(tx.To())
-			}
-			receipt.Height = app.currentHeader.Number.Uint64()
-			receipt.Timestamp = big.NewInt(block.Header.Time.Unix())
 			temReceipt = append(temReceipt, receipt)
 
 			return nil
@@ -567,7 +561,6 @@ func (app *EVMApp) queryReceipt(txHashBytes []byte) atypes.Result {
 }
 
 func (app *EVMApp) queryTransaction(txHashBytes []byte) atypes.Result {
-
 	if len(txHashBytes) == 0 {
 		return atypes.NewError(atypes.CodeType_BaseInvalidInput, "Empty query")
 	}
