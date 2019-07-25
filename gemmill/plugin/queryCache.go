@@ -52,24 +52,19 @@ func (qc *QueryCachePlugin) EndBlock(p *EndBlockParams) (*EndBlockReturns, error
 
 func (qc *QueryCachePlugin) ExecBlock(p *ExecBlockParams) (*ExecBlockReturns, error) {
 	batch := qc.db.NewBatch()
-	bheader := p.Block.Header
-	queryBlockInfo, err := (&types.TxExecutionResult{
-		Height:        bheader.Height,
-		BlockHash:     p.Block.Hash(),
-		BlockTime:     bheader.Time,
-		ValidatorHash: bheader.ValidatorsHash,
-	}).ToBytes()
-
-	if err != nil {
-		return nil, errors.Errorf("[QueryCachePlugin ExecBlock] fail to serialize execution result: %v", err)
+	for i, tx := range p.Block.Data.Txs {
+		e := types.TxExecutionResult{
+			Height:    uint64(p.Block.Height),
+			BlockHash: p.Block.Hash(),
+			Index:     uint64(i),
+		}
+		data, err := e.ToBytes()
+		if err != nil {
+			return nil, errors.Errorf("[QueryCachePlugin ExecBlock] fail to serialize execution result: %v", err)
+		}
+		batch.Set(tx.Hash(), data)
 	}
-
-	for _, tx := range p.ValidTxs {
-		batch.Set(tx.Hash(), queryBlockInfo)
-	}
-
 	batch.Write()
-
 	return nil, nil
 }
 

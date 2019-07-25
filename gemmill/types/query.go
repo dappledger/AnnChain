@@ -15,26 +15,25 @@
 package types
 
 import (
-	"encoding/json"
-	"time"
+	"github.com/dappledger/AnnChain/eth/rlp"
 )
 
 const (
 	// angine takes query id from 0x01 to 0x2F
 	QueryTxExecution = 0x01
+	QueryTx          = 0x02
 )
 
 type TxExecutionResult struct {
-	Height        int64     `json:"height"`
-	BlockHash     []byte    `json:"blockhash"`
-	BlockTime     time.Time `json:"blocktime"`
-	ValidatorHash []byte    `json:"validatorhash"`
+	Height    uint64 `json:"height"`
+	BlockHash []byte `json:"blockhash"`
+	Index     uint64 `json:"index"`
 }
 
 func (i *TxExecutionResult) ToBytes() ([]byte, error) {
-	return json.Marshal(i)
+	return rlp.EncodeToBytes(i)
 }
 
-func (i *TxExecutionResult) FromBytes(bytes []byte) error {
-	return json.Unmarshal(bytes, i)
+func (i *TxExecutionResult) FromBytes(data []byte) error {
+	return rlp.DecodeBytes(data, i)
 }

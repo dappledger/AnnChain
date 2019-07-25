@@ -75,8 +75,7 @@ func (bc *BlockChainEvm) GetHeader(hash ethcmn.Hash, number uint64) *ethtypes.He
 }
 
 var (
-	ReceiptsPrefix  = []byte("receipts-")
-	BlockHashPrefix = []byte("blockhash-")
+	ReceiptsPrefix = []byte("receipts-")
 )
 
 type LastBlockInfo struct {
@@ -102,8 +101,7 @@ type EVMApp struct {
 	state        *ethstate.StateDB
 	currentState *ethstate.StateDB
 
-	receipts    ethtypes.Receipts
-	valid_hashs Hashs
+	receipts ethtypes.Receipts
 
 	Signer ethtypes.Signer
 }
@@ -278,7 +276,6 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 		state := app.currentState
 		stateSnapshot := state.Snapshot()
 		temReceipt := make([]*ethtypes.Receipt, 0)
-		temTxHash := make([]ethcmn.Hash, 0)
 
 		execFunc := func(txIndex int, raw []byte, tx *ethtypes.Transaction) error {
 			gp := new(ethcore.GasPool).AddGas(math.MaxBig256.Uint64())
@@ -312,7 +309,6 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 			receipt.Height = app.currentHeader.Number.Uint64()
 			receipt.Timestamp = big.NewInt(block.Header.Time.Unix())
 			temReceipt = append(temReceipt, receipt)
-			temTxHash = append(temTxHash, txhash)
 
 			return nil
 		}
@@ -322,12 +318,10 @@ func (app *EVMApp) genExecFun(block *atypes.Block, res *atypes.ExecuteResult) Be
 				log.Warn("[evm execute],apply transaction", zap.Error(err))
 				state.RevertToSnapshot(stateSnapshot)
 				temReceipt = nil
-				temTxHash = nil
 				res.InvalidTxs = append(res.InvalidTxs, atypes.ExecuteInvalidTx{Bytes: raw, Error: err})
 				return true
 			}
 			app.receipts = append(app.receipts, temReceipt...)
-			app.valid_hashs = append(app.valid_hashs, temTxHash...)
 			res.ValidTxs = append(res.ValidTxs, raw)
 
 			return true
@@ -369,10 +363,14 @@ func (app *EVMApp) OnCommit(height, round int64, block *atypes.Block) (interface
 	app.stateMtx.Unlock()
 
 	app.SaveLastBlock(LastBlockInfo{Height: height, AppHash: appHash.Bytes()})
-	rHash := app.SaveReceipts()
-	bHash := app.SaveBlocks(block.Hash())
+
+	rHash, err := app.SaveReceipts()
+	if err != nil {
+		log.Error("application save receipts", zap.Error(err), zap.Int64("height", block.Height))
+	}
+
 	app.receipts = nil
-	app.valid_hashs = nil
+
 	app.pool.updateToState()
 
 	log.Info("application save to db", zap.String("appHash", fmt.Sprintf("%X", appHash.Bytes())), zap.String("receiptHash", fmt.Sprintf("%X", rHash)))
@@ -380,7 +378,6 @@ func (app *EVMApp) OnCommit(height, round int64, block *atypes.Block) (interface
 	return atypes.CommitResult{
 		AppHash:      appHash.Bytes(),
 		ReceiptsHash: rHash,
-		BlockHash:    bHash,
 	}, nil
 }
 
@@ -414,34 +411,7 @@ func (app *EVMApp) CheckTx(bs []byte) error {
 	})
 }
 
-func (app *EVMApp) SaveBlocks(blockHash []byte) []byte {
-
-	blockBatch := app.stateDb.NewBatch()
-
-	storageBlockBytes, err := rlp.EncodeToBytes(app.valid_hashs)
-	if err != nil {
-		fmt.Println("wrong rlp encode:" + err.Error())
-		return nil
-	}
-
-	key := append(BlockHashPrefix, blockHash...)
-
-	if err := blockBatch.Put(key, storageBlockBytes); err != nil {
-		fmt.Println("batch block failed:" + err.Error())
-		return nil
-	}
-
-	if err := blockBatch.Write(); err != nil {
-		fmt.Println("persist block failed:" + err.Error())
-		return nil
-	}
-
-	bHash := merkle.SimpleHashFromBinaries([]interface{}{app.valid_hashs})
-
-	return bHash
-}
-
-func (app *EVMApp) SaveReceipts() []byte {
+func (app *EVMApp) SaveReceipts() ([]byte, error) {
 	savedReceipts := make([][]byte, 0, len(app.receipts))
 	receiptBatch := app.stateDb.NewBatch()
 
@@ -449,26 +419,23 @@ func (app *EVMApp) SaveReceipts() []byte {
 		storageReceipt := (*ethtypes.ReceiptForStorage)(receipt)
 		storageReceiptBytes, err := rlp.EncodeToBytes(storageReceipt)
 		if err != nil {
-			fmt.Println("wrong rlp encode:" + err.Error())
-			return nil
+			return nil, fmt.Errorf("wrong rlp encode:%v", err.Error())
 		}
 
 		key := append(ReceiptsPrefix, receipt.TxHash.Bytes()...)
 
 		if err := receiptBatch.Put(key, storageReceiptBytes); err != nil {
-			fmt.Println("batch receipt failed:" + err.Error())
-			return nil
+			return nil, fmt.Errorf("batch receipt failed:%v", err.Error())
 		}
 		savedReceipts = append(savedReceipts, storageReceiptBytes)
 	}
 	if err := receiptBatch.Write(); err != nil {
-		fmt.Println("persist receipts failed:" + err.Error())
-		return nil
+		return nil, fmt.Errorf("persist receipts failed:%v", err.Error())
 	}
 
 	rHash := merkle.SimpleHashFromHashes(savedReceipts)
 
-	return rHash
+	return rHash, nil
 }
 
 func (app *EVMApp) Info() (resInfo atypes.ResultInfo) {
@@ -504,8 +471,9 @@ func (app *EVMApp) Query(query []byte) atypes.Result {
 		res = app.queryContractExistence(load)
 	case rtypes.QueryType_PayLoad:
 		res = app.queryPayLoad(load)
-	case rtypes.QueryType_BlockHash:
-		res = app.queryBlockHash(load)
+	case rtypes.QueryType_TxRaw:
+		res = app.queryTransaction(load)
+
 	default:
 		res = atypes.NewError(atypes.CodeType_BaseInvalidInput, "unimplemented query")
 	}
@@ -598,13 +566,25 @@ func (app *EVMApp) queryReceipt(txHashBytes []byte) atypes.Result {
 	return atypes.NewResultOK(data, "")
 }
 
-func (app *EVMApp) queryBlockHash(blockHashBytes []byte) atypes.Result {
-	key := append(BlockHashPrefix, blockHashBytes...)
-	data, err := app.stateDb.Get(key)
-	if err != nil {
-		return atypes.NewError(atypes.CodeType_InternalError, "fail to get txs for blockhash:"+string(key))
+func (app *EVMApp) queryTransaction(txHashBytes []byte) atypes.Result {
+
+	if len(txHashBytes) == 0 {
+		return atypes.NewError(atypes.CodeType_BaseInvalidInput, "Empty query")
 	}
-	return atypes.NewResultOK(data, "")
+
+	var res atypes.Result
+	data, err := app.core.Query(txHashBytes[0], txHashBytes[1:])
+	if err != nil {
+		return atypes.NewError(atypes.CodeType_InternalError, err.Error())
+	}
+
+	bs, err := rlp.EncodeToBytes(data)
+	if err != nil {
+		return atypes.NewError(atypes.CodeType_InternalError, err.Error())
+	}
+	res.Data = bs
+	res.Code = atypes.CodeType_OK
+	return res
 }
 
 func (app *EVMApp) queryPayLoad(txHashBytes []byte) atypes.Result {

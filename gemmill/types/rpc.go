@@ -103,6 +103,13 @@ type ResultBroadcastTxCommit struct {
 	Log    string   `json:"log"`
 }
 
+type ResultTransaction struct {
+	BlockHash        []byte `json:"block_hash"`
+	BlockHeight      uint64 `json:"block_height"`
+	TransactionIndex uint64 `json:"transaction_index"`
+	RawTransaction   []byte `json:"raw_transaction"`
+}
+
 type ResultUnconfirmedTxs struct {
 	N   int  `json:"n_txs"`
 	Txs []Tx `json:"txs"`
