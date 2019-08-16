@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	// SpecialOPChannel is for special operation only
-	SpecialOPChannel = byte(0x50)
+	// AdminOPChannel is for admin operation only
+	AdminOPChannel = byte(0x50)
 
 	maxTraceMessageSize = 1048576
 )
@@ -54,7 +54,7 @@ type Reactor struct {
 
 func newChannelAttributes(r *Reactor) map[byte]channelAttribute {
 	ret := make(map[byte]channelAttribute)
-	ret[SpecialOPChannel] = channelAttribute{
+	ret[AdminOPChannel] = channelAttribute{
 		ValidatorOnly: true,
 	}
 	return ret
@@ -84,7 +84,7 @@ func (tr *Reactor) OnStop() {
 func (tr *Reactor) GetChannels() []*p2p.ChannelDescriptor {
 	return []*p2p.ChannelDescriptor{
 		&p2p.ChannelDescriptor{
-			ID:                SpecialOPChannel,
+			ID:                AdminOPChannel,
 			Priority:          1,
 			SendQueueCapacity: 100,
 		},
@@ -108,10 +108,10 @@ func (tr *Reactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 	// different channel different strategy,
 	// mainly focus on how to broadcast the message
 	switch chID {
-	case SpecialOPChannel:
+	case AdminOPChannel:
 		switch msg := msg.(type) {
 		case *traceRequest:
-			broadcast, err := tr.router.TraceRequest(HashMessage(msg), src.PubKey.KeyString(), msg.Data, tr.channelAttributes[SpecialOPChannel].ValidatorOnly)
+			broadcast, err := tr.router.TraceRequest(HashMessage(msg), src.PubKey.KeyString(), msg.Data, tr.channelAttributes[AdminOPChannel].ValidatorOnly)
 			if err != nil {
 				// process error
 				return
@@ -119,7 +119,7 @@ func (tr *Reactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 			if broadcast {
 				for _, p := range tr.Switch.Peers().List() {
 					if !p.Equals(src) {
-						p.Send(SpecialOPChannel, struct{ Message }{msg})
+						p.Send(AdminOPChannel, struct{ Message }{msg})
 					}
 				}
 			}
@@ -131,7 +131,7 @@ func (tr *Reactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 			}
 			if pk != nil {
 				peer := tr.Switch.Peers().Get(fmt.Sprintf("%X", pk))
-				peer.Send(SpecialOPChannel, struct{ Message }{msg})
+				peer.Send(AdminOPChannel, struct{ Message }{msg})
 			}
 		}
 	default:

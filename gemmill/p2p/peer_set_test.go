@@ -24,7 +24,7 @@ import (
 // Returns an empty dummy peer
 func randPeer() *Peer {
 	return &Peer{
-		Key: RandStr(12),
+		Key: gcmn.RandStr(12),
 		NodeInfo: &NodeInfo{
 			RemoteAddr: gcmn.Fmt("%v.%v.%v.%v:46656", rand.Int()%256, rand.Int()%256, rand.Int()%256, rand.Int()%256),
 			ListenAddr: gcmn.Fmt("%v.%v.%v.%v:46656", rand.Int()%256, rand.Int()%256, rand.Int()%256, rand.Int()%256),

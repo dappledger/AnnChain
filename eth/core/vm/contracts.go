@@ -19,6 +19,7 @@ package vm
 import (
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/dappledger/AnnChain/eth/common"
@@ -37,26 +38,30 @@ type PrecompiledContract interface {
 	Run(input []byte) ([]byte, error) // Run runs the precompiled contract
 }
 
+var DefaultAdminContract = AdminOP{}
+
 // PrecompiledContractsHomestead contains the default set of pre-compiled Ethereum
 // contracts used in the Frontier and Homestead releases.
 var PrecompiledContractsHomestead = map[common.Address]PrecompiledContract{
-	common.BytesToAddress([]byte{1}): &ecrecover{},
-	common.BytesToAddress([]byte{2}): &sha256hash{},
-	common.BytesToAddress([]byte{3}): &ripemd160hash{},
-	common.BytesToAddress([]byte{4}): &dataCopy{},
+	common.BytesToAddress([]byte{1}):   &ecrecover{},
+	common.BytesToAddress([]byte{2}):   &sha256hash{},
+	common.BytesToAddress([]byte{3}):   &ripemd160hash{},
+	common.BytesToAddress([]byte{4}):   &dataCopy{},
+	common.BytesToAddress([]byte{254}): &DefaultAdminContract,
 }
 
 // PrecompiledContractsByzantium contains the default set of pre-compiled Ethereum
 // contracts used in the Byzantium release.
 var PrecompiledContractsByzantium = map[common.Address]PrecompiledContract{
-	common.BytesToAddress([]byte{1}): &ecrecover{},
-	common.BytesToAddress([]byte{2}): &sha256hash{},
-	common.BytesToAddress([]byte{3}): &ripemd160hash{},
-	common.BytesToAddress([]byte{4}): &dataCopy{},
-	common.BytesToAddress([]byte{5}): &bigModExp{},
-	common.BytesToAddress([]byte{6}): &bn256Add{},
-	common.BytesToAddress([]byte{7}): &bn256ScalarMul{},
-	common.BytesToAddress([]byte{8}): &bn256Pairing{},
+	common.BytesToAddress([]byte{1}):   &ecrecover{},
+	common.BytesToAddress([]byte{2}):   &sha256hash{},
+	common.BytesToAddress([]byte{3}):   &ripemd160hash{},
+	common.BytesToAddress([]byte{4}):   &dataCopy{},
+	common.BytesToAddress([]byte{5}):   &bigModExp{},
+	common.BytesToAddress([]byte{6}):   &bn256Add{},
+	common.BytesToAddress([]byte{7}):   &bn256ScalarMul{},
+	common.BytesToAddress([]byte{8}):   &bn256Pairing{},
+	common.BytesToAddress([]byte{254}): &DefaultAdminContract,
 }
 
 // RunPrecompiledContract runs and evaluates the output of a precompiled contract.
@@ -66,6 +71,59 @@ func RunPrecompiledContract(p PrecompiledContract, input []byte, contract *Contr
 		return p.Run(input)
 	}
 	return nil, ErrOutOfGas
+}
+
+func (c *AdminOP) SetCallback(cb func(app *AdminDBApp,data []byte) error) {
+	c.callback = cb
+}
+
+type AdminCallback func(app *AdminDBApp,data []byte) error
+
+type AdminOP struct {
+	callback AdminCallback
+	state StateDB
+}
+
+type AdminDBApp struct {
+	StateDB
+	Addr []byte
+}
+
+func (app *AdminDBApp)From()[]byte{
+	return app.Addr
+}
+
+func (app *AdminDBApp)GetNonce()uint64{
+	var addr common.Address
+	addr.SetBytes(app.Addr)
+	return app.StateDB.GetNonce(addr)
+}
+
+func (c *AdminOP) RequiredGas(input []byte) uint64 {
+	return 0
+}
+
+func (c *AdminOP)SetState(s StateDB){
+	c.state = s
+}
+
+func (c *AdminOP) Run(input []byte) ([]byte, error) {
+	//[$len + $arg]
+	dlen := new(big.Int).SetBytes(input[:32]).Uint64()
+	offset := dlen + 32
+	if int(offset) > len(input) {
+		offset = uint64(len(input))
+	}
+	from := input[32:32+20]
+	data := input[32+20:offset]
+	app := &AdminDBApp{
+		c.state,
+		from,
+	}
+	if c.callback != nil {
+		return nil, c.callback(app,data)
+	}
+	return nil, fmt.Errorf("admin callback not set")
 }
 
 // ECRECOVER implemented as a native contract.

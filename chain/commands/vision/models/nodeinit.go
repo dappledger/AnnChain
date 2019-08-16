@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,14 +22,15 @@ import (
 	"time"
 
 	"github.com/astaxie/beego"
-	glb "github.com/dappledger/AnnChain/chain/commands/global"
-	cnode "github.com/dappledger/AnnChain/chain/core"
-	agconf "github.com/dappledger/AnnChain/gemmill/config"
-	crypto "github.com/dappledger/AnnChain/gemmill/go-crypto"
+	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/dappledger/AnnChain/chain/commands/global"
+	"github.com/dappledger/AnnChain/chain/core"
+	"github.com/dappledger/AnnChain/gemmill/config"
+	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 	"github.com/dappledger/AnnChain/gemmill/go-utils"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
-	agtypes "github.com/dappledger/AnnChain/gemmill/types"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/dappledger/AnnChain/gemmill/types"
 )
 
 type KeyInfo struct {
@@ -93,18 +93,18 @@ func (n *NodeInit) CheckData() error {
 		}
 	}
 	if len(n.AppName) == 0 {
-		n.AppName = "db"
+		n.AppName = "evm"
 	}
 	if len(n.Peers) != 0 && !utils.CheckIPAddrSlc(n.Peers) {
-		return errors.New("peers should be <addr1>,<addr2>...")
+		return errors.New("peers should be <addr1>,<addr2>")
 	}
 	if len(n.CryptoType) == 0 {
 		n.CryptoType = crypto.CryptoTypeZhongAn
 	}
-	if !glb.CheckAppName(n.AppName) {
+	if !global.CheckAppName(n.AppName) {
 		return errors.New("app name not found")
 	}
-	if !glb.CheckCryptoType(n.CryptoType) {
+	if !global.CheckCryptoType(n.CryptoType) {
 		return errors.New("crypto type not found")
 	}
 	return nil
@@ -137,7 +137,7 @@ func (n *NodeInit) DoInit() error {
 	} else {
 		bytes, err := hex.DecodeString(privkey)
 		if err != nil {
-			return errors.New(fmt.Sprintf("privkey should be hexadecimal", err))
+			return errors.New(fmt.Sprintf("privkey should be hexadecimal: %v", err))
 		}
 		pk, err = crypto.GenPrivkeyByBytes(n.CryptoType, bytes)
 		if err != nil {
@@ -147,17 +147,17 @@ func (n *NodeInit) DoInit() error {
 
 	// gen chainid
 	if len(n.Chainid) == 0 {
-		n.Chainid = agconf.GenChainID()
+		n.Chainid = config.GenChainID()
 	}
 
 	// gen ca TODO don't ignore err?
 	pubkey, _ := hex.DecodeString(pk.PubKey().KeyString())
 	authPrivBytes, _ := hex.DecodeString(n.AuthPrivkey)
 	authPk, _ := crypto.GenPrivkeyByBytes(n.CryptoType, authPrivBytes)
-	ca := agtypes.SignCA(authPk, pubkey)
+	ca := types.SignCA(authPk, pubkey)
 
 	// set tunes config
-	tunesConf := glb.GenConf()
+	tunesConf := global.GenConf()
 	tunesConf.Set("p2p_laddr", fmt.Sprintf("tcp://0.0.0.0:%v", n.P2PPort))
 	tunesConf.Set("rpc_laddr", fmt.Sprintf("tcp://0.0.0.0:%v", n.RpcPort))
 	tunesConf.Set("log_dir", n.LogPath)
@@ -178,7 +178,7 @@ func (n *NodeInit) DoInit() error {
 		tunesConf.Set("genesis_json_file", n.Genesisfile)
 	}
 
-	if err = agconf.InitRuntime(n.ConfigPath, n.Chainid, tunesConf); err != nil {
+	if err = config.InitRuntime(n.ConfigPath, n.Chainid, tunesConf); err != nil {
 		os.RemoveAll(n.ConfigPath)
 	}
 	return err
@@ -200,7 +200,7 @@ func DoInitNode(c *beego.Controller) {
 func RunNode(c *beego.Controller) {
 	n := &NodeInit{}
 	c.ParseForm(n)
-	err := glb.CheckAndReadRuntimeConfig(n.ConfigPath)
+	err := global.CheckAndReadRuntimeConfig(n.ConfigPath)
 	if err != nil {
 		c.Data["json"] = err.Error()
 		return
@@ -208,7 +208,7 @@ func RunNode(c *beego.Controller) {
 	chret := make(chan error, 0)
 	go func() {
 		defer log.DumpStack()
-		if err := cnode.RunNodeRet(glb.GConf(), "", glb.GConf().GetString("app_name")); err != nil {
+		if err := core.RunNodeRet(global.GConf(), "", global.GConf().GetString("app_name")); err != nil {
 			chret <- err
 		}
 	}()

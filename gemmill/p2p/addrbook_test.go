@@ -61,7 +61,10 @@ func randIPv4Address() *NetAddress {
 			rand.Intn(255),
 		)
 		port := rand.Intn(65535-1) + 1
-		addr := NewNetAddressString(fmt.Sprintf("%v:%v", ip, port))
+		addr, err := NewNetAddressString(fmt.Sprintf("%v:%v", ip, port))
+		if err != nil {
+			panic(err)
+		}
 		if addr.Routable() {
 			return addr
 		}

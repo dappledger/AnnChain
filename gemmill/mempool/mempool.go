@@ -20,12 +20,12 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/spf13/viper"
+
 	auto "github.com/dappledger/AnnChain/gemmill/modules/go-autofile"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-clist"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/types"
-
-	"github.com/spf13/viper"
 )
 
 const cacheSize = 100000
@@ -111,6 +111,9 @@ func (mem *Mempool) ReceiveTx(tx types.Tx) (err error) {
 	if mem.config.GetBool("mempool_enable_txs_limits") && mem.txs.Len() > mem.txLimit {
 		return errors.New("Too many unsolved TX (rejected)")
 	}
+	if err := mem.checkTxWithFilters(tx); err != nil {
+		return errors.New("plugin checktx failed with error: " + err.Error())
+	}
 	// TODO: remove this wal, mempool lost may be durable
 	if mem.wal != nil {
 		mem.wal.Write([]byte(tx))
@@ -121,7 +124,14 @@ func (mem *Mempool) ReceiveTx(tx types.Tx) (err error) {
 	if !mem.cache.Push(tx) {
 		return ErrTxInCache
 	}
-	mem.checkAndAdd(tx)
+
+	nc := atomic.AddInt64(&mem.counter, 1)
+	memTx := &types.TxInPool{
+		Counter: nc,
+		Height:  atomic.LoadInt64(&mem.height),
+		Tx:      tx,
+	}
+	mem.txs.PushBack(memTx)
 
 	return nil
 }
@@ -168,7 +178,6 @@ func (mem *Mempool) collectTxs(maxTxs int) []types.Tx {
 	for e := mem.txs.Front(); e != nil && len(txs) < maxTxs; e = e.Next() {
 		memTx := e.Value.(*types.TxInPool)
 		txs = append(txs, memTx.Tx)
-
 	}
 	return txs
 }
@@ -224,19 +233,6 @@ func (mem *Mempool) initWAL() {
 	}
 }
 
-func (mem *Mempool) checkAndAdd(tx types.Tx) error {
-	if err := tx.Deal(func(ttx types.Tx) error {
-		return mem._checkTx(ttx)
-	}); err != nil {
-		mem.cache.Remove(tx)
-		return err
-	}
-	//return errors.New("skip proxyAppConn CheckTx")
-	mem._addToTxs(tx)
-	return nil
-
-}
-
 func (mem *Mempool) _addToTxs(tx types.Tx) {
 	nc := atomic.AddInt64(&mem.counter, 1)
 	memTx := &types.TxInPool{
@@ -255,34 +251,6 @@ func (mem *Mempool) _checkTx(tx types.Tx) error {
 }
 
 //--------------------------------------------------------------------------------
-
-// A transaction that successfully ran
-//type mempoolTx struct {
-//	counter int64    // a simple incrementing counter
-//	height  int64    // height that this tx had been validated in
-//	tx      types.Tx //
-//}
-
-//func (mem *Mempool) _addToTxs(tx types.Tx) {
-//	nc := atomic.AddInt64(&mem.counter, 1)
-//	memTx := &types.TxInPool{
-//		Counter: nc,
-//		Height:  atomic.LoadInt64(&mem.height),
-//		Tx:      tx,
-//	}
-//	mem.txs.PushBack(memTx)
-//}
-
-//func (memTx *mempoolTx) Height() int64 {
-//	return atomic.LoadInt64(&memTx.height)
-//}
-
-//func (mem *Mempool) _checkTx(tx types.Tx) error {
-//	if err := mem.checkTxWithFilters(tx); err != nil {
-//		return errors.New("plugin checktx failed with error: " + err.Error())
-//	}
-//	return nil
-//}
 
 //--------------------------------------------------------------------------------
 

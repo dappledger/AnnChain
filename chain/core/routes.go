@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,11 +20,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/dappledger/AnnChain/chain/types"
 	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 	rpc "github.com/dappledger/AnnChain/gemmill/rpc/server"
 	gtypes "github.com/dappledger/AnnChain/gemmill/types"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 // RPCNode define the node's abilities provided for rpc calls
@@ -57,6 +56,10 @@ func newRPCHandler(n *Node) *rpcHandler {
 func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 	h := newRPCHandler(n)
 	return map[string]*rpc.RPCFunc{
+		// subscribe/unsubscribe are reserved for websocket events.
+		// "subscribe":   rpc.NewWSRPCFunc(SubscribeResult, "event"),
+		// "unsubscribe": rpc.NewWSRPCFunc(UnsubscribeResult, "event"),
+
 		// info API
 		// "shards":               rpc.NewRPCFunc(h.Shards, ""),
 		"status":               rpc.NewRPCFunc(h.Status, ""),
@@ -87,13 +90,20 @@ func (n *Node) rpcRoutes() map[string]*rpc.RPCFunc {
 		"transaction": rpc.NewRPCFunc(h.GetTransactionByHash, "tx"),
 
 		// control API
+		// "dial_seeds":           rpc.NewRPCFunc(h.UnsafeDialSeeds, "seeds"),
 		"unsafe_flush_mempool": rpc.NewRPCFunc(h.UnsafeFlushMempool, ""),
+		// "unsafe_set_config":    rpc.NewRPCFunc(h.UnsafeSetConfig, "type,key,value"),
 
-		// specialOP API
-		"request_special_op": rpc.NewRPCFunc(h.RequestSpecialOP, "tx"),
+		// profiler API
+		// "unsafe_start_cpu_profiler": rpc.NewRPCFunc(UnsafeStartCPUProfilerResult, "filename"),
+		// "unsafe_stop_cpu_profiler":  rpc.NewRPCFunc(UnsafeStopCPUProfilerResult, ""),
+		// "unsafe_write_heap_profile": rpc.NewRPCFunc(UnsafeWriteHeapProfileResult, "filename"),
 
 		// refuse_list API
 		"blacklist": rpc.NewRPCFunc(h.Blacklist, ""),
+
+		// sharding API
+		// "shard_join": rpc.NewRPCFunc(h.ShardJoin, "gdata,cdata,sig"),
 	}
 }
 
@@ -128,7 +138,7 @@ func (h *rpcHandler) Genesis() (*gtypes.ResultGenesis, error) {
 }
 
 func (h *rpcHandler) HealthInfo() (*gtypes.ResultHealthInfo, error) {
-	return &gtypes.ResultHealthInfo{h.node.HealthStatus()}, nil
+	return &gtypes.ResultHealthInfo{Status: h.node.HealthStatus()}, nil
 }
 
 func (h *rpcHandler) Block(height int64) (*gtypes.ResultBlock, error) {
@@ -192,7 +202,7 @@ func (h *rpcHandler) NumUnconfirmedTxs() (*gtypes.ResultUnconfirmedTxs, error) {
 }
 
 func (h *rpcHandler) NumArchivedBlocks() (*gtypes.ResultNumArchivedBlocks, error) {
-	return &gtypes.ResultNumArchivedBlocks{h.node.Angine.OriginHeight()}, nil
+	return &gtypes.ResultNumArchivedBlocks{Num: h.node.Angine.OriginHeight()}, nil
 }
 
 func (h *rpcHandler) UnsafeFlushMempool() (*gtypes.ResultUnsafeFlushMempool, error) {
@@ -254,7 +264,7 @@ func (h *rpcHandler) Info() (*gtypes.ResultInfo, error) {
 func (h *rpcHandler) Validators() (*gtypes.ResultValidators, error) {
 	_, vs := h.node.Angine.GetValidators()
 	return &gtypes.ResultValidators{
-		Validators:  vs.Validators,
+		Validators:  gtypes.MakeResultValidators(vs.Validators),
 		BlockHeight: h.node.Angine.Height(),
 	}, nil
 }
@@ -349,19 +359,4 @@ func (h *rpcHandler) NetInfo() (*gtypes.ResultNetInfo, error) {
 
 func (h *rpcHandler) Blacklist() (*gtypes.ResultRefuseList, error) {
 	return &gtypes.ResultRefuseList{Result: h.node.Angine.GetBlacklist()}, nil
-}
-
-func (h *rpcHandler) RequestSpecialOP(tx []byte) (*gtypes.ResultRequestSpecialOP, error) {
-
-	if err := h.node.Angine.ProcessSpecialOP(tx); err != nil {
-		res := &gtypes.ResultRequestSpecialOP{
-			Code: gtypes.CodeType_InternalError,
-			Log:  err.Error(),
-		}
-		return res, err
-	}
-
-	return &gtypes.ResultRequestSpecialOP{
-		Code: gtypes.CodeType_OK,
-	}, nil
 }

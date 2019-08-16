@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,14 +21,15 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
+
 	"github.com/dappledger/AnnChain/eth/common"
-	ethtypes "github.com/dappledger/AnnChain/eth/core/types"
+	etypes "github.com/dappledger/AnnChain/eth/core/types"
 	"github.com/dappledger/AnnChain/eth/rlp"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-clist"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	"github.com/dappledger/AnnChain/gemmill/types"
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 const (
@@ -38,7 +38,7 @@ const (
 )
 
 var (
-	errTxExist                  = errors.New("Tx already exist in cache.")
+	errTxExist                  = errors.New("tx already exist in cache")
 	errTxPoolWaitingQueueIsFull = errors.New("evm tx pool waiting queue is full")
 )
 
@@ -48,7 +48,7 @@ type ethTxPool struct {
 	waitingBeats    map[common.Address]time.Time    // Last heartbeat from each known address
 	broadcastQueue  *clist.CList                    // list of txs to broadcast
 	all             map[common.Hash]types.Tx        // tx cache for lookup
-	extTxs          *clist.CList                    // extra transcations except Ethereum Transaction, eg. specialOP
+	extTxs          *clist.CList                    // extra transcations except Ethereum Transaction, eg. adminOP
 	mtx             sync.Mutex
 	app             *EVMApp
 	waitingLifeTime time.Duration // Maximum amount of time non-executable transaction are queued
@@ -133,8 +133,8 @@ func (tp *ethTxPool) Reap(maxTxs int) []types.Tx {
 
 	allTxs := make([]types.Tx, 0, maxTxs)
 
-	// reap specialOP txs
-	if extTxs := tp.reapSpecialOP(maxTxs); len(extTxs) == maxTxs {
+	// reap adminOP txs
+	if extTxs := tp.reapAdminOP(maxTxs); len(extTxs) == maxTxs {
 		return extTxs
 	} else {
 		allTxs = append(allTxs, extTxs...)
@@ -160,11 +160,11 @@ OUTLOOP: // reap normal txs
 
 // Try a new transaction in the tx pool. Tx may come from local rpc or remote node broadcast.
 func (tp *ethTxPool) ReceiveTx(rawTx types.Tx) error {
-	if types.IsSpecialOP(rawTx) {
-		return tp.handleSpecialOP(rawTx)
+	if types.IsAdminOP(rawTx) {
+		return tp.handleAdminOP(rawTx)
 	}
 
-	tx := &ethtypes.Transaction{}
+	tx := &etypes.Transaction{}
 	if err := rlp.DecodeBytes(rawTx, tx); err != nil {
 		return err
 	}
@@ -177,8 +177,8 @@ func (tp *ethTxPool) ReceiveTx(rawTx types.Tx) error {
 	return nil
 }
 
-// receive and handle specialOP txs
-func (tp *ethTxPool) handleSpecialOP(tx types.Tx) error {
+// receive and handle adminOP txs
+func (tp *ethTxPool) handleAdminOP(tx types.Tx) error {
 	tp.Lock()
 	defer tp.Unlock()
 
@@ -201,7 +201,7 @@ func (tp *ethTxPool) handleSpecialOP(tx types.Tx) error {
 }
 
 // reap extTxs to make block
-func (tp *ethTxPool) reapSpecialOP(maxTxs int) []types.Tx {
+func (tp *ethTxPool) reapAdminOP(maxTxs int) []types.Tx {
 	if tp.extTxs.Len() == 0 {
 		return []types.Tx{}
 	}
@@ -214,7 +214,7 @@ func (tp *ethTxPool) reapSpecialOP(maxTxs int) []types.Tx {
 }
 
 // remove extTxs already involved in block
-func (tp *ethTxPool) refreshSpecialOP(txsMap map[string]struct{}) {
+func (tp *ethTxPool) refreshAdminOP(txsMap map[string]struct{}) {
 	if tp.extTxs.Len() == 0 {
 		return
 	}
@@ -239,14 +239,14 @@ func (tp *ethTxPool) safeGetNonce(addr common.Address) uint64 {
 	return nonce
 }
 
-func (tp *ethTxPool) CheckAndAdd(tx *ethtypes.Transaction, rawTx types.Tx) error {
+func (tp *ethTxPool) CheckAndAdd(tx *etypes.Transaction, rawTx types.Tx) error {
 	tp.Lock()
 	defer tp.Unlock()
 	if _, exist := tp.all[tx.Hash()]; exist {
 		return errTxExist
 	}
 
-	from, _ := ethtypes.Sender(tp.app.Signer, tx)
+	from, _ := etypes.Sender(tp.app.Signer, tx)
 	currentNonce := tp.safeGetNonce(from)
 	if currentNonce > tx.Nonce() {
 		return fmt.Errorf("nonce(%d) different with getNonce(%d)", tx.Nonce(), currentNonce)
@@ -277,7 +277,7 @@ func (tp *ethTxPool) Update(height int64, txs []types.Tx) {
 		txsMap[string(tx)] = struct{}{}
 	}
 	tp.refreshBroadcastList(txsMap)
-	tp.refreshSpecialOP(txsMap)
+	tp.refreshAdminOP(txsMap)
 
 	return
 }
@@ -384,7 +384,7 @@ func (tp *ethTxPool) promoteExecutables(addrs []common.Address) {
 
 // add validates a transaction and inserts it into the waiting queue for
 // later pending promotion and execution.
-func (tp *ethTxPool) addWaiting(tx *ethtypes.Transaction, address common.Address) error {
+func (tp *ethTxPool) addWaiting(tx *etypes.Transaction, address common.Address) error {
 	waitingTxCount := 0
 	for _, txs := range tp.waiting {
 		waitingTxCount += txs.Len()

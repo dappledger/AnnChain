@@ -58,6 +58,7 @@ func makeHTTPClient(remoteAddr string) (string, *http.Client) {
 		Transport: &http.Transport{
 			Dial: dialer,
 		},
+		Timeout: time.Second * 5,
 	}
 }
 
@@ -96,13 +97,21 @@ func (c *ClientJSONRPC) call(method string, params []interface{}, result interfa
 	}
 	requestBytes := wire.JSONBytes(request)
 	requestBuf := bytes.NewBuffer(requestBytes)
-	httpResponse, err := c.client.Post(c.address, "text/json", requestBuf)
+
+	req, err := http.NewRequest("POST", c.address, requestBuf)
+	if err != nil {
+		return nil, err
+	}
+	req.Close = true
+	req.Header.Set("contentType", "text/json")
+	httpResponse, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer httpResponse.Body.Close()
 	responseBytes, err := ioutil.ReadAll(httpResponse.Body)
 	if err != nil {
+		fmt.Println("ioutilReadAll err", err)
 		return nil, err
 	}
 	return unmarshalResponseBytes(responseBytes, result)

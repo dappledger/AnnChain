@@ -22,10 +22,7 @@ import (
 )
 
 /*
-*
-*简易统计并行/串行代码 在周期(FLUSH_INTERVAL)内执行次数,每次最大/最小执行时间,以及未完成的并发个数
-*一个周期后重新统计次数及执行时间,未完成的并发个数保留
-*项目需要xlog支持,见xlog-->README.md
+*Please read README.md
 *
 *=======================Using Example:========================================
 *First Register In func init():
