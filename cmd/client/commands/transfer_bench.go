@@ -1,3 +1,16 @@
+// Copyright © 2017 ZhongAn Technology
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package commands
 
 import (
@@ -7,13 +20,13 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	cl "github.com/dappledger/AnnChain/gemmill/rpc/client"
-	agtypes "github.com/dappledger/AnnChain/gemmill/types"
 	"github.com/dappledger/AnnChain/cmd/client/commons"
 	"github.com/dappledger/AnnChain/eth/common"
-	ethtypes "github.com/dappledger/AnnChain/eth/core/types"
+	"github.com/dappledger/AnnChain/eth/core/types"
 	"github.com/dappledger/AnnChain/eth/crypto"
 	"github.com/dappledger/AnnChain/eth/rlp"
+	cl "github.com/dappledger/AnnChain/gemmill/rpc/client"
+	gtypes "github.com/dappledger/AnnChain/gemmill/types"
 )
 
 var (
@@ -39,7 +52,7 @@ var (
 	}
 
 	nonceMap  = make(map[common.Address]uint64)
-	ethSigner = ethtypes.HomesteadSigner{}
+	ethSigner = types.HomesteadSigner{}
 )
 
 func newPrivkey(n int64) *ecdsa.PrivateKey {
@@ -87,11 +100,11 @@ func transComplement(start int64, serial int64, n int64, times int64) {
 	for i = 0; i < times; i++ {
 		nonce := nonceMap[meAddress]
 		if nonce == 0 {
-			nonce = getNonce(meAddress)
+			nonce, _ = getNonce(meAddress.Bytes())
 			nonceMap[meAddress] = nonce
 		}
 
-		tx := ethtypes.NewTransaction(nonce, to, big.NewInt(1), gasLimit, big.NewInt(0), []byte{})
+		tx := types.NewTransaction(nonce, to, big.NewInt(1), gasLimit, big.NewInt(0), []byte{})
 		sig, err := crypto.Sign(ethSigner.Hash(tx).Bytes(), privkey)
 		if err != nil {
 			panic(err)
@@ -104,7 +117,7 @@ func transComplement(start int64, serial int64, n int64, times int64) {
 		if err != nil {
 			panic(err)
 		}
-		rpcResult := new(agtypes.ResultBroadcastTx)
+		rpcResult := new(gtypes.ResultBroadcastTx)
 		_, err = clientJSON.Call("broadcast_tx_async", []interface{}{b}, rpcResult)
 		if err != nil {
 			panic(err)
@@ -124,7 +137,7 @@ func benchAnnCoin(ctx *cli.Context) error {
 	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
 	fromAddr := crypto.PubkeyToAddress(privekey.PublicKey) //common.StringToAddress("680008fb232b293cbfee5f1c9c82dde51b03495f")
 	toAddr := common.HexToAddress("9cef2ef1197ff8bd475307aac3e27261df88059d")
-	nonce := getNonce(fromAddr)
+	nonce, _ := getNonce(fromAddr.Bytes())
 	for i := 0; i < 500; i++ {
 		transferAnnCoin(fromAddr, toAddr, privekey, clientJSON, nonce)
 		nonce++
@@ -134,7 +147,7 @@ func benchAnnCoin(ctx *cli.Context) error {
 }
 
 func transferAnnCoin(fromAddr common.Address, toAddr common.Address, privkey *ecdsa.PrivateKey, clientJSON *cl.ClientJSONRPC, nonce uint64) {
-	tx := ethtypes.NewTransaction(nonce, toAddr, big.NewInt(1), gasLimit, big.NewInt(0), []byte{})
+	tx := types.NewTransaction(nonce, toAddr, big.NewInt(1), gasLimit, big.NewInt(0), []byte{})
 	sig, err := crypto.Sign(ethSigner.Hash(tx).Bytes(), privkey)
 	if err != nil {
 		panic(err)
@@ -147,29 +160,10 @@ func transferAnnCoin(fromAddr common.Address, toAddr common.Address, privkey *ec
 	if err != nil {
 		panic(err)
 	}
-	rpcResult := new(agtypes.ResultBroadcastTx)
+	rpcResult := new(gtypes.ResultBroadcastTx)
 	_, err = clientJSON.Call("broadcast_tx_async", []interface{}{b}, rpcResult)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("tx result:")
-}
-
-func getNonce(address common.Address) uint64 {
-	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
-	rpcResult := new(agtypes.ResultQuery)
-
-	query := append([]byte{1}, address.Bytes()...)
-
-	_, err := clientJSON.Call("abci_query", []interface{}{query}, rpcResult)
-	if err != nil {
-		panic(err)
-	}
-
-	nonce := new(uint64)
-	rlp.DecodeBytes(rpcResult.Result.Data, nonce)
-
-	fmt.Println("query result:", *nonce)
-
-	return *nonce
 }

@@ -15,18 +15,19 @@
 package autofile
 
 import (
-	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"os"
 	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
+
+	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 )
 
 func TestSIGHUP(t *testing.T) {
 
 	// First, create an AutoFile writing to a tempfile dir
-	file, name := Tempfile("sighup_test")
+	file, name := gcmn.Tempfile("sighup_test")
 	err := file.Close()
 	if err != nil {
 		t.Fatalf("Error creating tempfile: %v", err)
@@ -77,10 +78,10 @@ func TestSIGHUP(t *testing.T) {
 	}
 
 	// Both files should exist
-	if body := MustReadFile(name + "_old"); string(body) != "Line 1\nLine 2\n" {
+	if body := gcmn.MustReadFile(name + "_old"); string(body) != "Line 1\nLine 2\n" {
 		t.Errorf("Unexpected body %s", body)
 	}
-	if body := MustReadFile(name); string(body) != "Line 3\nLine 4\n" {
+	if body := gcmn.MustReadFile(name); string(body) != "Line 3\nLine 4\n" {
 		t.Errorf("Unexpected body %s", body)
 	}
 

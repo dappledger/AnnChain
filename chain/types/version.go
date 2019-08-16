@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,9 +23,8 @@ import (
 const CommitPrefixLength = 8
 
 var (
-	Version   = "0.7.0"
+	Version   = "0.1.6"
 	commitVer string
-	lversion  string
 )
 
 func GetVersion() string {
@@ -39,10 +37,6 @@ func GetCommitVersion() string {
 	}
 
 	ctype := fmt.Sprintf("(crypto: %s)", crypto.CryptoType)
-
-	if len(lversion) != 0 {
-		return fmt.Sprintf("%s-%s-%s-%s", Version, commitVer, lversion, ctype)
-	}
 
 	return fmt.Sprintf("%s-%s-%s", Version, commitVer, ctype)
 }

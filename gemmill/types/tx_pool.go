@@ -15,9 +15,8 @@
 package types
 
 import (
-	"sync/atomic"
-
 	"github.com/dappledger/AnnChain/gemmill/modules/go-clist"
+	"sync/atomic"
 )
 
 type TxPool interface {

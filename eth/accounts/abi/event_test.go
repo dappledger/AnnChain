@@ -25,10 +25,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dappledger/AnnChain/eth/common"
-	"github.com/dappledger/AnnChain/eth/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/dappledger/AnnChain/eth/common"
+	"github.com/dappledger/AnnChain/eth/crypto"
 )
 
 var jsonEventTransfer = []byte(`{
@@ -356,7 +356,7 @@ func unpackTestEventData(dest interface{}, hexData string, jsonEvent []byte, ass
 
 /*
 Taken from
-https://github.com/dappledger/AnnChain/eth/pull/15568
+https://github.com/ethereum/go-ethereum/pull/15568
 */
 
 type testResult struct {

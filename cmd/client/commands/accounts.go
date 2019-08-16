@@ -1,3 +1,16 @@
+// Copyright © 2017 ZhongAn Technology
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package commands
 
 import (
@@ -33,24 +46,32 @@ var (
 )
 
 func accountCreate(ctx *cli.Context) error {
+	privkeyBytes, addrBytes, err := createAccount()
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+	fmt.Printf("privkey: %X\n", privkeyBytes)
+	fmt.Printf("address: %X\n", addrBytes)
+	return nil
+}
+
+func createAccount() ([]byte, []byte, error) {
 	var (
-		privkeyStr string
-		addrStr    string
+		privkeyBytes []byte
+		addrBytes    []byte
 	)
 
 	privkey, err := crypto.GenerateKey()
 	if err != nil {
-		return cli.NewExitError(err.Error(), 127)
+		return privkeyBytes, addrBytes, cli.NewExitError(err.Error(), 127)
 	}
 
-	privkeyStr = common.Bytes2Hex(crypto.FromECDSA(privkey))
+	privkeyBytes = crypto.FromECDSA(privkey)
 
 	address := crypto.PubkeyToAddress(privkey.PublicKey)
-	addrStr = address.Hex()
+	addrBytes = address.Bytes()
 
-	fmt.Println("privkey: ", privkeyStr)
-	fmt.Println("address: ", addrStr)
-	return nil
+	return privkeyBytes, addrBytes, nil
 }
 
 func queryPubAddr(ctx *cli.Context) error {
@@ -73,9 +94,9 @@ func queryPubAddr(ctx *cli.Context) error {
 	privkey := crypto.FromECDSA(priv)
 	pubkeyStr = common.Bytes2Hex(privkey)
 	pubkeyStr = common.Bytes2Hex(crypto.FromECDSAPub(&priv.PublicKey))
-
 	addrBytes := crypto.PubkeyToAddress(priv.PublicKey)
 	addrStr = common.Bytes2Hex(addrBytes[:])
+	privkeyStr = key
 
 	fmt.Println("privkey: ", privkeyStr)
 	fmt.Println("pubkey:", pubkeyStr)

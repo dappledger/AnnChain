@@ -52,6 +52,6 @@ func ripemd160Func(bytes []byte) []byte {
 }
 
 //Workrand
-func Keccak256OrSM3Func(bytes []byte) []byte {
+func Keccak256Func(bytes []byte) []byte {
 	return sha256Func(bytes)
 }

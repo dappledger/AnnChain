@@ -18,23 +18,22 @@ import (
 	"bytes"
 	"fmt"
 	mrand "math/rand"
+	"runtime"
 	"sort"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
-	. "github.com/dappledger/AnnChain/gemmill/modules/go-common/test"
-	"github.com/dappledger/AnnChain/gemmill/go-db"
-	"github.com/dappledger/AnnChain/gemmill/go-wire"
 
-	"runtime"
-	"testing"
+	"github.com/dappledger/AnnChain/gemmill/go-wire"
+	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
+	"github.com/dappledger/AnnChain/gemmill/modules/go-db"
 )
 
 const testReadLimit = 1 << 20 // Some reasonable limit for wire.Read*() lmt
 
 func randstr(length int) string {
-	return RandStr(length)
+	return gcmn.RandStr(length)
 }
 
 func i2b(i int) []byte {
@@ -504,7 +503,7 @@ func testProof(t *testing.T, proof *IAVLProof, keyBytes, valueBytes []byte) {
 
 	// Random mutations must not verify
 	for i := 0; i < 10; i++ {
-		badProofBytes := MutateByteSlice(proofBytes)
+		badProofBytes := gcmn.MutateByteSlice(proofBytes)
 		badProof, err := LoadProof(badProofBytes)
 		// may be invalid... errors are okay
 		if err == nil {
@@ -515,9 +514,9 @@ func testProof(t *testing.T, proof *IAVLProof, keyBytes, valueBytes []byte) {
 	}
 
 	// targetted changes fails...
-	proof.RootHash = MutateByteSlice(proof.RootHash)
+	proof.RootHash = gcmn.MutateByteSlice(proof.RootHash)
 	assert.False(t, proof.Valid())
-	proof2.LeafNode.ValueBytes = MutateByteSlice(proof2.LeafNode.ValueBytes)
+	proof2.LeafNode.ValueBytes = gcmn.MutateByteSlice(proof2.LeafNode.ValueBytes)
 	assert.False(t, proof2.Valid())
 }
 
@@ -596,7 +595,7 @@ func BenchmarkImmutableAvlTreeCLevelDB(b *testing.B) {
 	// for i := 0; i < 10000000; i++ {
 	for i := 0; i < 1000000; i++ {
 		// for i := 0; i < 1000; i++ {
-		t.Set(i2b(int(RandInt32())), nil)
+		t.Set(i2b(int(gcmn.RandInt32())), nil)
 		if i > 990000 && i%1000 == 999 {
 			t.Save()
 		}
@@ -609,7 +608,7 @@ func BenchmarkImmutableAvlTreeCLevelDB(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		ri := i2b(int(RandInt32()))
+		ri := i2b(int(gcmn.RandInt32()))
 		t.Set(ri, nil)
 		t.Remove(ri)
 		if i%100 == 99 {
@@ -628,7 +627,7 @@ func BenchmarkImmutableAvlTreeMemDB(b *testing.B) {
 	// for i := 0; i < 10000000; i++ {
 	for i := 0; i < 1000000; i++ {
 		// for i := 0; i < 1000; i++ {
-		t.Set(i2b(int(RandInt32())), nil)
+		t.Set(i2b(int(gcmn.RandInt32())), nil)
 		if i > 990000 && i%1000 == 999 {
 			t.Save()
 		}
@@ -641,7 +640,7 @@ func BenchmarkImmutableAvlTreeMemDB(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		ri := i2b(int(RandInt32()))
+		ri := i2b(int(gcmn.RandInt32()))
 		t.Set(ri, nil)
 		t.Remove(ri)
 		if i%100 == 99 {

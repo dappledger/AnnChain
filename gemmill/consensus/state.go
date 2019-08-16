@@ -952,13 +952,13 @@ func (cs *ConsensusState) createProposalBlock() (block *types.Block, blockParts 
 	extxs := []types.Tx{}
 	txs := []types.Tx{}
 	for _, tx := range alltxs {
-		if types.IsSpecialOP(tx) {
+		if types.IsAdminOP(tx) {
 			extxs = append(extxs, tx)
 		} else {
 			txs = append(txs, tx)
 		}
 	}
-	return types.MakeBlock(cs.Height, cs.state.ChainID, txs, extxs, commit,
+	return types.MakeBlock(cs.Height, cs.state.ChainID, txs, extxs, commit, cs.privValidator.GetAddress(),
 		cs.state.LastBlockID, cs.state.Validators.Hash(), cs.state.AppHash, cs.state.ReceiptsHash, cs.config.GetInt("block_part_size"))
 }
 

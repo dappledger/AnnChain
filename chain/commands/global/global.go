@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,33 +19,34 @@ import (
 	"path/filepath"
 	"runtime"
 
-	cnode "github.com/dappledger/AnnChain/chain/core"
-	agconf "github.com/dappledger/AnnChain/gemmill/config"
+	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
+
+	"github.com/dappledger/AnnChain/chain/core"
+	"github.com/dappledger/AnnChain/gemmill/config"
 	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 	"github.com/dappledger/AnnChain/gemmill/go-utils"
-
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
 )
 
 const (
 	DefaultRuntimeDir = "~/.genesis"
-	DefaultLogDir     = "log"
+	DefaultApiAddr    = "127.0.0.1:9011"
 	DefaultCrypto     = crypto.CryptoTypeZhongAn
-	DefaultApp        = "evm"
+
+	DefaultApp = "evm"
 )
 
 type GlobalFlags struct {
 	Debug      bool
 	RuntimeDir string
 	LogDir     string
+	ApiAddr    string
 }
 
 var (
 	globalFlags = GlobalFlags{}
 
 	globalConf *viper.Viper
-	logPath    string
 )
 
 func GFlags() *GlobalFlags {
@@ -92,13 +92,8 @@ func ConfigIsInitialized(cfgPath string) bool {
 	return true
 }
 
-func ExitWithError(code int, err error) {
-	fmt.Fprintln(os.Stderr, err.Error())
-	os.Exit(code)
-}
-
 func GenConf() *viper.Viper {
-	globalConf = cnode.DefaultConf()
+	globalConf = core.DefaultConf()
 	//globalConf.Set("runtime", GFlags().RuntimeDir)
 	return globalConf
 }
@@ -117,7 +112,7 @@ func CheckAndReadRuntimeConfig(runtimeDir string) (err error) {
 		return err
 	}
 
-	if globalConf, err = agconf.ReadConfig(runtimeDir); err != nil {
+	if globalConf, err = config.ReadConfig(runtimeDir); err != nil {
 		return err
 	}
 	cmdAllKv := viper.AllSettings()

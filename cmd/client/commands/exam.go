@@ -1,3 +1,16 @@
+// Copyright © 2017 ZhongAn Technology
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package commands
 
 import (
@@ -7,13 +20,13 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
-	cl "github.com/dappledger/AnnChain/gemmill/rpc/client"
-	agtypes "github.com/dappledger/AnnChain/gemmill/types"
 	"github.com/dappledger/AnnChain/cmd/client/commons"
 	"github.com/dappledger/AnnChain/eth/common"
-	ethtypes "github.com/dappledger/AnnChain/eth/core/types"
+	"github.com/dappledger/AnnChain/eth/core/types"
 	"github.com/dappledger/AnnChain/eth/crypto"
 	"github.com/dappledger/AnnChain/eth/rlp"
+	cl "github.com/dappledger/AnnChain/gemmill/rpc/client"
+	gtypes "github.com/dappledger/AnnChain/gemmill/types"
 )
 
 var (
@@ -54,7 +67,7 @@ func initial2(ctx *cli.Context) error {
 
 func initial(ctx *cli.Context) error {
 
-	nonceFor911 = getNonce(common.HexToAddress("0x7752b42608a0f1943c19fc5802cb027e60b4c911"))
+	nonceFor911, _ = getNonce(common.HexToAddress("0x7752b42608a0f1943c19fc5802cb027e60b4c911").Bytes())
 	start := ctx.Int64("start")
 	var i int64
 	for i = start; i < 1000+start; i++ {
@@ -96,7 +109,7 @@ func transferToAddress(addr common.Address, nonce uint64) {
 
 	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
 
-	tx := ethtypes.NewTransaction(nonce, addr, big.NewInt(10000), gasLimit, big.NewInt(0), []byte{})
+	tx := types.NewTransaction(nonce, addr, big.NewInt(10000), gasLimit, big.NewInt(0), []byte{})
 
 	key := "a8971729fbc199fb3459529cebcd8704791fc699d88ac89284f23ff8e7fca7d6"
 
@@ -116,7 +129,7 @@ func transferToAddress(addr common.Address, nonce uint64) {
 		panic(err)
 	}
 
-	rpcResult := new(agtypes.ResultBroadcastTx)
+	rpcResult := new(gtypes.ResultBroadcastTx)
 	_, err = clientJSON.Call("broadcast_tx_async", []interface{}{b}, rpcResult)
 	if err != nil {
 		panic(err)

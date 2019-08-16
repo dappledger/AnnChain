@@ -16,11 +16,9 @@ package merkle
 
 import (
 	"bytes"
+	"testing"
 
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
-	. "github.com/dappledger/AnnChain/gemmill/modules/go-common/test"
-
-	"testing"
 )
 
 type testItem []byte
@@ -35,7 +33,7 @@ func TestSimpleProof(t *testing.T) {
 
 	items := make([]Hashable, total)
 	for i := 0; i < total; i++ {
-		items[i] = testItem(RandBytes(32))
+		items[i] = testItem(gcmn.RandBytes(32))
 	}
 
 	rootHash := SimpleHashFromHashables(items)
@@ -67,7 +65,7 @@ func TestSimpleProof(t *testing.T) {
 
 		// Trail too long should make it fail
 		origAunts := proof.Aunts
-		proof.Aunts = append(proof.Aunts, RandBytes(32))
+		proof.Aunts = append(proof.Aunts, gcmn.RandBytes(32))
 		{
 			ok = proof.Verify(i, total, itemHash, rootHash)
 			if ok {
@@ -87,13 +85,13 @@ func TestSimpleProof(t *testing.T) {
 		proof.Aunts = origAunts
 
 		// Mutating the itemHash should make it fail.
-		ok = proof.Verify(i, total, MutateByteSlice(itemHash), rootHash)
+		ok = proof.Verify(i, total, gcmn.MutateByteSlice(itemHash), rootHash)
 		if ok {
 			t.Errorf("Expected verification to fail for mutated leaf hash")
 		}
 
 		// Mutating the rootHash should make it fail.
-		ok = proof.Verify(i, total, itemHash, MutateByteSlice(rootHash))
+		ok = proof.Verify(i, total, itemHash, gcmn.MutateByteSlice(rootHash))
 		if ok {
 			t.Errorf("Expected verification to fail for mutated root hash")
 		}

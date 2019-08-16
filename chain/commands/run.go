@@ -16,15 +16,15 @@ package commands
 import (
 	"fmt"
 
-	glb "github.com/dappledger/AnnChain/chain/commands/global"
-	"github.com/dappledger/AnnChain/chain/core"
-	"github.com/dappledger/AnnChain/gemmill/go-crypto"
-	gutils "github.com/dappledger/AnnChain/gemmill/utils"
-
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/dappledger/AnnChain/chain/commands/global"
+	"github.com/dappledger/AnnChain/chain/core"
+	"github.com/dappledger/AnnChain/gemmill/go-crypto"
+	"github.com/dappledger/AnnChain/gemmill/utils"
 )
 
 func NewRunCommand() *cobra.Command {
@@ -35,20 +35,20 @@ func NewRunCommand() *cobra.Command {
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 			runtime, _ := cmd.Flags().GetString("runtime")
-			if err = glb.CheckAndReadRuntimeConfig(runtime); err != nil {
+			if err = global.CheckAndReadRuntimeConfig(runtime); err != nil {
 				fmt.Println("load runtime config err:", err)
 				return err
 			}
-			setFlags(cmd, glb.GConf())
+			setFlags(cmd, global.GConf())
 
 			logDir, _ := cmd.Flags().GetString("log_path")
 
 			if logDir != "" {
 				if logDir, err = homedir.Expand(logDir); err == nil {
-					glb.GConf().Set("log_path", logDir)
+					global.GConf().Set("log_path", logDir)
 				}
 			}
-			fmt.Println("Log path is: ", glb.GConf().Get("log_path"))
+			fmt.Println("Log path is: ", global.GConf().Get("log_path"))
 			fmt.Println("CryptoType is: ", crypto.CryptoType)
 
 			return err
@@ -60,6 +60,7 @@ func NewRunCommand() *cobra.Command {
 	c.Flags().BoolP("pprof", "", false, "start golang profile at port :6060")
 	c.Flags().BoolP("statistic", "", false, "start statistic tool on specified code lines")
 	c.Flags().BoolP("test", "", false, "run the node in test mode")
+	// c.Flags().StringP("app", "", glb.DefaultApp, "app name")
 
 	viper.BindPFlag("chain_id", c.Flag("chain_id"))
 	viper.BindPFlag("pprof", c.Flag("pprof"))
@@ -70,12 +71,10 @@ func NewRunCommand() *cobra.Command {
 }
 
 func runCommandFunc(cmd *cobra.Command, args []string) {
-	if glb.GConf().GetBool("statistic") {
-		gutils.StartStat()
+	if global.GConf().GetBool("statistic") {
+		utils.StartStat()
 	}
-	core.RunNode(glb.GConf(), "", glb.GConf().GetString("app_name"))
+	core.RunNode(global.GConf(), "", global.GConf().GetString("app_name"))
 }
 
-func setFlags(cmd *cobra.Command, conf *viper.Viper) {
-
-}
+func setFlags(cmd *cobra.Command, conf *viper.Viper) {}

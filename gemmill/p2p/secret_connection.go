@@ -1,3 +1,17 @@
+// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Uses nacl's secret_box to encrypt a net.Conn.
 // It is (meant to be) an implementation of the STS protocol.
 // Note we do not (yet) assume that a remote peer's pubkey
@@ -113,13 +127,10 @@ func (sc *SecretConnection) writeEncode(chunk []byte) []byte {
 	binary.BigEndian.PutUint16(frame, uint16(chunkLength))
 	copy(frame[dataLenSize:], chunk)
 
-	switch crypto.GetNodeCryptoType() {
-	default: //ZA
-		var sealedFrame = make([]byte, sealedFrameSize)
-		secretbox.Seal(sealedFrame[:0], frame, sc.sendNonce, sc.shrSecret)
-		incr2Nonce(sc.sendNonce)
-		return sealedFrame
-	}
+	var sealedFrame = make([]byte, sealedFrameSize)
+	secretbox.Seal(sealedFrame[:0], frame, sc.sendNonce, sc.shrSecret)
+	incr2Nonce(sc.sendNonce)
+	return sealedFrame
 }
 
 // Writes encrypted frames of `sealedFrameSize`
@@ -155,16 +166,14 @@ func (sc *SecretConnection) readDecode() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	switch crypto.GetNodeCryptoType() {
-	default: //ZA
-		var frame = make([]byte, totalFrameSize)
-		_, ok := secretbox.Open(frame[:0], sealedFrame, sc.recvNonce, sc.shrSecret)
-		if !ok {
-			return frame, fmt.Errorf("Failed to decrypt SecretConnection")
-		}
-		incr2Nonce(sc.recvNonce)
-		return frame, nil
+
+	var frame = make([]byte, totalFrameSize)
+	_, ok := secretbox.Open(frame[:0], sealedFrame, sc.recvNonce, sc.shrSecret)
+	if !ok {
+		return frame, fmt.Errorf("Failed to decrypt SecretConnection")
 	}
+	incr2Nonce(sc.recvNonce)
+	return frame, nil
 }
 
 // CONTRACT: data smaller than dataMaxSize is read atomically.

@@ -55,6 +55,10 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 		if p := precompiles[*contract.CodeAddr]; p != nil {
 			gas := p.RequiredGas(input)
 			if useGas(&evm.gasLeft, gas) {
+				ap, ok := p.(*AdminOP)
+				if ok {
+					ap.SetState(evm.StateDB)
+				}
 				return p.Run(input)
 			}
 

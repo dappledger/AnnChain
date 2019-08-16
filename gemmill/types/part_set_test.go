@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	. "github.com/tendermint/go-common"
+	. "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 )
 
 const (

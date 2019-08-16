@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,15 +14,16 @@
 package app
 
 import (
-	"github.com/dappledger/AnnChain/chain/app/evm"
-	atypes "github.com/dappledger/AnnChain/gemmill/types"
 	"github.com/spf13/viper"
+
+	"github.com/dappledger/AnnChain/chain/app/evm"
+	"github.com/dappledger/AnnChain/gemmill/types"
 )
 
-type AppMaker func(*viper.Viper) (atypes.Application, error)
+type AppMaker func(*viper.Viper) (types.Application, error)
 
 var AppMap = map[string]AppMaker{
-	"evm": func(c *viper.Viper) (atypes.Application, error) {
+	"evm": func(c *viper.Viper) (types.Application, error) {
 		return evm.NewEVMApp(c)
 	},
 }
