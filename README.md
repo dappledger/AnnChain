@@ -27,10 +27,3 @@ make
 ## remove cluster
 ➜  docker-compose down
 ```
-
-##设置validator运行的节点
-并不是所有的k8s 节点都会运行genesis。 通过gtool生成的集群配置中，会自动给每个genesis分配nodeSelector: `validatorNode<i>=enabled`,所以，我们需要给k8s node添加标签 `validator<i>=enabled`
-具体操作示例如下：
-```bash
-kubectl label node <node_name> validatorNode7=enabled
-```
