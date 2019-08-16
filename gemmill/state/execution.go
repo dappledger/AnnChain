@@ -22,7 +22,7 @@ import (
 
 	cfg "github.com/dappledger/AnnChain/gemmill/config"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
-	log "github.com/dappledger/AnnChain/gemmill/modules/go-log"
+	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	"github.com/dappledger/AnnChain/gemmill/types"
 )
 
@@ -149,6 +149,10 @@ func (s *State) validateBlock(block *types.Block) error {
 	err := block.ValidateBasic(s.ChainID, s.LastBlockHeight, s.LastBlockID, s.LastBlockTime, s.AppHash, s.ReceiptsHash)
 	if err != nil {
 		return err
+	}
+
+	if !s.Validators.HasAddress(block.ProposerAddress) {
+		return fmt.Errorf("Block.Header.ProposerAddress, %X, is not a validator", block.ProposerAddress)
 	}
 
 	// Validate block LastCommit.

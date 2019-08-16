@@ -1,17 +1,3 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package main
 
 import (
@@ -35,8 +21,8 @@ import (
 	"github.com/dappledger/AnnChain/cmd/client/commands"
 	"github.com/dappledger/AnnChain/eth/accounts/abi"
 	"github.com/dappledger/AnnChain/eth/common"
-	ethtypes "github.com/dappledger/AnnChain/eth/core/types"
-	ethcrypto "github.com/dappledger/AnnChain/eth/crypto"
+	etypes "github.com/dappledger/AnnChain/eth/core/types"
+	"github.com/dappledger/AnnChain/eth/crypto"
 	"github.com/dappledger/AnnChain/eth/rlp"
 	gcrypto "github.com/dappledger/AnnChain/gemmill/go-crypto"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
@@ -47,8 +33,8 @@ import (
 var version = "0.9.0"
 
 var (
-	ethSigner = ethtypes.HomesteadSigner{}
-	gasLimit  = big.NewInt(90000000000)
+	ethSigner = etypes.HomesteadSigner{}
+	gasLimit  = uint64(90000000000)
 	txSize    = 250
 
 	requestNum int
@@ -109,11 +95,11 @@ func main() {
 	}
 }
 
-// For "db" App
 func basic(client *rpcclient.ClientJSONRPC) {
 	timeStart := time.Now().UnixNano() / 1000000
 	fmt.Printf("START: %v\n", timeStart)
 	for i := 0; i < requestNum; i++ {
+		// randomTx := generateTx(1, i, "genesis")
 
 		startTime := time.Now().UnixNano()
 
@@ -140,7 +126,6 @@ func basic(client *rpcclient.ClientJSONRPC) {
 	fmt.Printf("END: %v\n", time.Now().UnixNano()/1000000)
 }
 
-// For "db" App
 func basic_goroutine(client *rpcclient.ClientJSONRPC) {
 	timeStart := time.Now().UnixNano() / 1000000
 	// fmt.Printf("START: %v\n", timeStart)
@@ -245,21 +230,21 @@ func createContract(client *rpcclient.ClientJSONRPC, pkEcdsa *ecdsa.PrivateKey, 
 
 	if pkEcdsa == nil {
 		var err error
-		// pkEcdsa, err = ethcrypto.GenerateKey()
-		pkEcdsa = ethcrypto.ToECDSA(common.Hex2Bytes(defaultPrivKey))
+		// pkEcdsa, err = crypto.GenerateKey()
+		pkEcdsa, err = crypto.ToECDSA(common.Hex2Bytes(defaultPrivKey))
 		panicErr(err)
 	}
 
 	for i := 0; i < requestNum; i++ {
-		// pkEcdsa = ethcrypto.ToECDSA(common.Hex2Bytes(defaultPrivKey))
-		caller := ethcrypto.PubkeyToAddress(pkEcdsa.PublicKey)
+		// pkEcdsa = crypto.ToECDSA(common.Hex2Bytes(defaultPrivKey))
+		caller := crypto.PubkeyToAddress(pkEcdsa.PublicKey)
 		nonce, err := getNonce(client, caller.Hex())
 		fmt.Printf("nonce: %v\n", nonce)
 		panicErr(err)
 		data := common.Hex2Bytes(bytecode)
-		tx := ethtypes.NewContractCreation(nonce, big.NewInt(0), gasLimit, big.NewInt(0), data)
+		tx := etypes.NewContractCreation(nonce, big.NewInt(0), gasLimit, big.NewInt(0), data)
 
-		sig, _ := ethcrypto.Sign(tx.SigHash(ethSigner).Bytes(), pkEcdsa)
+		sig, _ := crypto.Sign(ethSigner.Hash(tx).Bytes(), pkEcdsa)
 		sigTx, _ := tx.WithSignature(ethSigner, sig)
 		rlpSignedTx, err := rlp.EncodeToBytes(sigTx)
 		panicErr(err)
@@ -278,7 +263,7 @@ func createContract(client *rpcclient.ClientJSONRPC, pkEcdsa *ecdsa.PrivateKey, 
 		// }
 
 		// fmt.Println(res.Code, string(res.Data))
-		contractAddr := ethcrypto.CreateAddress(caller, nonce)
+		contractAddr := crypto.CreateAddress(caller, nonce)
 		fmt.Println("contract address:", contractAddr.Hex())
 		time.Sleep(time.Millisecond * 1)
 
@@ -321,15 +306,15 @@ func readContract(client *rpcclient.ClientJSONRPC) {
 	panicErr(err)
 
 	privkey := gcmn.SanitizeHex(defaultPrivKey)
-	pkEcdsa, err := ethcrypto.HexToECDSA(privkey)
+	pkEcdsa, err := crypto.HexToECDSA(privkey)
 	panicErr(err)
-	caller := ethcrypto.PubkeyToAddress(pkEcdsa.PublicKey)
+	caller := crypto.PubkeyToAddress(pkEcdsa.PublicKey)
 	nonce, err := getNonce(client, caller.Hex())
 	panicErr(err)
 	fmt.Println("Nonce: ", nonce)
 
-	tx := ethtypes.NewTransaction(nonce, common.HexToAddress(contractAddr), big.NewInt(0), gasLimit, big.NewInt(0), data)
-	sig, err := ethcrypto.Sign(tx.SigHash(ethSigner).Bytes(), pkEcdsa)
+	tx := etypes.NewTransaction(nonce, common.HexToAddress(contractAddr), big.NewInt(0), gasLimit, big.NewInt(0), data)
+	sig, err := crypto.Sign(ethSigner.Hash(tx).Bytes(), pkEcdsa)
 	panicErr(err)
 	sigTx, err := tx.WithSignature(ethSigner, sig)
 	panicErr(err)
@@ -370,13 +355,13 @@ func callContract(client *rpcclient.ClientJSONRPC, method string, args []interfa
 
 	fmt.Println("data:", hex.EncodeToString(data))
 
-	// pkEcdsa, err := ethcrypto.GenerateKey()
+	// pkEcdsa, err := crypto.GenerateKey()
 	// panicErr(err)
 
 	privkey := gcmn.SanitizeHex(defaultPrivKey)
-	pkEcdsa, err := ethcrypto.HexToECDSA(privkey)
+	pkEcdsa, err := crypto.HexToECDSA(privkey)
 	panicErr(err)
-	caller := ethcrypto.PubkeyToAddress(pkEcdsa.PublicKey)
+	caller := crypto.PubkeyToAddress(pkEcdsa.PublicKey)
 	nonce, err := getNonce(client, caller.Hex())
 	panicErr(err)
 	fmt.Println("Nonce: ", nonce)
@@ -384,9 +369,9 @@ func callContract(client *rpcclient.ClientJSONRPC, method string, args []interfa
 	// timeStart := time.Now().UnixNano() / 1000000
 	// fmt.Printf("START: %v\n", timeStart)
 	for i := 0; i < requestNum; i++ {
-		tx := ethtypes.NewTransaction(nonce+uint64(i), common.HexToAddress(contractAddr), big.NewInt(0), gasLimit, big.NewInt(0), data)
+		tx := etypes.NewTransaction(nonce+uint64(i), common.HexToAddress(contractAddr), big.NewInt(0), gasLimit, big.NewInt(0), data)
 
-		sig, err := ethcrypto.Sign(tx.SigHash(ethSigner).Bytes(), pkEcdsa)
+		sig, err := crypto.Sign(ethSigner.Hash(tx).Bytes(), pkEcdsa)
 		panicErr(err)
 		sigTx, err := tx.WithSignature(ethSigner, sig)
 		panicErr(err)
@@ -417,7 +402,7 @@ func create_goroutine(client *rpcclient.ClientJSONRPC) {
 
 	var wg sync.WaitGroup
 	for i := 0; i < procNum; i++ {
-		pkEcdsa, err := ethcrypto.GenerateKey()
+		pkEcdsa, err := crypto.GenerateKey()
 		panicErr(err)
 
 		wg.Add(1)
@@ -426,15 +411,15 @@ func create_goroutine(client *rpcclient.ClientJSONRPC) {
 		// 	startTime := time.Now().UnixNano()
 
 		// 	defer wg.Done()
-		// 	// pk := ethcrypto.ToECDSA(common.Hex2Bytes(privKey))
-		// 	caller := ethcrypto.PubkeyToAddress(pkEcdsa.PublicKey)
+		// 	// pk := crypto.ToECDSA(common.Hex2Bytes(privKey))
+		// 	caller := crypto.PubkeyToAddress(pkEcdsa.PublicKey)
 		// 	nonce, err := getNonce(client, caller.Hex())
 		// 	panicErr(err)
 
 		// 	data := common.Hex2Bytes(bytecode)
-		// 	tx := ethtypes.NewContractCreation(nonce, big.NewInt(0), gasLimit, big.NewInt(0), data)
+		// 	tx := etypes.NewContractCreation(nonce, big.NewInt(0), gasLimit, big.NewInt(0), data)
 
-		// 	sig, _ := ethcrypto.Sign(tx.SigHash(ethSigner).Bytes(), pkEcdsa)
+		// 	sig, _ := crypto.Sign(tx.SigHash(ethSigner).Bytes(), pkEcdsa)
 		// 	sigTx, _ := tx.WithSignature(ethSigner, sig)
 		// 	rlpSignedTx, err := rlp.EncodeToBytes(sigTx)
 		// 	panicErr(err)
@@ -451,7 +436,7 @@ func create_goroutine(client *rpcclient.ClientJSONRPC) {
 		// 	// }
 
 		// 	// fmt.Println(res.Code, string(res.Data))
-		// 	contractAddr := ethcrypto.CreateAddress(caller, nonce)
+		// 	contractAddr := crypto.CreateAddress(caller, nonce)
 		// 	fmt.Println("contract address:", contractAddr.Hex())
 		// }(i, pkEcdsa)
 	}
@@ -474,9 +459,9 @@ func read_goroutine(client *rpcclient.ClientJSONRPC) {
 		panicErr(err)
 
 		privkey := gcmn.SanitizeHex(defaultPrivKey)
-		pkEcdsa, err := ethcrypto.HexToECDSA(privkey)
+		pkEcdsa, err := crypto.HexToECDSA(privkey)
 		panicErr(err)
-		caller := ethcrypto.PubkeyToAddress(pkEcdsa.PublicKey)
+		caller := crypto.PubkeyToAddress(pkEcdsa.PublicKey)
 		nonce, err := getNonce(client, caller.Hex())
 		panicErr(err)
 
@@ -485,8 +470,8 @@ func read_goroutine(client *rpcclient.ClientJSONRPC) {
 			defer wg.Done()
 			startTime := time.Now().UnixNano()
 
-			tx := ethtypes.NewTransaction(nonce, common.HexToAddress(defaultContractAddr), big.NewInt(0), gasLimit, big.NewInt(0), data)
-			sig, err := ethcrypto.Sign(tx.SigHash(ethSigner).Bytes(), pkEcdsa)
+			tx := etypes.NewTransaction(nonce, common.HexToAddress(defaultContractAddr), big.NewInt(0), gasLimit, big.NewInt(0), data)
+			sig, err := crypto.Sign(ethSigner.Hash(tx).Bytes(), pkEcdsa)
 			panicErr(err)
 			sigTx, err := tx.WithSignature(ethSigner, sig)
 			panicErr(err)
@@ -523,7 +508,7 @@ func call_goroutine(client *rpcclient.ClientJSONRPC) {
 
 	var wg sync.WaitGroup
 	for i := 0; i < requestNum; i++ {
-		pkEcdsa, err := ethcrypto.GenerateKey()
+		pkEcdsa, err := crypto.GenerateKey()
 		panicErr(err)
 
 		wg.Add(1)
@@ -538,14 +523,14 @@ func call_goroutine(client *rpcclient.ClientJSONRPC) {
 			panicErr(err)
 
 			// privkey := gcmn.SanitizeHex(privKey)
-			// pkEcdsa, err := ethcrypto.HexToECDSA(privkey)
+			// pkEcdsa, err := crypto.HexToECDSA(privkey)
 			// panicErr(err)
-			caller := ethcrypto.PubkeyToAddress(pkEcdsa.PublicKey)
+			caller := crypto.PubkeyToAddress(pkEcdsa.PublicKey)
 			nonce, err := getNonce(client, caller.Hex())
 			panicErr(err)
 
-			tx := ethtypes.NewTransaction(nonce+uint64(i), common.HexToAddress(contractAddr), big.NewInt(0), gasLimit, big.NewInt(0), data)
-			sig, err := ethcrypto.Sign(tx.SigHash(ethSigner).Bytes(), pkEcdsa)
+			tx := etypes.NewTransaction(nonce+uint64(i), common.HexToAddress(contractAddr), big.NewInt(0), gasLimit, big.NewInt(0), data)
+			sig, err := crypto.Sign(ethSigner.Hash(tx).Bytes(), pkEcdsa)
 			panicErr(err)
 			sigTx, err := tx.WithSignature(ethSigner, sig)
 			panicErr(err)

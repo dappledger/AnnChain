@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,13 +19,13 @@ import (
 	"fmt"
 	"sort"
 
-	ethtypes "github.com/dappledger/AnnChain/eth/core/types"
+	"github.com/dappledger/AnnChain/eth/core/types"
 )
 
 type txSortedMap struct {
-	items map[uint64]*ethtypes.Transaction // Hash map storing the transaction data
-	index *nonceHeap                       // Heap of nonces of all the stored transactions (non-strict mode)
-	cache ethtypes.Transactions            // Cache of the transactions already sorted
+	items map[uint64]*types.Transaction // Hash map storing the transaction data
+	index *nonceHeap                    // Heap of nonces of all the stored transactions (non-strict mode)
+	cache types.Transactions            // Cache of the transactions already sorted
 }
 
 type nonceHeap []uint64
@@ -50,27 +49,27 @@ func (h *nonceHeap) Pop() interface{} {
 // newTxSortedMap creates a new nonce-sorted transaction map.
 func newTxSortedMap() *txSortedMap {
 	return &txSortedMap{
-		items: make(map[uint64]*ethtypes.Transaction),
+		items: make(map[uint64]*types.Transaction),
 		index: new(nonceHeap),
 	}
 }
 
-func (m *txSortedMap) Add(tx *ethtypes.Transaction) error {
+func (m *txSortedMap) Add(tx *types.Transaction) error {
 	if _, exist := m.items[tx.Nonce()]; exist {
-		return errors.New("Tx nonce already exist in cache.")
+		return errors.New("tx nonce already exist in cache")
 	}
 	m.Put(tx)
 	return nil
 }
 
 // Get retrieves the current transactions associated with the given nonce.
-func (m *txSortedMap) Get(nonce uint64) *ethtypes.Transaction {
+func (m *txSortedMap) Get(nonce uint64) *types.Transaction {
 	return m.items[nonce]
 }
 
 // Put inserts a new transaction into the map, also updating the map's nonce
 // index. If a transaction already exists with the same nonce, it's overwritten.
-func (m *txSortedMap) Put(tx *ethtypes.Transaction) {
+func (m *txSortedMap) Put(tx *types.Transaction) {
 	nonce := tx.Nonce()
 	if m.items[nonce] == nil {
 		heap.Push(m.index, nonce)
@@ -81,8 +80,8 @@ func (m *txSortedMap) Put(tx *ethtypes.Transaction) {
 // Forward removes all transactions from the map with a nonce lower than the
 // provided threshold. Every removed transaction is returned for any post-removal
 // maintenance.
-func (m *txSortedMap) Forward(threshold uint64) ethtypes.Transactions {
-	var removed ethtypes.Transactions
+func (m *txSortedMap) Forward(threshold uint64) types.Transactions {
+	var removed types.Transactions
 
 	// Pop off heap items until the threshold is reached
 	for m.index.Len() > 0 && (*m.index)[0] < threshold {
@@ -98,7 +97,7 @@ func (m *txSortedMap) Forward(threshold uint64) ethtypes.Transactions {
 }
 
 // try to replace a big nonce tx to a small nonce tx
-func (m *txSortedMap) TryReplace(tx *ethtypes.Transaction) bool {
+func (m *txSortedMap) TryReplace(tx *types.Transaction) bool {
 	if m.index.Len() <= 0 {
 		return false
 	}
@@ -118,7 +117,7 @@ func (m *txSortedMap) TryReplace(tx *ethtypes.Transaction) bool {
 
 // return max nonce in txSortedMap, call from empty m will cause a panic.
 func (m *txSortedMap) MaxNonce() uint64 {
-	var sortedTxs ethtypes.Transactions
+	var sortedTxs types.Transactions
 	if m.cache != nil {
 		sortedTxs = m.cache
 	} else {
@@ -157,18 +156,18 @@ func (m *txSortedMap) Remove(nonce uint64) bool {
 // Note, all transactions with nonces lower than start will also be returned to
 // prevent getting into and invalid state. This is not something that should ever
 // happen but better to be self correcting than failing!
-func (m *txSortedMap) Ready(start uint64) ethtypes.Transactions {
+func (m *txSortedMap) Ready(start uint64) types.Transactions {
 	return m.ReadyN(start, m.Len())
 }
 
 // the func is like ready, but it only retrieves up to N(count) txs that are ready
-func (m *txSortedMap) ReadyN(start uint64, count int) ethtypes.Transactions {
+func (m *txSortedMap) ReadyN(start uint64, count int) types.Transactions {
 	// Short circuit if no transactions are available
 	if m.index.Len() == 0 || (*m.index)[0] > start || count <= 0 {
 		return nil
 	}
 	// Otherwise start accumulating incremental transactions
-	var ready ethtypes.Transactions
+	var ready types.Transactions
 	for next := (*m.index)[0]; m.index.Len() > 0 && (*m.index)[0] == next; next++ {
 		ready = append(ready, m.items[next])
 		delete(m.items, next)
@@ -190,17 +189,17 @@ func (m *txSortedMap) Len() int {
 // Flatten creates a nonce-sorted slice of transactions based on the loosely
 // sorted internal representation. The result of the sorting is cached in case
 // it's requested again before any modifications are made to the contents.
-func (m *txSortedMap) Flatten() ethtypes.Transactions {
+func (m *txSortedMap) Flatten() types.Transactions {
 	// If the sorting was not cached yet, create and cache it
 	if m.cache == nil {
-		m.cache = make(ethtypes.Transactions, 0, len(m.items))
+		m.cache = make(types.Transactions, 0, len(m.items))
 		for _, tx := range m.items {
 			m.cache = append(m.cache, tx)
 		}
-		sort.Sort(ethtypes.TxByNonce(m.cache))
+		sort.Sort(types.TxByNonce(m.cache))
 	}
 	// Copy the cache to prevent accidental modifications
-	txs := make(ethtypes.Transactions, len(m.cache))
+	txs := make(types.Transactions, len(m.cache))
 	copy(txs, m.cache)
 	return txs
 }

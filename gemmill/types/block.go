@@ -36,18 +36,19 @@ type Block struct {
 }
 
 // TODO: version
-func MakeBlock(height int64, chainID string, txs []Tx, extxs []Tx, commit *Commit,
+func MakeBlock(height int64, chainID string, txs []Tx, extxs []Tx, commit *Commit, proposer []byte,
 	prevBlockID BlockID, valHash, appHash, receiptsHash []byte, partSize int) (*Block, *PartSet) {
 	block := &Block{
 		Header: &Header{
-			ChainID:        chainID,
-			Height:         height,
-			Time:           time.Now(),
-			NumTxs:         int64(len(txs) + len(extxs)),
-			LastBlockID:    prevBlockID,
-			ValidatorsHash: valHash,
-			AppHash:        appHash,      // state merkle root of txs from the previous block.
-			ReceiptsHash:   receiptsHash, // receipts hash from the previous block
+			ChainID:         chainID,
+			Height:          height,
+			Time:            time.Now(),
+			NumTxs:          int64(len(txs) + len(extxs)),
+			LastBlockID:     prevBlockID,
+			ValidatorsHash:  valHash,
+			AppHash:         appHash,      // state merkle root of txs from the previous block.
+			ReceiptsHash:    receiptsHash, // receipts hash from the previous block
+			ProposerAddress: proposer,
 		},
 		LastCommit: commit,
 		Data:       &Data{},
@@ -171,16 +172,17 @@ func (b *Block) StringShort() string {
 //-----------------------------------------------------------------------------
 
 type Header struct {
-	ChainID        string    `json:"chain_id"`
-	Height         int64     `json:"height"`
-	Time           time.Time `json:"time"`
-	NumTxs         int64     `json:"num_txs"` // XXX: Can we get rid of this?
-	LastBlockID    BlockID   `json:"last_block_id"`
-	LastCommitHash []byte    `json:"last_commit_hash"` // commit from validators from the last block
-	DataHash       []byte    `json:"data_hash"`        // transactions
-	ValidatorsHash []byte    `json:"validators_hash"`  // validators for the current block
-	AppHash        []byte    `json:"app_hash"`         // state after txs from the previous block
-	ReceiptsHash   []byte    `json:"recepits_hash"`    // recepits_hash from previous block
+	ChainID         string    `json:"chain_id"`
+	Height          int64     `json:"height"`
+	Time            time.Time `json:"time"`
+	NumTxs          int64     `json:"num_txs"` // XXX: Can we get rid of this?
+	LastBlockID     BlockID   `json:"last_block_id"`
+	LastCommitHash  []byte    `json:"last_commit_hash"` // commit from validators from the last block
+	DataHash        []byte    `json:"data_hash"`        // transactions
+	ValidatorsHash  []byte    `json:"validators_hash"`  // validators for the current block
+	AppHash         []byte    `json:"app_hash"`         // state after txs from the previous block
+	ReceiptsHash    []byte    `json:"recepits_hash"`    // recepits_hash from previous block
+	ProposerAddress []byte    `json:"proposer_address"`
 }
 
 // NOTE: hash is nil if required fields are missing.
@@ -189,16 +191,17 @@ func (h *Header) Hash() []byte {
 		return nil
 	}
 	return merkle.SimpleHashFromMap(map[string]interface{}{
-		"ChainID":     h.ChainID,
-		"Height":      h.Height,
-		"Time":        h.Time,
-		"NumTxs":      h.NumTxs,
-		"LastBlockID": h.LastBlockID,
-		"LastCommit":  h.LastCommitHash,
-		"Data":        h.DataHash,
-		"Validators":  h.ValidatorsHash,
-		"App":         h.AppHash,
-		"Receipts":    h.ReceiptsHash,
+		"ChainID":         h.ChainID,
+		"Height":          h.Height,
+		"Time":            h.Time,
+		"NumTxs":          h.NumTxs,
+		"LastBlockID":     h.LastBlockID,
+		"LastCommit":      h.LastCommitHash,
+		"Data":            h.DataHash,
+		"Validators":      h.ValidatorsHash,
+		"App":             h.AppHash,
+		"Receipts":        h.ReceiptsHash,
+		"ProposerAddress": h.ProposerAddress,
 	})
 }
 
@@ -217,6 +220,7 @@ func (h *Header) StringIndented(indent string) string {
 %s  Validators:     %X
 %s  App:            %X
 %s  Receipts:       %X
+%s  ProposerAddress:%X
 %s}#%X`,
 		indent, h.ChainID,
 		indent, h.Height,
@@ -228,6 +232,7 @@ func (h *Header) StringIndented(indent string) string {
 		indent, h.ValidatorsHash,
 		indent, h.AppHash,
 		indent, h.ReceiptsHash,
+		indent, h.ProposerAddress,
 		indent, h.Hash())
 }
 
@@ -374,7 +379,6 @@ func (commit *Commit) StringIndented(indent string) string {
 //-----------------------------------------------------------------------------
 
 type Data struct {
-
 	// Txs that will be applied by state @ block.Height+1.
 	// NOTE: not all txs here are valid.  We're just agreeing on the order first.
 	// This means that block.AppHash does not include these txs.

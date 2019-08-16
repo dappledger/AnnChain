@@ -94,7 +94,7 @@ func (rt *Router) Broadcast(ctx context.Context, data []byte, voteCh chan []byte
 	rt.responseChannels[string(hash)] = voteCh
 	rt.mtx.Unlock()
 
-	rt.reactor.Switch.Broadcast(SpecialOPChannel, struct{ Message }{msg})
+	rt.reactor.Switch.Broadcast(AdminOPChannel, struct{ Message }{msg})
 	return nil
 }
 
@@ -143,11 +143,11 @@ func (rt *Router) request(requestHash []byte, fromPeer string, data []byte, only
 	// sign the change validator msg
 	resp := &traceResponse{
 		RequestHash: requestHash,
-		Resp:        rt.channelHandlers[SpecialOPChannel](data),
+		Resp:        rt.channelHandlers[AdminOPChannel](data),
 	}
 
 	// peer is keyed by its PublicKey in the form of uppercase hex string
-	rt.reactor.Switch.Peers().Get(fromPeer).Send(SpecialOPChannel, struct{ Message }{resp})
+	rt.reactor.Switch.Peers().Get(fromPeer).Send(AdminOPChannel, struct{ Message }{resp})
 	return true, nil
 }
 
