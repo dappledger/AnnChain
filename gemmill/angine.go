@@ -34,7 +34,7 @@ import (
 
 	"github.com/dappledger/AnnChain/gemmill/archive"
 	"github.com/dappledger/AnnChain/gemmill/blockchain"
-	ac "github.com/dappledger/AnnChain/gemmill/config"
+	config "github.com/dappledger/AnnChain/gemmill/config"
 	"github.com/dappledger/AnnChain/gemmill/consensus"
 	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
@@ -54,7 +54,7 @@ import (
 
 const version = "0.9.0"
 
-// Angine is a high level abstraction of all the state, consensus, mempool...
+// Angine is a high level abstraction of all the state, consensus, mempool blah blah...
 type Angine struct {
 	Tune *Tunes
 
@@ -83,7 +83,7 @@ type Angine struct {
 	addrBook      *p2p.AddrBook
 	plugins       []plugin.IPlugin
 
-	getSpecialVote func([]byte, *types.Validator) ([]byte, error)
+	getAdminVote func([]byte, *types.Validator) ([]byte, error)
 
 	queryPayLoadTxParser func([]byte) ([]byte, error)
 }
@@ -97,7 +97,7 @@ type Tunes struct {
 // It is usually used with commands like "init" before user put the node into running.
 func Initialize(tune *Tunes, chainId string) {
 	crypto.NodeInit(crypto.CryptoType)
-	if err := ac.InitRuntime(tune.Runtime, chainId, tune.Conf); err != nil {
+	if err := config.InitRuntime(tune.Runtime, chainId, tune.Conf); err != nil {
 		gcmn.Exit(gcmn.Fmt("Init Runtime error: %v", err))
 	}
 }
@@ -106,7 +106,7 @@ func Initialize(tune *Tunes, chainId string) {
 func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 	var conf *viper.Viper
 	if tune.Conf == nil {
-		conf, err = ac.ReadConfig(tune.Runtime)
+		conf, err = config.ReadConfig(tune.Runtime)
 		if err != nil {
 			return nil, err
 		}
@@ -179,6 +179,7 @@ func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 		p2pPort:       p2pListener.ExternalAddress().Port,
 		genesis:       genesis,
 	}
+
 	angine.app = app
 	err = angine.buildState(genesis)
 
@@ -259,6 +260,10 @@ func closeDBs(a *Angine) {
 	}
 }
 
+// func (e *Angine) SetAdminVoteRPC(f func([]byte, *types.Validator) ([]byte, error)) {
+// 	e.getAdminVote = f
+// }
+
 func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	conf := ang.tune.Conf
 	conf.Set("chain_id", stateM.ChainID)
@@ -268,7 +273,6 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	blockStore := blockchain.NewBlockStore(ang.dbs["blockstore"], ang.dbs["archive"])
 	_, stateLastHeight, _ := stateM.GetLastBlockInfo()
 	bcReactor := blockchain.NewBlockchainReactor(conf, stateLastHeight, blockStore, fastSync, ang.dataArchive)
-
 	var txPool types.TxPool
 	if txPoolApp, isType := ang.app.(types.TxPoolApplication); isType {
 		log.Info("app implemented tx pool")
@@ -298,15 +302,9 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 		return nil
 	})
 
-	spRouter := trace.NewRouter(conf, stateM, ang.PrivValidator())
-	spReactor := trace.NewTraceReactor(conf, spRouter)
-	spRouter.SetReactor(spReactor)
-	spRouter.RegisterHandler(trace.SpecialOPChannel, ang.SpecialOPResponseHandler)
-
 	ang.p2pSwitch.AddReactor("MEMPOOL", memReactor)
 	ang.p2pSwitch.AddReactor("BLOCKCHAIN", bcReactor)
 	ang.p2pSwitch.AddReactor("CONSENSUS", consensusReactor)
-	ang.p2pSwitch.AddReactor("SPECIALOP", spReactor)
 
 	var addrBook *p2p.AddrBook
 	if conf.GetBool("pex_reactor") {
@@ -324,7 +322,7 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	ang.blockstore = blockStore
 	ang.consensus = consensusState
 	ang.txPool = txPool
-	ang.traceRouter = spRouter
+
 	ang.stateMachine = stateM
 	ang.genesis = stateM.GenesisDoc
 	ang.addrBook = addrBook
@@ -675,7 +673,6 @@ func (ang *Angine) Query(queryType byte, load []byte) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		return data, nil
 	case types.QueryTx:
 		return ang.QueryTransaction(load)
@@ -685,7 +682,6 @@ func (ang *Angine) Query(queryType byte, load []byte) (interface{}, error) {
 }
 
 func (ang *Angine) QueryTransaction(load []byte) (interface{}, error) {
-
 	for _, p := range ang.plugins {
 
 		if qc, ok := p.(*plugin.QueryCachePlugin); ok {
@@ -720,13 +716,13 @@ func (ang *Angine) QueryTransaction(load []byte) (interface{}, error) {
 }
 
 func (ang *Angine) QueryPayLoad(load []byte) (interface{}, error) {
+
 	tx, err := ang.QueryTransaction(load)
 	if err != nil {
 		return nil, err
 	}
 	rawTx := tx.(*types.ResultTransaction)
 	return ang.queryPayLoadTxParser(rawTx.RawTransaction)
-
 }
 
 // Recover world status
@@ -839,6 +835,20 @@ func (ang *Angine) BeginBlock(block *types.Block, eventFireable events.Fireable,
 	return nil
 }
 
+func (ang *Angine) ExecAdminTx(app plugin.AdminApp, tx []byte) error {
+	var ip *plugin.AdminOp
+	ok := false
+	for _, p := range ang.plugins {
+		if ip, ok = p.(*plugin.AdminOp); ok {
+			break
+		}
+	}
+	if ip != nil {
+		return ip.ExecTX(app, tx)
+	}
+	return fmt.Errorf("there is no plugin.AdminOp")
+}
+
 func (ang *Angine) ExecBlock(block *types.Block, eventFireable events.Fireable, executeResult *types.ExecuteResult) error {
 	params := &plugin.ExecBlockParams{
 		Block:      block,
@@ -846,6 +856,9 @@ func (ang *Angine) ExecBlock(block *types.Block, eventFireable events.Fireable, 
 		InvalidTxs: executeResult.InvalidTxs,
 	}
 	for _, p := range ang.plugins {
+		if _, ok := p.(*plugin.AdminOp); ok {
+			continue
+		}
 		_, err := p.ExecBlock(params)
 		if err != nil {
 			return err
@@ -898,7 +911,7 @@ func authByCA(conf *viper.Viper, ppValidators **types.ValidatorSet) func(*p2p.No
 	valset := *ppValidators
 	return func(peerNodeInfo *p2p.NodeInfo) error {
 		// validator node must be signed by CA
-
+		// but normal node can bypass auth check if config says so
 		if !valset.HasAddress(peerNodeInfo.PubKey.Address()) && !conf.GetBool("non_validator_node_auth") {
 			return nil
 		}
@@ -940,8 +953,8 @@ func (ang *Angine) InitPlugins() {
 
 	for _, pn := range ps {
 		switch pn {
-		case "specialop":
-			p := &plugin.Specialop{}
+		case "adminOp":
+			p := &plugin.AdminOp{}
 			p.Init(params)
 			ang.plugins = append(ang.plugins, p)
 		case "querycache":
@@ -985,6 +998,24 @@ func fastSyncable(conf *viper.Viper, selfAddress []byte, validators *types.Valid
 	}
 	return fastSync
 }
+
+// func getGenesisFileMust(conf cfg.Config) *types.GenesisDoc {
+// 	genDocFile := conf.GetString("genesis_file")
+// 	if !gcmn.FileExists(genDocFile) {
+// 		gcmn.PanicSanity("missing genesis_file")
+// 	}
+// 	jsonBlob, err := ioutil.ReadFile(genDocFile)
+// 	if err != nil {
+// 		gcmn.Exit(gcmn.Fmt("Couldn't read GenesisDoc file: %v", err))
+// 	}
+// 	genDoc := types.GenesisDocFromJSON(jsonBlob)
+// 	if genDoc.ChainID == "" {
+// 		gcmn.PanicSanity(gcmn.Fmt("Genesis doc %v must include non-empty chain_id", genDocFile))
+// 	}
+// 	conf.Set("chain_id", genDoc.ChainID)
+
+// 	return genDoc
+// }
 
 var (
 	GENESIS_NOT_FOUND = errors.New("missing genesis_file")
@@ -1083,6 +1114,30 @@ func (m MockMempool) Update(height int64, txs []types.Tx) {}
 type ITxCheck interface {
 	CheckTx(types.Tx) (bool, error)
 }
+
+// func (ang *Angine) newArchiveDB(height def.INT) (archiveDB dbm.DB, err error) {
+//     fileHash := string(ang.dataArchive.QueryFileHash(height))
+//     archiveDir := ang.conf.GetString("db_archive_dir")
+//     tiClient := ti.NewTiCapsuleClient(
+//         ang.conf.GetString("ti_endpoint"),
+//         ang.conf.GetString("ti_key"),
+//         ang.conf.GetString("ti_secret"),
+//     )
+//     _, err = os.Stat(filepath.Join(archiveDir, fileHash+".zip"))
+//     if err != nil {
+//         err = tiClient.DownloadFile(fileHash, filepath.Join(archiveDir, fileHash+".zip"))
+//         if err != nil {
+//             return
+//         }
+//         err = zip.Decompress(filepath.Join(archiveDir, fileHash+".zip"), filepath.Join(archiveDir, fileHash+".db"))
+//         if err != nil {
+//             return
+//         }
+//     }
+
+//     archiveDB = dbm.NewDB(fileHash, ang.conf.GetString("db_backend"), archiveDir)
+//     return
+// }
 
 const (
 	TIME_OUT_HEALTH = int64(time.Second * 60)

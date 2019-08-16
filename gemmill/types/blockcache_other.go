@@ -1,9 +1,23 @@
+// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package types
 
 import (
 	"math/rand"
 
-	crypto "github.com/dappledger/AnnChain/gemmill/go-crypto"
+	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 )
 
 // =============for test code
@@ -23,8 +37,8 @@ func GenTxsForTest(numtx, numExTx int) ([]Tx, []Tx) {
 		txs = append(txs, Tx(crypto.CRandBytes(TxsLenForTest())))
 	}
 	for i := 0; i < numExTx; i++ {
-		tx := make([]byte, len(SpecialTag))
-		copy(tx, SpecialTag)
+		tx := make([]byte, len(AdminTag))
+		copy(tx, AdminTag)
 		tx = append(tx, crypto.CRandBytes(TxsLenForTest())...)
 		extxs = append(extxs, tx)
 	}
@@ -49,6 +63,7 @@ func GenBlockForTest(height int64, ntxs, nexTxs int) *Block {
 		txs,
 		extxs,
 		GenCommitForTest(height, chainID),
+		nil,
 		GenBlockID(),
 		crypto.CRandBytes(20),
 		crypto.CRandBytes(20),

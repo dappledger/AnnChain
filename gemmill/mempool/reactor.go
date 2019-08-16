@@ -57,8 +57,7 @@ func NewTxReactor(conf *viper.Viper, mempool types.TxPool) *MempoolReactor {
 func (memR *MempoolReactor) GetChannels() []*p2p.ChannelDescriptor {
 	return []*p2p.ChannelDescriptor{
 		&p2p.ChannelDescriptor{
-			ID: MempoolChannel,
-			//			Priority: 5,
+			ID:       MempoolChannel,
 			Priority: 1,
 		},
 	}
@@ -96,11 +95,6 @@ func (memR *MempoolReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
 		log.Info(fmt.Sprintf("Unknown message type %T", msg))
 	}
 }
-
-// Just an alias for CheckTx since broadcasting happens in peer routines
-//func (memR *MempoolReactor) BroadcastTx(tx types.Tx) error {
-//	return memR.Mempool.CheckTx(tx)
-//}
 
 type PeerState interface {
 	GetHeight() int64

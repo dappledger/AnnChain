@@ -17,13 +17,13 @@ import (
 	"fmt"
 	"os"
 
-	glb "github.com/dappledger/AnnChain/chain/commands/global"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/dappledger/AnnChain/chain/commands/global"
 	"github.com/dappledger/AnnChain/chain/types"
 	"github.com/dappledger/AnnChain/gemmill"
 	gtypes "github.com/dappledger/AnnChain/gemmill/types"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func NewShowCommand() *cobra.Command {
@@ -80,8 +80,8 @@ func NewResetCommand() *cobra.Command {
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 			runtime, _ := cmd.Flags().GetString("runtime")
-			if err = glb.CheckAndReadRuntimeConfig(runtime); err == nil {
-				setFlags(cmd, glb.GConf())
+			if err = global.CheckAndReadRuntimeConfig(runtime); err == nil {
+				setFlags(cmd, global.GConf())
 			}
 			return err
 		},
@@ -92,7 +92,7 @@ func NewResetCommand() *cobra.Command {
 }
 
 func resetCommandFunc(cmd *cobra.Command, args []string) {
-	angineconf := glb.GConf()
+	angineconf := global.GConf()
 	os.RemoveAll(angineconf.GetString("db_dir"))
 	resetPrivValidator(angineconf.GetString("priv_validator_file"))
 }
@@ -112,7 +112,7 @@ func resetPrivValidator(privValidatorFile string) {
 		privValidator.Reset()
 		fmt.Println("Reset PrivValidator", "file", privValidatorFile)
 	} else {
-		privValidator, err = gtypes.GenPrivValidator(glb.DefaultCrypto, nil)
+		privValidator, err = gtypes.GenPrivValidator(global.DefaultCrypto, nil)
 		if err != nil {
 			fmt.Println("Generate PrivValidator error: ", err)
 			os.Exit(1)

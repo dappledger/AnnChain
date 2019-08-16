@@ -70,6 +70,7 @@ func SetNodePubkey(data []byte) PubKey {
 }
 
 func SetNodePrivKey(data []byte) PrivKey {
+
 	return setNodePrivKey_ed25519(data)
 }
 

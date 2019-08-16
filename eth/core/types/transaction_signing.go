@@ -56,6 +56,7 @@ func MakeSigner(config *params.ChainConfig, blockNumber *big.Int) Signer {
 	if config.HomesteadBlock != nil {
 		signer = HomesteadSigner{}
 	}
+
 	return signer
 }
 
@@ -86,6 +87,7 @@ func Sender(signer Signer, tx *Transaction) (common.Address, error) {
 			return sigCache.from, nil
 		}
 	}
+
 	addr, err := signer.Sender(tx)
 	if err != nil {
 		return common.Address{}, err

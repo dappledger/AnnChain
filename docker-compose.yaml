@@ -10,7 +10,7 @@ services:
       app_net:
         ipv4_address: 192.168.10.7
   block-browser:
-    image: registry.cn-shanghai.aliyuncs.com/anlink/block-browser:latest
+    image: 
     ports:
       - '9090:9090'
     entrypoint:
@@ -37,8 +37,8 @@ services:
     networks:
       app_net:
         ipv4_address: 192.168.10.8
-  rendez-api:
-    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez-api:latest
+  genesis-api:
+    image: 
     ports:
       - '8800:8800'
     entrypoint:
@@ -46,14 +46,14 @@ services:
       - -c
       - |
         echo '{"ListenAddress": ":8800", "RPCAddress": "tcp://validator-0:47000", "GasLimit" : 10000000000 }' > api.conf
-        rendez-api -f api.conf
+        genesis-api -f api.conf
     restart: always
     networks:
       app_net:
         ipv4_address: 192.168.10.9
   validator-0:
     hostname: validator-0
-    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez:latest
+    image: 
     ports:
       - '46000:46000'
       - '47000:47000'
@@ -62,9 +62,9 @@ services:
       - -c
       - |
         mkdir -p logs
-        mkdir -p /rendez
-        rendez init --runtime="/rendez" --log_path="logs/rendez.log" --app="evm" --chainid=9102
-        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /rendez/genesis.json
+        mkdir -p /genesis
+        genesis init --runtime="/genesis" --log_path="logs/genesis.log" --app="evm" --chainid=9102
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /genesis/genesis.json
         echo 'app_name = "evm"
               auth_by_ca = false
               block_size = 5000
@@ -85,16 +85,16 @@ services:
               skip_upnp = true
               threshold_blocks = 0
               tracerouter_msg_ttl = 5
-              network_rate_limit = 1024' > /rendez/config.toml
-        echo '{"address":"6E57A5F704E94151714650DCFC52D220595D912B","pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"C8A5E8E93D58D4AD26DDB6BA9D14BA1941E3AE26E39E9B71F70855C9E391A0E01C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"]}' > /rendez/priv_validator.json
-        rendez run --runtime="/rendez"
+              network_rate_limit = 1024' > /genesis/config.toml
+        echo '{"address":"6E57A5F704E94151714650DCFC52D220595D912B","pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"C8A5E8E93D58D4AD26DDB6BA9D14BA1941E3AE26E39E9B71F70855C9E391A0E01C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"]}' > /genesis/priv_validator.json
+        genesis run --runtime="/genesis"
     networks:
       app_net:
         ipv4_address: 192.168.10.10
     restart: always
   validator-1:
     hostname: validator-1
-    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez:latest
+    image: 
     ports:
       - '46001:46001'
       - '47001:47001'
@@ -103,9 +103,9 @@ services:
       - -c
       - |
         mkdir -p logs
-        mkdir -p /rendez
-        rendez init --runtime="/rendez" --log_path="logs/rendez.log" --app="evm" --chainid=9102
-        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /rendez/genesis.json
+        mkdir -p /genesis
+        genesis init --runtime="/genesis" --log_path="logs/genesis.log" --app="evm" --chainid=9102
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /genesis/genesis.json
         echo 'app_name = "evm"
               auth_by_ca = false
               block_size = 5000
@@ -126,16 +126,16 @@ services:
               skip_upnp = true
               threshold_blocks = 0
               tracerouter_msg_ttl = 5
-              network_rate_limit = 1024' > /rendez/config.toml
-        echo '{"address":"AE4EC0F626FFE71D013C8E8F5137B710F5DC715F","pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"D95D969B03943B9509CD624CFA600739393BB3A2A38E869E4077F949415159399C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"]}' > /rendez/priv_validator.json
-        rendez run --runtime="/rendez"
+              network_rate_limit = 1024' > /genesis/config.toml
+        echo '{"address":"AE4EC0F626FFE71D013C8E8F5137B710F5DC715F","pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"D95D969B03943B9509CD624CFA600739393BB3A2A38E869E4077F949415159399C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"]}' > /genesis/priv_validator.json
+        genesis run --runtime="/genesis"
     networks:
       app_net:
         ipv4_address: 192.168.10.11
     restart: always
   validator-2:
     hostname: validator-2
-    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez:latest
+    image: 
     ports:
       - '46002:46002'
       - '47002:47002'
@@ -144,9 +144,9 @@ services:
       - -c
       - |
         mkdir -p logs
-        mkdir -p /rendez
-        rendez init --runtime="/rendez" --log_path="logs/rendez.log" --app="evm" --chainid=9102
-        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /rendez/genesis.json
+        mkdir -p /genesis
+        genesis init --runtime="/genesis" --log_path="logs/genesis.log" --app="evm" --chainid=9102
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /genesis/genesis.json
         echo 'app_name = "evm"
               auth_by_ca = false
               block_size = 5000
@@ -167,16 +167,16 @@ services:
               skip_upnp = true
               threshold_blocks = 0
               tracerouter_msg_ttl = 5
-              network_rate_limit = 1024' > /rendez/config.toml
-        echo '{"address":"DC884FC7E6311D49652A2ADE1906BBE8145DEB05","pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"E5A3EFBAEAC9725F5ED36C13492C423F541056A53F37473C7BDEBD7BAA038D8A0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"]}' > /rendez/priv_validator.json
-        rendez run --runtime="/rendez"
+              network_rate_limit = 1024' > /genesis/config.toml
+        echo '{"address":"DC884FC7E6311D49652A2ADE1906BBE8145DEB05","pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"E5A3EFBAEAC9725F5ED36C13492C423F541056A53F37473C7BDEBD7BAA038D8A0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"]}' > /genesis/priv_validator.json
+        genesis run --runtime="/genesis"
     networks:
       app_net:
         ipv4_address: 192.168.10.12
     restart: always
   validator-3:
     hostname: validator-3
-    image: registry.cn-shanghai.aliyuncs.com/anlink/rendez:latest
+    image: 
     ports:
       - '46003:46003'
       - '47003:47003'
@@ -185,9 +185,9 @@ services:
       - -c
       - |
         mkdir -p logs
-        mkdir -p /rendez
-        rendez init --runtime="/rendez" --log_path="logs/rendez.log" --app="evm" --chainid=9102
-        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /rendez/genesis.json
+        mkdir -p /genesis
+        genesis init --runtime="/genesis" --log_path="logs/genesis.log" --app="evm" --chainid=9102
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /genesis/genesis.json
         echo 'app_name = "evm"
               auth_by_ca = false
               block_size = 5000
@@ -208,9 +208,9 @@ services:
               skip_upnp = true
               threshold_blocks = 0
               tracerouter_msg_ttl = 5
-              network_rate_limit = 1024' > /rendez/config.toml
-        echo '{"address":"7CE2DED89377BA0C2742CF4C0CF0F3687BBC3C32","pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"B578B7B45316454F8198BEB760C9460A4C5617417B99F587777C0FF9A54BA195576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"]}' > /rendez/priv_validator.json
-        rendez run --runtime="/rendez"
+              network_rate_limit = 1024' > /genesis/config.toml
+        echo '{"address":"7CE2DED89377BA0C2742CF4C0CF0F3687BBC3C32","pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"last_height":0,"last_round":0,"last_step":0,"last_signature":null,"last_signbytes":"","priv_key":[1,"B578B7B45316454F8198BEB760C9460A4C5617417B99F587777C0FF9A54BA195576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"]}' > /genesis/priv_validator.json
+        genesis run --runtime="/genesis"
     networks:
       app_net:
         ipv4_address: 192.168.10.13

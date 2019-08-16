@@ -1,95 +1,36 @@
-## 一、Genesis介绍
+## How to build?
 
-AnnChain是工信部DAPPLedger开源社区项目之一，Annchain.Genesis是底层为链表式结构的区块链基础协议，致力于快速创建一条高性能、可扩展、可自由配置的区块链基础设施，使得创建去中心化应用更加简单快速，并已在技术社区中应用于数十个实际应用场景。
+``` shell
+# Step0. 设置GOPATH。
+export GOPATH=$HOME/.gopkgs
 
-### 1.1本项目你能学到什么
+# Step1. Clone项目到本地, 注意不要放到GOPATH中。另外，这里使用的是http方式，如果clone不了，请参考后面的解决方案。
+git clone https://github.com/dappledger/AnnChain.git
 
-- [ ] 了解PBFT快速共识
-- [ ] 了解资产数字化
-- [ ] 了解可编程智能合约
-- [ ] 如何快速部署开发环境
-- [ ] 如何配置创世节点
-- [ ] 了解节点的部署方式
+# Step2. 进入项目，下载依赖。
+cd AnnChain
+./get_pkgs.sh
 
-### 1.2面向读者
+# Step3. 构建。
+make
+```
 
-- [ ] 大学生
-- [ ] 区块链的技术爱好者
-- [ ] 互联网工程师
-- [ ] 区块链工程师
-- [ ] 运维工程师
+## How to run?
 
-### 1.3涉及技术
-
-- [ ] 版本管理：Git工具
-- [ ] 编程语言：Golang
-- [ ] 编程工具：Vscode/JetBrains GoLand/Atom/LiteIDE
-- [ ] 操作系统：CentOS/Ubuntu/Mac/Windos
-- [ ] 运维工具：Docker/Docker-compose/Docker-machine
-
-## 二、安装部署
-
-本章节主要介绍在部署annChain.Genesis链节点之前，预先安装一些需要涉及到的环境配置和工具：
-
-- [ ] 版本管理工具Git；
-- [ ] Golang环境配置（1.9以上）；
-- [ ] curl下载工具；
-- [ ] Docker容器和Docker-compose工具；
-
-### 2.1支持平台
-
-目前运行的操作系统平台如下：
-
-- Windows
-- Linux
-- Mac
-
-### 2.2安装说明
-
-如果您想编译源码并亲自动手配置，搭建annChain.Genesis,请参考[annChain.Genesis操作手册v1.0](https://github.com/dappledger/AnnChain/tree/master/doc/manual)。
-
-如果您希望使用Docker进行安装部署，可以参阅[使用Docker安装部署](https://github.com/dappledger/AnnChain/blob/master/docker-compose.yaml)。
-
-## 三、特性介绍
-
-- PBFT快速共识
-- 可编程智能合约
-- 数字资产发行
-- 系统参数配置化
-- 提供完善的API接口
-- 提供Golang版和JAVA版SDK接入
-
-## 四、应用案例
-
-某银行电商项目
-某企业供应链项目
-
-## 五、其他
-
-### 5.1区块链知识&行业动态
-
-[解读Conflux的共识机制](http://www.annchain.io/news/BlkaAVTkL)
-
-[布隆过滤器在区块链中的应用](http://www.annchain.io/news/8tkqctsPf)
-
-[像谈恋爱那样去招区块链工程师](http://www.annchain.io/news/8308r12PE)
-
-[区块链+“UKey”破解上链数据真伪之争，众安携手鼎钻推出钻石标准化交易模式](http://www.annchain.io/news/w-jzv7fBM)
-
-### 5.2常见问题
-
-annChain.Genesis常见问题，可参见[常见问题](https://github.com/dappledger/AnnChain/tree/master/doc)。
-
-也欢迎爱好者互相讨论、一起交流，请进入[提问专区](https://github.com/dappledger/AnnChain/issues)。
-
-## 六、联系我们
-
-邮箱：annchain@zhongan.io
-
-微信群：添加群管理员微信号，拉您进入annchain官方技术交流群。
-
-群管理员微信二维码：
-![](https://github.com/dappledger/AnnChain/blob/master/doc/annChain.Genesis.png)
+### use docker compose to run in one host.
 
 
+```
+## start cluster
+➜  docker-compose up
 
+## remove cluster
+➜  docker-compose down
+```
+
+##设置validator运行的节点
+并不是所有的k8s 节点都会运行genesis。 通过gtool生成的集群配置中，会自动给每个genesis分配nodeSelector: `validatorNode<i>=enabled`,所以，我们需要给k8s node添加标签 `validator<i>=enabled`
+具体操作示例如下：
+```bash
+kubectl label node <node_name> validatorNode7=enabled
+```

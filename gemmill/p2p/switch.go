@@ -402,10 +402,19 @@ func (sw *Switch) DialSeeds(seeds []string) {
 	perm := rand.Perm(len(seeds))
 	for i := 0; i < len(perm); i++ {
 		go func(i int) {
-			time.Sleep(time.Duration(rand.Int63n(3000)) * time.Millisecond)
-			j := perm[i]
-			addr, _ := NewNetAddressString(seeds[j])
-			sw.dialSeed(addr)
+			for {
+				time.Sleep(time.Duration(rand.Int63n(3000)) * time.Millisecond)
+				j := perm[i]
+				addr, err := NewNetAddressString(seeds[j])
+				if err != nil {
+					// loop to parse address in case of host resolve err(k8s)
+					log.Warn("failed to parse net address", zap.String("seed", seeds[j]), zap.Error(err))
+					continue
+				}
+				sw.dialSeed(addr)
+				break
+			}
+
 		}(i)
 	}
 }

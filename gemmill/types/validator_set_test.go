@@ -15,12 +15,12 @@
 package types
 
 import (
-	. "github.com/tendermint/go-common"
-	"github.com/tendermint/go-crypto"
-
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/dappledger/AnnChain/gemmill/go-crypto"
+	. "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 )
 
 func randPubKey() crypto.PubKeyEd25519 {
@@ -30,7 +30,7 @@ func randPubKey() crypto.PubKeyEd25519 {
 }
 
 func randValidator_() *Validator {
-	val := NewValidator(randPubKey(), RandInt64())
+	val := NewValidator(randPubKey(), RandInt64(), false)
 	val.Accum = RandInt64()
 	return val
 }
@@ -158,7 +158,7 @@ func BenchmarkValidatorSetCopy(b *testing.B) {
 	for i := 0; i < 1000; i++ {
 		privKey := crypto.GenPrivKeyEd25519()
 		pubKey := privKey.PubKey().(crypto.PubKeyEd25519)
-		val := NewValidator(pubKey, 0)
+		val := NewValidator(pubKey, 0, false)
 		if !vset.Add(val) {
 			panic("Failed to add validator")
 		}

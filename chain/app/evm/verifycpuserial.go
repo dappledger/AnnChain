@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,30 +14,30 @@
 package evm
 
 import (
-	ethtypes "github.com/dappledger/AnnChain/eth/core/types"
+	etypes "github.com/dappledger/AnnChain/eth/core/types"
 	"github.com/dappledger/AnnChain/eth/rlp"
-	agtypes "github.com/dappledger/AnnChain/gemmill/types"
+	gtypes "github.com/dappledger/AnnChain/gemmill/types"
 )
 
-func exeWithCPUSerialVeirfy(signer ethtypes.Signer, txs agtypes.Txs, beginExec BeginExecFunc) error {
+func exeWithCPUSerialVeirfy(txs gtypes.Txs, beginExec BeginExecFunc) {
 	for i, raw := range txs {
-		txbs := agtypes.Tx(txs[i])
+		txbs := gtypes.Tx(txs[i])
 		exec, end := beginExec()
-		err := txbs.Deal(func(atx agtypes.Tx) error {
-			var tx *ethtypes.Transaction
-			if len(atx) > 0 {
-				tx = new(ethtypes.Transaction)
-				if err := rlp.DecodeBytes(atx, tx); err != nil {
-					return err
-				}
-				if err := exec(i, raw, tx); err != nil {
-					return err
-				}
-			}
-			return nil
-		})
+		err := execTx(txbs, exec, i, raw)
 		end(raw, err)
 	}
+}
 
+func execTx(atx gtypes.Tx, exec ExecFunc, index int, raw gtypes.Tx) error {
+	var tx *etypes.Transaction
+	if len(atx) > 0 {
+		tx = new(etypes.Transaction)
+		if err := rlp.DecodeBytes(atx, tx); err != nil {
+			return err
+		}
+		if err := exec(index, raw, tx); err != nil {
+			return err
+		}
+	}
 	return nil
 }

@@ -1,8 +1,19 @@
+// Copyright © 2017 ZhongAn Technology
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package commands
 
-import (
-	"gopkg.in/urfave/cli.v1"
-)
+import "gopkg.in/urfave/cli.v1"
 
 type AnntoolFlags struct {
 	abif,
@@ -19,18 +30,21 @@ type AnntoolFlags struct {
 	accountPubkey,
 	peerPubkey,
 	validatorPubkey,
+	validatorSignature,
+	validatorPrivKey,
 	power,
-	isCA,
 	rpc,
 	to,
 	cType,
+	verbose,
+	nPrivs,
 	codeHash cli.Flag
 }
 
 var anntoolFlags = AnntoolFlags{
 	cType: cli.StringFlag{
 		Name:  "crypto_type",
-		Usage: "choose one of the three crypto_type types: \n\t'ZA' includes ed25519,ecdsa,ripemd160,keccak256,secretbox;\n",
+		Usage: "choose one of the three crypto_type types: \n\t'ZA' includes ed25519,ecdsa,ripemd160,keccak256,secretbox;",
 	},
 	abif: cli.StringFlag{
 		Name:  "abif",
@@ -79,11 +93,14 @@ var anntoolFlags = AnntoolFlags{
 	validatorPubkey: cli.StringFlag{
 		Name: "validator_pubkey",
 	},
+	validatorSignature: cli.StringFlag{
+		Name: "validator_signature",
+	},
+	validatorPrivKey: cli.StringFlag{
+		Name: "validator_privkey",
+	},
 	power: cli.IntFlag{
 		Name: "power",
-	},
-	isCA: cli.BoolFlag{
-		Name: "isCA",
 	},
 	rpc: cli.StringFlag{
 		Name:  "rpc",
@@ -92,5 +109,12 @@ var anntoolFlags = AnntoolFlags{
 	codeHash: cli.StringFlag{
 		Name:  "code_hash",
 		Value: "",
+	},
+	verbose: cli.BoolFlag{
+		Name: "verbose",
+	},
+	nPrivs: cli.IntFlag{
+		Name:  "nPrivs",
+		Usage: "number of ca privateKey!",
 	},
 }

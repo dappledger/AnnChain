@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/tendermint/ed25519"
+	"github.com/dappledger/AnnChain/gemmill/ed25519"
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
 )
 

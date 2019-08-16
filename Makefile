@@ -1,32 +1,22 @@
 .PHONY: ann api all
-all: genesis 
+all: genesis gtool 
 
 #
 ver=github.com/dappledger/AnnChain/chain/types.commitVer=`git rev-parse --short=8 HEAD`
-tag=github.com/dappledger/AnnChain/chain/types.Version=`git describe --exact-match --tags $(git log -n1 --pretty='%h')`
-gVer=github.com/dappledger/AnnChain/chain/types.gversion=`go run version/gemmill.go`
-balance=github.com/dappledger/AnnChain/chain/types.lversion=balance
-evmBalance=github.com/dappledger/AnnChain/eth/core.EVM_LIMIT_TYPE=balance
-tx=github.com/dappledger/AnnChain/chain/types.lversion=tx
-evmTx=github.com/dappledger/AnnChain/eth/core.EVM_LIMIT_TYPE=tx
-
+tag=github.com/dappledger/AnnChain/chain/types.Version=`git describe --tags --always $(git log -n1 --pretty='%h')`
 #
-rtoolver=github.com/dappledger/AnnChain/cmd/client/commands.VERSION=`git rev-parse --short=8 HEAD`
+gtoolver=github.com/dappledger/AnnChain/cmd/client/commands.VERSION=`git rev-parse --short=8 HEAD`
 
 genesis:
 	go build -ldflags "-X $(ver) -X $(tag)"  -o ./build/genesis ./cmd/genesis
-limit_balance_genesis:
-	go build -ldflags "-X $(ver) -X $(tag) -X $(gVer) -X $(balance) -X $(evmBalance)"  -o ./build/genesis ./cmd/genesis
-limit_tx_genesis:
-	go build -ldflags "-X $(ver) -X $(tag) -X $(gVer) -X $(tx) -X $(evmTx)"  -o ./build/genesis ./cmd/genesis
 
-
-
+gtool:
+	go build -ldflags "-X $(ver) -X $(tag)" -o ./build/gtool ./cmd/client
 
 clean:
-	rm ./genesis*
+	rm -rf build
 
-test:
+test-eth:
 	go test -v ./chain/app/evm
 	go test -v ./eth/rlp
 	go test -v ./eth/accounts/abi
@@ -42,3 +32,26 @@ test:
 	go test -v ./eth/core/types
 	go test -v ./eth/core/rawdb
 	go test -v ./eth/core
+
+test-gemmill:
+	go test -v ./gemmill/blockchain
+	go test -v ./gemmill/config
+	go test -v ./gemmill/consensus
+	go test -v ./gemmill/ed25519
+	go test -v ./gemmill/ed25519/extra25519
+	go test -v ./gemmill/go-crypto
+	go test -v ./gemmill/go-utils
+	go test -v ./gemmill/go-wire
+	go test -v ./gemmill/go-wire/expr
+	go test -v ./gemmill/modules/go-autofile
+	go test -v ./gemmill/modules/go-clist
+	go test -v ./gemmill/modules/go-common
+	go test -v ./gemmill/modules/go-db
+	go test -v ./gemmill/modules/go-events
+	go test -v ./gemmill/modules/go-flowrate/flowrate
+	go test -v ./gemmill/modules/go-log
+	go test -v ./gemmill/modules/go-merkle
+	go test -v ./gemmill/p2p
+	go test -v ./gemmill/refuse_list
+	go test -v ./gemmill/types
+	go test -v ./gemmill/utils

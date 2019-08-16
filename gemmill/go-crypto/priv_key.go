@@ -16,7 +16,6 @@ package crypto
 
 import (
 	"bytes"
-
 	"fmt"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
@@ -29,7 +28,6 @@ import (
 const (
 	// A series of combination of ciphers
 	// ZA includes ed25519,ecdsa,ripemd160,keccak256,secretbox
-
 	CryptoTypeZhongAn = "ZA"
 )
 
@@ -178,6 +176,19 @@ func (privKey PrivKeySecp256k1) String() string {
 func (privKey PrivKeySecp256k1) KeyString() string {
 	return gcmn.Fmt("%X", privKey[:])
 }
+
+/*
+// Deterministically generates new priv-key bytes from key.
+func (key PrivKeySecp256k1) Generate(index int) PrivKeySecp256k1 {
+	newBytes := wire.BinarySha256(struct {
+		PrivKey [64]byte
+		Index   int
+	}{key, index})
+	var newKey [64]byte
+	copy(newKey[:], newBytes)
+	return PrivKeySecp256k1(newKey)
+}
+*/
 
 func GenPrivKeySecp256k1() PrivKeySecp256k1 {
 	privKeyBytes := [PrivKeyLenSecp256k1]byte{}

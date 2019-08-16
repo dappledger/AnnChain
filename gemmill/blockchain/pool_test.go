@@ -15,11 +15,13 @@
 package blockchain
 
 import (
+	"go.uber.org/zap"
 	"math/rand"
 	"testing"
 	"time"
 
 	gcnm "github.com/dappledger/AnnChain/gemmill/modules/go-common"
+	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	"github.com/dappledger/AnnChain/gemmill/types"
 )
 
@@ -35,7 +37,7 @@ type testPeer struct {
 func makePeers(numPeers int, minHeight, maxHeight int) map[string]testPeer {
 	peers := make(map[string]testPeer, numPeers)
 	for i := 0; i < numPeers; i++ {
-		peerID := RandStr(12)
+		peerID := gcnm.RandStr(12)
 		height := minHeight + rand.Intn(maxHeight-minHeight)
 		peers[peerID] = testPeer{peerID, height}
 	}
@@ -47,13 +49,13 @@ func TestBasic(t *testing.T) {
 	peers := makePeers(10, start+1, 1000)
 	timeoutsCh := make(chan string, 100)
 	requestsCh := make(chan BlockRequest, 100)
-	pool := NewBlockPool(start, requestsCh, timeoutsCh)
+	pool := NewBlockPool(int64(start), requestsCh, timeoutsCh)
 	pool.Start()
 
 	// Introduce each peer.
 	go func() {
 		for _, peer := range peers {
-			pool.SetPeerHeight(peer.id, peer.height)
+			pool.SetPeerHeight(peer.id, int64(peer.height))
 		}
 	}()
 
@@ -78,7 +80,7 @@ func TestBasic(t *testing.T) {
 		case peerID := <-timeoutsCh:
 			t.Errorf("timeout: %v", peerID)
 		case request := <-requestsCh:
-			log.Info("TEST: Pulled new BlockRequest", "request", request)
+			log.Info("TEST: Pulled new BlockRequest", zap.Any("request", request))
 			if request.Height == 300 {
 				return // Done!
 			}
@@ -86,7 +88,7 @@ func TestBasic(t *testing.T) {
 			go func() {
 				block := &types.Block{Header: &types.Header{Height: request.Height}}
 				pool.AddBlock(request.PeerID, block, 123)
-				log.Info("TEST: Added block", "block", request.Height, "peer", request.PeerID)
+				log.Info("TEST: Added block", zap.Int64("block", request.Height), zap.String("peer", request.PeerID))
 			}()
 		}
 	}
@@ -99,17 +101,17 @@ func TestTimeout(t *testing.T) {
 	peers := makePeers(10, start+1, 1000)
 	timeoutsCh := make(chan string, 100)
 	requestsCh := make(chan BlockRequest, 100)
-	pool := NewBlockPool(start, requestsCh, timeoutsCh)
+	pool := NewBlockPool(int64(start), requestsCh, timeoutsCh)
 	pool.Start()
 
 	for _, peer := range peers {
-		log.Info("Peer", "id", peer.id)
+		log.Info("Peer", zap.String("id", peer.id))
 	}
 
 	// Introduce each peer.
 	go func() {
 		for _, peer := range peers {
-			pool.SetPeerHeight(peer.id, peer.height)
+			pool.SetPeerHeight(peer.id, int64(peer.height))
 		}
 	}()
 
@@ -134,7 +136,7 @@ func TestTimeout(t *testing.T) {
 	for {
 		select {
 		case peerID := <-timeoutsCh:
-			log.Info("Timeout", "peerID", peerID)
+			log.Info("Timeout", zap.String("peerID", peerID))
 			if _, ok := timedOut[peerID]; !ok {
 				counter++
 				if counter == len(peers) {
@@ -142,7 +144,7 @@ func TestTimeout(t *testing.T) {
 				}
 			}
 		case request := <-requestsCh:
-			log.Info("TEST: Pulled new BlockRequest", "request", request)
+			log.Info("TEST: Pulled new BlockRequest", zap.Any("request", request))
 		}
 	}
 

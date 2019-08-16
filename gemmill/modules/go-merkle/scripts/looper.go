@@ -18,8 +18,8 @@ import (
 	"fmt"
 
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
-	"github.com/dappledger/AnnChain/gemmill/go-db"
-	"github.com/dappledger/AnnChain/gemmill/go-merkle"
+	"github.com/dappledger/AnnChain/gemmill/modules/go-db"
+	"github.com/dappledger/AnnChain/gemmill/modules/go-merkle"
 )
 
 func main() {
@@ -29,14 +29,14 @@ func main() {
 	// for i := 0; i < 10000000; i++ {
 	// for i := 0; i < 1000000; i++ {
 	for i := 0; i < 1000; i++ {
-		t.Set(RandBytes(12), nil)
+		t.Set(gcmn.RandBytes(12), nil)
 	}
 	t.Save()
 
 	fmt.Println("ok, starting")
 
 	for i := 0; ; i++ {
-		key := RandBytes(12)
+		key := gcmn.RandBytes(12)
 		t.Set(key, nil)
 		t.Remove(key)
 		if i%1000 == 0 {

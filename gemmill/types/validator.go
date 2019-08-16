@@ -35,15 +35,25 @@ type Validator struct {
 	IsCA        bool          `json:"is_ca"`
 }
 
+type ValidatorCmd string
+
+const (
+	ValidatorCmdAddPeer    ValidatorCmd = "add_peer"
+	ValidatorCmdUpdateNode ValidatorCmd = "update_node"
+	ValidatorCmdRemoveNode ValidatorCmd = "remove_node"
+)
+
 type ValidatorAttr struct {
-	PubKey []byte `json:"pubKey,omitempty"`
-	Power  uint64 `json:"power,omitempty"`
-	IsCA   bool   `json:"isCA,omitempty"`
+	PubKey []byte       `json:"pubKey,omitempty"` //hex of pubkey;
+	Power  int64        `json:"power,omitempty"`
+	Cmd    ValidatorCmd `json:"cmd"`
+	Addr   []byte       `json:"addr"`
+	Nonce  uint64       `json:"nonce"`
 }
 
 func (m *ValidatorAttr) Reset() { *m = ValidatorAttr{} }
 func (m *ValidatorAttr) String() string {
-	return fmt.Sprintf("[%s,%s,%s]", m.PubKey, m.Power, m.IsCA)
+	return fmt.Sprintf("[%s,%x,%d]", m.Cmd, m.GetPubKey(), m.GetPower())
 }
 func (m *ValidatorAttr) GetPubKey() []byte {
 	if m != nil {
@@ -51,7 +61,8 @@ func (m *ValidatorAttr) GetPubKey() []byte {
 	}
 	return nil
 }
-func (m *ValidatorAttr) GetPower() uint64 {
+
+func (m *ValidatorAttr) GetPower() int64 {
 	if m != nil {
 		return m.Power
 	}
@@ -60,7 +71,7 @@ func (m *ValidatorAttr) GetPower() uint64 {
 
 func (m *ValidatorAttr) GetIsCA() bool {
 	if m != nil {
-		return m.IsCA
+		return m.GetPower() > 0
 	}
 	return false
 }

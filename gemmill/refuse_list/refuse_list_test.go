@@ -18,10 +18,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dappledger/AnnChain/gemmill/types"
-
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/go-db"
+
+	"github.com/dappledger/AnnChain/gemmill/modules/go-db"
+	"github.com/dappledger/AnnChain/gemmill/types"
 )
 
 func TestRefuseList(t *testing.T) {
@@ -34,9 +34,9 @@ func TestRefuseList(t *testing.T) {
 
 	pubKey, err := types.StringTo32byte(keyStr)
 	assert.Nil(t, err)
-	refuseList.AddRefuseKey(pubKey)
-	assert.Equal(t, true, refuseList.QueryRefuseKey(pubKey))
+	refuseList.AddRefuseKey(pubKey[:])
+	assert.Equal(t, true, refuseList.QueryRefuseKey(pubKey[:]))
 	assert.Equal(t, []string{keyStr}, refuseList.ListAllKey())
-	refuseList.DeleteRefuseKey(pubKey)
+	refuseList.DeleteRefuseKey(pubKey[:])
 	assert.Equal(t, 0, len(refuseList.ListAllKey()))
 }
