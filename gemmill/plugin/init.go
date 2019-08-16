@@ -30,7 +30,7 @@ const (
 )
 
 var (
-	pluginTypeSpecialOP  = byte(0x01)
+	pluginTypeAdminOP  = byte(0x01)
 	pluginTypeSuspect    = byte(0x02)
 	pluginTypeQueryCache = byte(0x03)
 )
@@ -117,6 +117,6 @@ type (
 func init() {
 	_ = wire.RegisterInterface(
 		struct{ IPlugin }{},
-		wire.ConcreteType{&Specialop{}, pluginTypeSpecialOP},
+		wire.ConcreteType{&AdminOp{}, pluginTypeAdminOP},
 	)
 }

@@ -46,27 +46,6 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// about the transaction and calling mechanisms.
 	vmenv := vm.NewEVM(context, statedb, config, cfg)
 
-	switch GetEvmLimitType() {
-	case EvmLimitTypeTx:
-		if msg.From() == BalanceAdministrator {
-			break
-		}
-		if ok := vmenv.CanTransfer(statedb, TxAdministrator, Big1); !ok {
-			return nil, 0, vm.ErrInsufficientBalance
-		}
-		vmenv.Transfer(statedb, TxAdministrator, BurningAccount, Big1)
-	case EvmLimitTypeBalance:
-		if msg.From() == BalanceAdministrator {
-			break
-		}
-		if ok := vmenv.CanTransfer(statedb, msg.From(), Big1); !ok {
-			return nil, 0, vm.ErrInsufficientBalance
-		}
-		vmenv.Transfer(statedb, msg.From(), BurningAccount, Big1)
-	default:
-
-	}
-
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
 	if err != nil {
@@ -74,11 +53,13 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	}
 	// Update the state with pending changes
 	var root []byte
-	if config.IsByzantium(header.Number) {
-		statedb.Finalise(true)
-	} else {
-		root = statedb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
-	}
+	// if config.IsByzantium(header.Number) {
+	// 	statedb.Finalise(true)
+	// } else {
+	// 	root = statedb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
+	// }
+	//Edit by zhongan
+	statedb.Finalise(true)
 	*usedGas += gas
 
 	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
@@ -88,6 +69,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// Edit by zhongan
 	txBytes, _ := rlp.EncodeToBytes(tx)
 	receipt.TxHash = common.BytesToHash(gtypes.Tx(txBytes).Hash())
+
 	receipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the receipt.
 	if msg.To() == nil {

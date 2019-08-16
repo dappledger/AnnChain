@@ -28,9 +28,9 @@ import (
 
 // NOTE: Returned group has ticker stopped
 func createTestGroup(t *testing.T, headSizeLimit int64) *Group {
-	testID := RandStr(12)
+	testID := gcmn.RandStr(12)
 	testDir := "_test_" + testID
-	err := EnsureDir(testDir, 0700)
+	err := gcmn.EnsureDir(testDir, 0700)
 	if err != nil {
 		t.Fatal("Error creating dir", err)
 	}
@@ -78,7 +78,7 @@ func TestCheckHeadSizeLimit(t *testing.T) {
 
 	// Write 1000 bytes 999 times.
 	for i := 0; i < 999; i++ {
-		err := g.WriteLine(RandStr(999))
+		err := g.WriteLine(gcmn.RandStr(999))
 		if err != nil {
 			t.Fatal("Error appending to head", err)
 		}
@@ -91,7 +91,7 @@ func TestCheckHeadSizeLimit(t *testing.T) {
 	assertGroupInfo(t, g.ReadGroupInfo(), 0, 0, 999000, 999000)
 
 	// Write 1000 more bytes.
-	err := g.WriteLine(RandStr(999))
+	err := g.WriteLine(gcmn.RandStr(999))
 	if err != nil {
 		t.Fatal("Error appending to head", err)
 	}
@@ -102,7 +102,7 @@ func TestCheckHeadSizeLimit(t *testing.T) {
 	assertGroupInfo(t, g.ReadGroupInfo(), 0, 1, 1000000, 0)
 
 	// Write 1000 more bytes.
-	err = g.WriteLine(RandStr(999))
+	err = g.WriteLine(gcmn.RandStr(999))
 	if err != nil {
 		t.Fatal("Error appending to head", err)
 	}
@@ -114,7 +114,7 @@ func TestCheckHeadSizeLimit(t *testing.T) {
 
 	// Write 1000 bytes 999 times.
 	for i := 0; i < 999; i++ {
-		err := g.WriteLine(RandStr(999))
+		err := g.WriteLine(gcmn.RandStr(999))
 		if err != nil {
 			t.Fatal("Error appending to head", err)
 		}
@@ -127,7 +127,7 @@ func TestCheckHeadSizeLimit(t *testing.T) {
 	assertGroupInfo(t, g.ReadGroupInfo(), 0, 2, 2000000, 0)
 
 	// Write 1000 more bytes.
-	_, err = g.Head.Write([]byte(RandStr(999) + "\n"))
+	_, err = g.Head.Write([]byte(gcmn.RandStr(999) + "\n"))
 	if err != nil {
 		t.Fatal("Error appending to head", err)
 	}
@@ -150,13 +150,13 @@ func TestSearch(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		// The random junk at the end ensures that this INFO linen
 		// is equally likely to show up at the end.
-		_, err := g.Head.Write([]byte(gcmn.Fmt("INFO %v %v\n", i, RandStr(123))))
+		_, err := g.Head.Write([]byte(gcmn.Fmt("INFO %v %v\n", i, gcmn.RandStr(123))))
 		if err != nil {
 			t.Error("Failed to write to head")
 		}
 		g.checkHeadSizeLimit()
 		for j := 0; j < 10; j++ {
-			_, err := g.Head.Write([]byte(RandStr(123) + "\n"))
+			_, err := g.Head.Write([]byte(gcmn.RandStr(123) + "\n"))
 			if err != nil {
 				t.Error("Failed to write to head")
 			}

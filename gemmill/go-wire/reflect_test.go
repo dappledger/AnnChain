@@ -412,7 +412,7 @@ func TestBinary(t *testing.T) {
 		n, err = new(int), new(error)
 		ReadBinary(instance, bytes.NewReader(data), len(data), n, err)
 		if *err != nil {
-			t.Fatalf("Failed to read instance with sufficient limit: %v", (*err).Error(), *n, len(data), reflect.TypeOf(instance))
+			t.Fatalf("Failed to read instance with sufficient limit: %v, %v, %v, %v", (*err).Error(), *n, len(data), reflect.TypeOf(instance))
 		}
 	}
 
@@ -496,7 +496,7 @@ func TestJSONFieldNames(t *testing.T) {
 func TestBadAlloc(t *testing.T) {
 	n, err := new(int), new(error)
 	instance := new([]byte)
-	data := RandBytes(100 * 1024)
+	data := gcmn.RandBytes(100 * 1024)
 	b := new(bytes.Buffer)
 	// this slice of data claims to be much bigger than it really is
 	WriteUvarint(uint(1<<32-1), b, n, err)

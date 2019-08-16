@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -70,6 +69,37 @@ func (tx *Transaction) EncodeRLP() ([]byte, error) {
 func (tx *Transaction) DecodeRLP(b []byte) error {
 	return rlp.DecodeBytes(b, &tx.Data)
 }
+
+// func (tx *Transaction) Sign(sk *ecdsa.PrivateKey) error {
+// 	h := tx.SigHash()
+
+// 	sig, err := crypto.Sign(h[:], sk)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	tx.Data.Signature = sig
+// 	return nil
+// }
+
+// func (tx *Transaction) Validate() bool {
+// 	if sc := tx.valid.Load(); sc != nil {
+// 		return sc.(bool)
+// 	}
+
+// 	h := tx.SigHash()
+// 	pub, err := crypto.Ecrecover(h[:], tx.Data.Signature)
+// 	if err != nil {
+// 		return false
+// 	}
+
+// 	var addr ethcmn.Address
+// 	copy(addr[:], crypto.Keccak256(pub[1:])[12:])
+// 	result := addr == tx.Data.Caller
+
+// 	tx.valid.Store(result)
+// 	return result
+// }
 
 func rlpHash(x interface{}) (h ethcmn.Hash) {
 	hw := sha3.NewLegacyKeccak256()

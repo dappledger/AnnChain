@@ -1,9 +1,25 @@
+// Copyright © 2017 ZhongAn Technology
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/dappledger/AnnChain/eth/common"
 )
@@ -100,14 +116,27 @@ func ParseBigInt(value interface{}) (*big.Int, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
-	v, ok := new(big.Int).SetString(fmt.Sprintf("%v", value), 10)
+	strVal := fmt.Sprintf("%v", value)
+
+	if strings.Index(strVal, "e") != -1 {
+		s, err := parseScientificNotation(strVal)
+		if err != nil {
+			return nil, err
+		}
+		bi, ok := new(big.Int).SetString(s, 10)
+		if !ok {
+			return nil, fmt.Errorf("fail to parse %v to big.Int", value)
+		}
+		return bi, nil
+	}
+	v, ok := new(big.Int).SetString(strVal, 10)
 	if !ok {
-		return nil, fmt.Errorf("Fail to convert %v to big.Int", value)
+		return nil, fmt.Errorf("fail to convert %v to big.Int", value)
 	}
 	return v, nil
 }
 
-func ParseUint8Slice(value interface{}, size int) ([]uint8, error) {
+func ParseUint8Slice(value interface{}) ([]uint8, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -115,10 +144,8 @@ func ParseUint8Slice(value interface{}, size int) ([]uint8, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []uint8{}
+
+	var retVals []uint8
 	for _, v := range values {
 		retVal, err := ParseUint8(v)
 		if err != nil {
@@ -129,7 +156,7 @@ func ParseUint8Slice(value interface{}, size int) ([]uint8, error) {
 	return retVals, nil
 }
 
-func ParseUint16Slice(value interface{}, size int) ([]uint16, error) {
+func ParseUint16Slice(value interface{}) ([]uint16, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -137,10 +164,8 @@ func ParseUint16Slice(value interface{}, size int) ([]uint16, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []uint16{}
+
+	var retVals []uint16
 	for _, v := range values {
 		retVal, err := ParseUint16(v)
 		if err != nil {
@@ -151,7 +176,7 @@ func ParseUint16Slice(value interface{}, size int) ([]uint16, error) {
 	return retVals, nil
 }
 
-func ParseUint32Slice(value interface{}, size int) ([]uint32, error) {
+func ParseUint32Slice(value interface{}) ([]uint32, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -159,10 +184,8 @@ func ParseUint32Slice(value interface{}, size int) ([]uint32, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []uint32{}
+
+	var retVals []uint32
 	for _, v := range values {
 		retVal, err := ParseUint32(v)
 		if err != nil {
@@ -173,7 +196,7 @@ func ParseUint32Slice(value interface{}, size int) ([]uint32, error) {
 	return retVals, nil
 }
 
-func ParseUint64Slice(value interface{}, size int) ([]uint64, error) {
+func ParseUint64Slice(value interface{}) ([]uint64, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -181,10 +204,8 @@ func ParseUint64Slice(value interface{}, size int) ([]uint64, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []uint64{}
+
+	var retVals []uint64
 	for _, v := range values {
 		retVal, err := ParseUint64(v)
 		if err != nil {
@@ -195,7 +216,7 @@ func ParseUint64Slice(value interface{}, size int) ([]uint64, error) {
 	return retVals, nil
 }
 
-func ParseInt8Slice(value interface{}, size int) ([]int8, error) {
+func ParseInt8Slice(value interface{}) ([]int8, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -203,10 +224,8 @@ func ParseInt8Slice(value interface{}, size int) ([]int8, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []int8{}
+
+	var retVals []int8
 	for _, v := range values {
 		retVal, err := ParseInt8(v)
 		if err != nil {
@@ -217,7 +236,7 @@ func ParseInt8Slice(value interface{}, size int) ([]int8, error) {
 	return retVals, nil
 }
 
-func ParseInt16Slice(value interface{}, size int) ([]int16, error) {
+func ParseInt16Slice(value interface{}) ([]int16, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -225,10 +244,8 @@ func ParseInt16Slice(value interface{}, size int) ([]int16, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []int16{}
+
+	var retVals []int16
 	for _, v := range values {
 		retVal, err := ParseInt16(v)
 		if err != nil {
@@ -239,7 +256,7 @@ func ParseInt16Slice(value interface{}, size int) ([]int16, error) {
 	return retVals, nil
 }
 
-func ParseInt32Slice(value interface{}, size int) ([]int32, error) {
+func ParseInt32Slice(value interface{}) ([]int32, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -247,10 +264,8 @@ func ParseInt32Slice(value interface{}, size int) ([]int32, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []int32{}
+
+	var retVals []int32
 	for _, v := range values {
 		retVal, err := ParseInt32(v)
 		if err != nil {
@@ -261,7 +276,7 @@ func ParseInt32Slice(value interface{}, size int) ([]int32, error) {
 	return retVals, nil
 }
 
-func ParseInt64Slice(value interface{}, size int) ([]int64, error) {
+func ParseInt64Slice(value interface{}) ([]int64, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -269,10 +284,8 @@ func ParseInt64Slice(value interface{}, size int) ([]int64, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []int64{}
+
+	var retVals []int64
 	for _, v := range values {
 		retVal, err := ParseInt64(v)
 		if err != nil {
@@ -283,18 +296,19 @@ func ParseInt64Slice(value interface{}, size int) ([]int64, error) {
 	return retVals, nil
 }
 
-func ParseBigIntSlice(value interface{}, size int) ([]*big.Int, error) {
+func ParseBigIntSlice(value interface{}) ([]*big.Int, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
+	}
+	if values, ok := value.([]*big.Int); ok {
+		return values, nil
 	}
 	values, ok := value.([]interface{})
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	biValues := []*big.Int{}
+
+	var biValues []*big.Int
 	for _, v := range values {
 		biValue, err := ParseBigInt(v)
 		if err != nil {
@@ -309,10 +323,13 @@ func ParseAddress(value interface{}) (common.Address, error) {
 	if value == nil {
 		return common.Address{}, fmt.Errorf("value cannot be nil")
 	}
+	if addr, ok := value.(common.Address); ok {
+		return addr, nil
+	}
 	return common.HexToAddress(fmt.Sprintf("%v", value)), nil
 }
 
-func ParseAddressSlice(value interface{}, size int) ([]common.Address, error) {
+func ParseAddressSlice(value interface{}) ([]common.Address, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -320,10 +337,8 @@ func ParseAddressSlice(value interface{}, size int) ([]common.Address, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	addrValues := []common.Address{}
+
+	var addrValues []common.Address
 	for _, v := range values {
 		addrValue, err := ParseAddress(v)
 		if err != nil {
@@ -368,31 +383,37 @@ func ParseBytesM(value interface{}, m int) (interface{}, error) {
 }
 
 func ParseBytes(value interface{}) ([]byte, error) {
-	if value == nil {
-		return nil, fmt.Errorf("value cannot be nil")
+
+	switch reflect.TypeOf(value).Kind() {
+	case reflect.String:
+		return []byte(common.FromHex(value.(string))), nil
+	case reflect.Slice:
+		return value.([]byte), nil
+	case reflect.Array:
+		dstr := fmt.Sprintf("%x", value)
+		return []byte(common.FromHex(dstr)), nil
+	default:
+		return nil, fmt.Errorf("unsupoort value type")
 	}
-	dstr := fmt.Sprintf("%v", value)
-	if len(dstr) <= 1 {
-		return nil, fmt.Errorf("bytes format error:mast start with 0x")
-	}
-	if dstr[0:2] != "0x" && dstr[0:2] != "0X" {
-		return nil, fmt.Errorf("bytes format error:mast start with 0x")
-	}
-	return []byte(common.FromHex(dstr)), nil
 }
 
-func ParseBytesMSlice(value interface{}, m, size int) ([]interface{}, error) {
+func ParseBytesMSlice(value interface{}, m int) (interface{}, error) {
+
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
+
 	values, ok := value.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
+		switch reflect.TypeOf(value).Kind() {
+		case reflect.Slice, reflect.Array:
+			return value, nil
+		default:
+			return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
+		}
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []interface{}{}
+
+	retVals := make([]interface{}, 0, len(values))
 	for _, v := range values {
 		retVal, err := ParseBytesM(v, m)
 		if err != nil {
@@ -414,7 +435,7 @@ func ParseBool(value interface{}) (bool, error) {
 	return b, nil
 }
 
-func ParseBoolSlice(value interface{}, size int) ([]bool, error) {
+func ParseBoolSlice(value interface{}) ([]bool, error) {
 	if value == nil {
 		return nil, fmt.Errorf("value cannot be nil")
 	}
@@ -422,10 +443,8 @@ func ParseBoolSlice(value interface{}, size int) ([]bool, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
 	}
-	if size != -1 && size != len(values) {
-		return nil, fmt.Errorf("size of %v must be %d", value, size)
-	}
-	retVals := []bool{}
+
+	var retVals []bool
 	for _, v := range values {
 		retVal, err := ParseBool(v)
 		if err != nil {
@@ -438,4 +457,52 @@ func ParseBoolSlice(value interface{}, size int) ([]bool, error) {
 
 func ParseString(value interface{}) (string, error) {
 	return fmt.Sprintf("%s", value), nil
+}
+
+func parseScientificNotation(str string) (string, error) {
+	eIndex := strings.Index(str, "e+")
+	if eIndex == -1 || eIndex == 0 {
+		return "", errors.New("invalid scientific notation number")
+	}
+	times, err := strconv.ParseInt(str[eIndex+2:], 10, 64)
+	if err != nil {
+		return "", err
+	}
+	if times == 0 {
+		return str[:eIndex], nil
+	}
+	intTimes := int(times)
+	pointIndex := strings.Index(str, ".")
+	if pointIndex+1 == eIndex {
+		return "", errors.New("invalid scientific notation number")
+	}
+	var withoutPoint string
+	if pointIndex != -1 {
+		withoutPoint = str[:pointIndex] + str[pointIndex+1:eIndex]
+	} else {
+		withoutPoint = str[:eIndex]
+	}
+
+	l := len(withoutPoint)
+	if pointIndex == -1 {
+		for i := 0; i < intTimes; i++ {
+			withoutPoint += "0"
+		}
+		return deletePrefixZero(withoutPoint), nil
+	} else if intTimes >= l-pointIndex {
+		for i := 0; i < intTimes-(l-pointIndex); i++ {
+			withoutPoint += "0"
+		}
+		return deletePrefixZero(withoutPoint), nil
+	} else {
+		withoutPoint = withoutPoint[:pointIndex+intTimes] + "." + withoutPoint[pointIndex+intTimes:]
+		return deletePrefixZero(withoutPoint), nil
+	}
+}
+
+func deletePrefixZero(s string) string {
+	for strings.Index(s, "0") == 0 {
+		s = s[1:]
+	}
+	return s
 }

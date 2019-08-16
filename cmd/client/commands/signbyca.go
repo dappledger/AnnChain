@@ -1,3 +1,16 @@
+// Copyright © 2017 ZhongAn Technology
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package commands
 
 import (
@@ -5,8 +18,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 	"gopkg.in/urfave/cli.v1"
+
+	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 )
 
 var (
@@ -28,7 +42,7 @@ var (
 			cli.StringFlag{
 				Name:  "crypto_type",
 				Value: "ZA",
-				Usage: "choose one of the three crypto_type types: \n\t'ZA' includes ed25519,ecdsa,ripemd160,keccak256,secretbox;\n",
+				Usage: "choose one of the three crypto_type types: \n\t'ZA' includes ed25519,ecdsa,ripemd160,keccak256,secretbox;",
 			},
 		},
 	}

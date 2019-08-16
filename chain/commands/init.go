@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,14 +16,14 @@ package commands
 import (
 	"log"
 
-	glb "github.com/dappledger/AnnChain/chain/commands/global"
-	vrouter "github.com/dappledger/AnnChain/chain/commands/vision/routers"
-	"github.com/dappledger/AnnChain/gemmill"
-	"github.com/dappledger/AnnChain/gemmill/go-crypto"
-
 	"github.com/astaxie/beego"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
+
+	"github.com/dappledger/AnnChain/chain/commands/global"
+	"github.com/dappledger/AnnChain/chain/commands/vision/routers"
+	"github.com/dappledger/AnnChain/gemmill"
+	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 )
 
 var (
@@ -45,38 +44,38 @@ func NewInitCommand() *cobra.Command {
 
 	c.Flags().StringVar(&chainId, "chainid", "", "manually specify chainId")
 	c.Flags().BoolVar(&visual, "visual", false, "whether init node visually")
-	c.Flags().StringVar(&appName, "app", glb.DefaultApp, "app name")
+	c.Flags().StringVar(&appName, "app", global.DefaultApp, "app name")
 	c.Flags().StringVar(&vport, "vport", ":8080", "port of visual mode")
 	return c
 }
 
 func newInitCommandFunc(cmd *cobra.Command, args []string) {
 	if visual {
-		vrouter.InitNode()
+		routers.InitNode()
 		beego.Run(vport)
 		select {}
 	}
-	if !glb.CheckAppName(appName) {
+	if !global.CheckAppName(appName) {
 		cmd.Println("appname not found")
 		return
 	}
 	if _, err := crypto.GenPrivkeyByType(crypto.CryptoType); err != nil {
 		log.Fatal(err)
 	}
-	defConf := glb.GenConf()
+	defConf := global.GenConf()
 	defConf.Set("app_name", appName)
 
-	if glb.GFlags().LogDir == "" {
-		glb.GFlags().LogDir = "./"
+	if global.GFlags().LogDir == "" {
+		global.GFlags().LogDir = "./"
 	} else {
 		var err error
-		if glb.GFlags().LogDir, err = homedir.Expand(glb.GFlags().LogDir); err != nil {
+		if global.GFlags().LogDir, err = homedir.Expand(global.GFlags().LogDir); err != nil {
 			panic(err)
 		}
 	}
 
-	log.Println("Log dir is: ", glb.GFlags().LogDir)
-	defConf.Set("log_dir", glb.GFlags().LogDir)
+	log.Println("Log dir is: ", global.GFlags().LogDir)
+	defConf.Set("log_dir", global.GFlags().LogDir)
 
-	gemmill.Initialize(&gemmill.Tunes{Runtime: glb.GFlags().RuntimeDir, Conf: defConf}, chainId)
+	gemmill.Initialize(&gemmill.Tunes{Runtime: global.GFlags().RuntimeDir, Conf: defConf}, chainId)
 }

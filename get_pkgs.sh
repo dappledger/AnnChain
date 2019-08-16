@@ -3,6 +3,7 @@
 tryGetInternalPkgs()
 {
     unset GOPROXY
+    # 解决jenkins与gitlab不通
     if [ ! -z "$HTTPS_PRXOY" ]
     then
         export https_proxy=$HTTPS_PRXOY
