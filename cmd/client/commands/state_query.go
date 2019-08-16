@@ -1,20 +1,32 @@
+// Copyright © 2017 ZhongAn Technology
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package commands
 
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"strings"
 
 	"gopkg.in/urfave/cli.v1"
 
 	"github.com/dappledger/AnnChain/cmd/client/commons"
 	"github.com/dappledger/AnnChain/eth/common"
-	ethtypes "github.com/dappledger/AnnChain/eth/core/types"
+	"github.com/dappledger/AnnChain/eth/core/types"
 	"github.com/dappledger/AnnChain/eth/rlp"
-	ac "github.com/dappledger/AnnChain/gemmill/modules/go-common"
+	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	cl "github.com/dappledger/AnnChain/gemmill/rpc/client"
-	agtypes "github.com/dappledger/AnnChain/gemmill/types"
+	gtypes "github.com/dappledger/AnnChain/gemmill/types"
 )
 
 var (
@@ -32,14 +44,6 @@ var (
 				},
 			},
 			{
-				Name:   "balance",
-				Usage:  "query account's balance",
-				Action: queryBalance,
-				Flags: []cli.Flag{
-					anntoolFlags.addr,
-				},
-			},
-			{
 				Name:   "receipt",
 				Usage:  "",
 				Action: queryReceipt,
@@ -47,20 +51,15 @@ var (
 					anntoolFlags.hash,
 				},
 			},
-			{
-				Name:   "limittx",
-				Usage:  "query rest of limited tx number if the chain enable the tx limited function ",
-				Action: queryLimittx,
-			},
 		},
 	}
 )
 
 func queryNonce(ctx *cli.Context) error {
 	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
-	rpcResult := new(agtypes.ResultQuery)
+	rpcResult := new(gtypes.ResultQuery)
 
-	addrHex := ac.SanitizeHex(ctx.String("address"))
+	addrHex := gcmn.SanitizeHex(ctx.String("address"))
 	addr := common.Hex2Bytes(addrHex)
 	query := append([]byte{1}, addr...)
 
@@ -77,30 +76,9 @@ func queryNonce(ctx *cli.Context) error {
 	return nil
 }
 
-func queryBalance(ctx *cli.Context) error {
-	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
-	rpcResult := new(agtypes.ResultQuery)
-
-	addrHex := ac.SanitizeHex(ctx.String("address"))
-	addr := common.Hex2Bytes(addrHex)
-	query := append([]byte{2}, addr...)
-
-	_, err := clientJSON.Call("query", []interface{}{query}, rpcResult)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 127)
-	}
-
-	balance := big.NewInt(0)
-	rlp.DecodeBytes(rpcResult.Result.Data, balance)
-
-	fmt.Println("query result:", balance.String())
-
-	return nil
-}
-
 func queryReceipt(ctx *cli.Context) error {
 	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
-	rpcResult := new(agtypes.ResultQuery)
+	rpcResult := new(gtypes.ResultQuery)
 	hash := ctx.String("hash")
 	if strings.Index(hash, "0x") == 0 {
 		hash = hash[2:]
@@ -113,7 +91,7 @@ func queryReceipt(ctx *cli.Context) error {
 		return cli.NewExitError(err.Error(), 127)
 	}
 
-	receiptForStorage := new(ethtypes.ReceiptForStorage)
+	receiptForStorage := new(types.ReceiptForStorage)
 
 	err = rlp.DecodeBytes(rpcResult.Result.Data, receiptForStorage)
 	if err != nil {
@@ -122,18 +100,5 @@ func queryReceipt(ctx *cli.Context) error {
 	receiptJSON, _ := json.Marshal(receiptForStorage)
 	fmt.Println("query result:", string(receiptJSON))
 
-	return nil
-}
-
-func queryLimittx(ctx *cli.Context) error {
-	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
-	rpcResult := new(agtypes.ResultNumLimitTx)
-
-	_, err := clientJSON.Call("querytx", []interface{}{[]byte{9}}, rpcResult)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 127)
-	}
-
-	fmt.Println("query result:", rpcResult.Num)
 	return nil
 }

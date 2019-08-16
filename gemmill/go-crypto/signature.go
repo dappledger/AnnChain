@@ -104,8 +104,6 @@ func (sig SignatureSecp256k1) KeyString() string {
 	return fmt.Sprintf("%X", sig[:])
 }
 
-//-------------------------------------
-
 func PaddedBigBytes(bi *big.Int, buf []byte) {
 	n := len(buf)
 	bb := bi.Bytes()

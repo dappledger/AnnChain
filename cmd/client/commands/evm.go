@@ -1,10 +1,25 @@
+// Copyright © 2017 ZhongAn Technology
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package commands
 
 import (
 	_ "encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math/big"
+	"os"
 	"reflect"
 	"strings"
 
@@ -14,11 +29,11 @@ import (
 	"github.com/dappledger/AnnChain/cmd/client/commons"
 	"github.com/dappledger/AnnChain/eth/accounts/abi"
 	"github.com/dappledger/AnnChain/eth/common"
-	ethtypes "github.com/dappledger/AnnChain/eth/core/types"
+	etypes "github.com/dappledger/AnnChain/eth/core/types"
 	"github.com/dappledger/AnnChain/eth/crypto"
 	"github.com/dappledger/AnnChain/eth/rlp"
-	ac "github.com/dappledger/AnnChain/gemmill/modules/go-common"
-	cl "github.com/dappledger/AnnChain/gemmill/rpc/client"
+	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
+	client "github.com/dappledger/AnnChain/gemmill/rpc/client"
 	"github.com/dappledger/AnnChain/gemmill/types"
 )
 
@@ -84,33 +99,30 @@ func createContract(ctx *cli.Context) error {
 	nonce := ctx.Uint64("nonce")
 	json, err := getCallParamsJSON(ctx)
 	if err != nil {
-		cli.NewExitError(err.Error(), 127)
-		return err
+		return cli.NewExitError(err.Error(), 127)
 	}
 	aabbii, err := getAbiJSON(ctx)
 	if err != nil {
-		cli.NewExitError(err.Error(), 127)
-		return err
+		return cli.NewExitError(err.Error(), 127)
 	}
 	params := json.Get("params").MustArray()
 	bytecode := common.Hex2Bytes(json.Get("bytecode").MustString())
 	if len(bytecode) == 0 {
-		cli.NewExitError("please give me the bytecode the contract", 127)
-		return errors.New("no bytecode")
+		return cli.NewExitError("please give me the bytecode the contract", 127)
 	}
 	if len(params) > 0 {
 		args, err := commons.ParseArgs("", *aabbii, params)
 		if err != nil {
-			cli.NewExitError(err.Error(), 127)
+			return cli.NewExitError(err.Error(), 127)
 		}
 		data, err := aabbii.Pack("", args...)
 		if err != nil {
-			cli.NewExitError(err.Error(), 127)
+			return cli.NewExitError(err.Error(), 127)
 		}
 		bytecode = append(bytecode, data...)
 	}
 
-	tx := ethtypes.NewContractCreation(nonce, big.NewInt(0), gasLimit, big.NewInt(0), bytecode)
+	tx := etypes.NewContractCreation(nonce, big.NewInt(0), gasLimit, big.NewInt(0), bytecode)
 
 	key, err := requireAccPrivky(ctx)
 	if err != nil {
@@ -139,7 +151,7 @@ func createContract(ctx *cli.Context) error {
 	}
 
 	rpcResult := new(types.ResultBroadcastTxCommit)
-	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
+	clientJSON := client.NewClientJSONRPC(commons.QueryServer)
 	_, err = clientJSON.Call("broadcast_tx_commit", []interface{}{b}, rpcResult)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 110)
@@ -165,7 +177,7 @@ func callContract(ctx *cli.Context) error {
 	}
 	function := json.Get("function").MustString()
 	params := json.Get("params").MustArray()
-	contractAddress := ac.SanitizeHex(json.Get("contract").MustString())
+	contractAddress := gcmn.SanitizeHex(json.Get("contract").MustString())
 	args, err := commons.ParseArgs(function, *aabbii, params)
 	if err != nil {
 		panic(err)
@@ -179,7 +191,7 @@ func callContract(ctx *cli.Context) error {
 	nonce := ctx.Uint64("nonce")
 	to := common.HexToAddress(contractAddress)
 
-	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, big.NewInt(0), data)
+	tx := etypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, big.NewInt(0), data)
 
 	key, err := requireAccPrivky(ctx)
 	if err != nil {
@@ -201,7 +213,7 @@ func callContract(ctx *cli.Context) error {
 	}
 
 	rpcResult := new(types.ResultBroadcastTxCommit)
-	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
+	clientJSON := client.NewClientJSONRPC(commons.QueryServer)
 	_, err = clientJSON.Call("broadcast_tx_commit", []interface{}{b}, rpcResult)
 	if err != nil {
 		return err
@@ -227,7 +239,7 @@ func readContract(ctx *cli.Context) error {
 		fmt.Printf("we can only read constant method, %s is not! Any consequence is on you.\n", function)
 	}
 	params := json.Get("params").MustArray()
-	contractAddress := ac.SanitizeHex(json.Get("contract").MustString())
+	contractAddress := gcmn.SanitizeHex(json.Get("contract").MustString())
 	args, err := commons.ParseArgs(function, *aabbii, params)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 127)
@@ -241,7 +253,7 @@ func readContract(ctx *cli.Context) error {
 	nonce := ctx.Uint64("nonce")
 	to := common.HexToAddress(contractAddress)
 
-	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, big.NewInt(0), data)
+	tx := etypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, big.NewInt(0), data)
 
 	key, err := requireAccPrivky(ctx)
 	if err != nil {
@@ -263,7 +275,7 @@ func readContract(ctx *cli.Context) error {
 		return cli.NewExitError(err.Error(), 127)
 	}
 	query := append([]byte{0}, b...)
-	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
+	clientJSON := client.NewClientJSONRPC(commons.QueryServer)
 	rpcResult := new(types.ResultQuery)
 	_, err = clientJSON.Call("query", []interface{}{query}, rpcResult)
 	if err != nil {
@@ -279,7 +291,7 @@ func readContract(ctx *cli.Context) error {
 func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, error) {
 	m, ok := abiDef.Methods[method]
 	if !ok {
-		return nil, errors.New("No such method")
+		return nil, errors.New("no such method")
 	}
 	if len(m.Outputs) == 0 {
 		return nil, errors.New("method " + m.Name + " doesn't have any returns")
@@ -341,7 +353,7 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 func existContract(ctx *cli.Context) error {
 	json, err := getCallParamsJSON(ctx)
 	if err != nil {
-		cli.NewExitError(err.Error(), 127)
+		return cli.NewExitError(err.Error(), 127)
 	}
 	bytecode := json.Get("bytecode").MustString()
 	contractAddress := json.Get("contract").MustString()
@@ -352,18 +364,15 @@ func existContract(ctx *cli.Context) error {
 		bytecode = strings.Split(bytecode, "f300")[1]
 	}
 	data := common.Hex2Bytes(bytecode)
-	contractAddr := common.HexToAddress(ac.SanitizeHex(contractAddress))
+	contractAddr := common.HexToAddress(gcmn.SanitizeHex(contractAddress))
 
-	tx := ethtypes.NewTransaction(0, contractAddr, big.NewInt(0), gasLimit, big.NewInt(0), crypto.Keccak256(data))
+	tx := etypes.NewTransaction(0, contractAddr, big.NewInt(0), gasLimit, big.NewInt(0), crypto.Keccak256(data))
 
 	key, err := requireAccPrivky(ctx)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 127)
 	}
 	privBytes := common.Hex2Bytes(key)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 127)
-	}
 
 	signer, sig, err := SignTx(privBytes, tx)
 	if err != nil {
@@ -379,7 +388,7 @@ func existContract(ctx *cli.Context) error {
 		return cli.NewExitError(err.Error(), 127)
 	}
 	query := append([]byte{4}, txBytes...)
-	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
+	clientJSON := client.NewClientJSONRPC(commons.QueryServer)
 	rpcResult := new(types.ResultQuery)
 	_, err = clientJSON.Call("query", []interface{}{query}, rpcResult)
 	if err != nil {
@@ -473,13 +482,14 @@ func bytesN2Slice(value interface{}, m int) ([]byte, error) {
 	return nil, fmt.Errorf("type(bytes%d) not support", m)
 }
 
-func SignTx(privBytes []byte, tx *ethtypes.Transaction) (signer ethtypes.Signer, sig []byte, err error) {
-	signer = new(ethtypes.HomesteadSigner)
+func SignTx(privBytes []byte, tx *etypes.Transaction) (signer etypes.Signer, sig []byte, err error) {
+	signer = new(etypes.HomesteadSigner)
 
 	privkey, err := crypto.ToECDSA(privBytes)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	sig, err = crypto.Sign(signer.Hash(tx).Bytes(), privkey)
 
 	return signer, sig, nil
@@ -494,4 +504,25 @@ func getAddrBytes(privBytes []byte) (addrBytes []byte, err error) {
 	addrBytes = addr[:]
 
 	return addrBytes, nil
+}
+
+func pathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+func fileData(str string) ([]byte, error) {
+	path, _ := pathExists(str)
+	if !path {
+		fstr := strings.Replace(str, "\\\r\n", "\r\n", -1)
+		fstr = strings.Replace(fstr, "\\\"", "\"", -1)
+		return []byte(fstr), nil
+	}
+	return ioutil.ReadFile(str)
 }

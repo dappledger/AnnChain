@@ -17,7 +17,6 @@ package types
 import (
 	"bytes"
 	"errors"
-
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-db"
@@ -43,6 +42,7 @@ type Application interface {
 
 type Core interface {
 	Query(byte, []byte) (interface{}, error)
+	GetBlockMeta(height int64) (*BlockMeta, error)
 }
 
 // type AppMaker func(config.Config) Application

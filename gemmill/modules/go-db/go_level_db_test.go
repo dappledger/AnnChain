@@ -31,7 +31,7 @@ func BenchmarkRandomReadsWrites(b *testing.B) {
 	for i := 0; i < int(numItems); i++ {
 		internal[int64(i)] = int64(0)
 	}
-	db, err := NewGoLevelDB(gcmn.Fmt("test_%x", RandStr(12)), "")
+	db, err := NewGoLevelDB(gcmn.Fmt("test_%x", gcmn.RandStr(12)), "")
 	if err != nil {
 		b.Fatal(err.Error())
 		return
@@ -43,7 +43,7 @@ func BenchmarkRandomReadsWrites(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// Write something
 		{
-			idx := (int64(RandInt()) % numItems)
+			idx := (int64(gcmn.RandInt()) % numItems)
 			internal[idx] += 1
 			val := internal[idx]
 			idxBytes := int642Bytes(int64(idx))
@@ -56,14 +56,14 @@ func BenchmarkRandomReadsWrites(b *testing.B) {
 		}
 		// Read something
 		{
-			idx := (int64(RandInt()) % numItems)
+			idx := (int64(gcmn.RandInt()) % numItems)
 			val := internal[idx]
 			idxBytes := int642Bytes(int64(idx))
 			valBytes := db.Get(idxBytes)
 			//fmt.Printf("Get %X -> %X\n", idxBytes, valBytes)
 			if val == 0 {
 				if !bytes.Equal(valBytes, nil) {
-					b.Errorf("Expected %X for %v, got %X",
+					b.Errorf("Expected %v for %v, got %X",
 						nil, idx, valBytes)
 					break
 				}

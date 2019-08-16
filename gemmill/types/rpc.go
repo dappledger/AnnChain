@@ -73,9 +73,31 @@ type Peer struct {
 	ConnectionStatus p2p.ConnectionStatus `json:"connection_status"`
 }
 
+type ResultValidator struct {
+	Address     []byte `json:"address"`
+	PubKey      string `json:"pub_key"`
+	VotingPower int64  `json:"voting_power"`
+	Accum       int64  `json:"accum"`
+	IsCA        bool   `json:"is_ca"`
+}
+
+func MakeResultValidators(vs []*Validator) []*ResultValidator {
+	var rets = make([]*ResultValidator, 0, len(vs))
+	for _, v := range vs {
+		rets = append(rets, &ResultValidator{
+			Address:     v.Address,
+			PubKey:      v.PubKey.KeyString(),
+			VotingPower: v.VotingPower,
+			Accum:       v.Accum,
+			IsCA:        v.VotingPower > 0,
+		})
+	}
+	return rets
+}
+
 type ResultValidators struct {
-	BlockHeight int64        `json:"block_height"`
-	Validators  []*Validator `json:"validators"`
+	BlockHeight int64              `json:"block_height"`
+	Validators  []*ResultValidator `json:"validators"`
 }
 
 type ResultDumpConsensusState struct {
@@ -90,7 +112,7 @@ type ResultBroadcastTx struct {
 	Log    string   `json:"log"`
 }
 
-type ResultRequestSpecialOP struct {
+type ResultRequestAdminOP struct {
 	Code CodeType `json:"code"`
 	Data []byte   `json:"data"`
 	Log  string   `json:"log"`
@@ -202,7 +224,7 @@ const (
 	ResultTypeBroadcastTx       = byte(0x60)
 	ResultTypeUnconfirmedTxs    = byte(0x61)
 	ResultTypeBroadcastTxCommit = byte(0x62)
-	ResultTypeRequestSpecialOP  = byte(0x63)
+	ResultTypeRequestAdminOP    = byte(0x63)
 	ResultTypeNumArchivedBlocks = byte(0x64)
 	ResultTypeNumLimitTx        = byte(0x65)
 
@@ -247,7 +269,7 @@ var _ = wire.RegisterInterface(
 	wire.ConcreteType{&ResultDumpConsensusState{}, ResultTypeDumpConsensusState},
 	wire.ConcreteType{&ResultBroadcastTx{}, ResultTypeBroadcastTx},
 	wire.ConcreteType{&ResultBroadcastTxCommit{}, ResultTypeBroadcastTxCommit},
-	wire.ConcreteType{&ResultRequestSpecialOP{}, ResultTypeRequestSpecialOP},
+	wire.ConcreteType{&ResultRequestAdminOP{}, ResultTypeRequestAdminOP},
 	wire.ConcreteType{&ResultUnconfirmedTxs{}, ResultTypeUnconfirmedTxs},
 	wire.ConcreteType{&ResultNumArchivedBlocks{}, ResultTypeNumArchivedBlocks},
 	wire.ConcreteType{&ResultNumLimitTx{}, ResultTypeNumLimitTx},

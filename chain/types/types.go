@@ -1,5 +1,4 @@
-// Copyright 2017 ZhongAn Information Technology Services Co.,Ltd.
-//
+// Copyright © 2017 ZhongAn Technology
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,12 +13,9 @@
 
 package types
 
-import (
-	ethcmn "github.com/dappledger/AnnChain/eth/common"
-)
+import "github.com/dappledger/AnnChain/eth/common"
 
 type (
-
 	// LastBlockInfo used for crash recover
 	LastBlockInfo struct {
 		Height  int64  `json:"height"`
@@ -28,7 +24,7 @@ type (
 
 	// Receipt used to record tx execute result
 	Receipt struct {
-		TxHash  ethcmn.Hash
+		TxHash  common.Hash
 		Height  uint64
 		Success bool
 		Message string
@@ -38,14 +34,14 @@ type (
 )
 
 const (
-	APIQueryTx                    = iota
-	QueryType_Contract  QueryType = 0
-	QueryType_Nonce     QueryType = 1
-	QueryType_Balance   QueryType = 2
-	QueryType_Receipt   QueryType = 3
-	QueryType_Existence QueryType = 4
-	QueryType_PayLoad   QueryType = 5
-	QueryType_TxRaw     QueryType = 6
-	QueryTxLimit        QueryType = 9
-	QueryType_BlockHash QueryType = 10
+	APIQueryTx                          = iota
+	QueryType_Contract        QueryType = 0
+	QueryType_Nonce           QueryType = 1
+	QueryType_Balance         QueryType = 2
+	QueryType_Receipt         QueryType = 3
+	QueryType_Existence       QueryType = 4
+	QueryType_PayLoad         QueryType = 5
+	QueryType_TxRaw           QueryType = 6
+	QueryTxLimit              QueryType = 9
+	QueryTypeContractByHeight QueryType = 10
 )
