@@ -78,6 +78,7 @@ func (bc *BlockChainEvm) GetHeader(hash common.Hash, number uint64) *etypes.Head
 
 var (
 	ReceiptsPrefix = []byte("receipts-")
+	KvPrefix       = []byte("kvstore-")
 
 	EmptyTrieRoot = common.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
 
@@ -378,6 +379,15 @@ func (app *EVMApp) CheckTx(bs []byte) error {
 	if app.state.GetBalance(from).Cmp(tx.Cost()) < 0 {
 		return fmt.Errorf("not enough funds")
 	}
+
+	if tx.OpCode() == rtypes.Op_KV {
+		kvData := &rtypes.KV{}
+		if err := rlp.DecodeBytes(tx.Data(), kvData); err != nil {
+			return fmt.Errorf("rlp decode to kv error %s", err.Error())
+		}
+		app.Database.Get(append(KvPrefix, kvData.Key...))
+	}
+
 	return nil
 }
 

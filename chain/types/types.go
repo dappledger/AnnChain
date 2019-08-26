@@ -31,6 +31,16 @@ type (
 	}
 
 	QueryType = byte
+
+	KV struct {
+		Key   []byte
+		Value []byte
+	}
+)
+
+var (
+	Op_TX uint16 = 0
+	Op_KV uint16 = 1
 )
 
 const (
