@@ -1,5 +1,6 @@
 .PHONY: ann api all
-all: genesis gtool 
+all: genesis gtool
+test: test-eth test-gemmill
 
 #
 ver=github.com/dappledger/AnnChain/chain/types.commitVer=`git rev-parse --short=8 HEAD`
