@@ -18,11 +18,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/dappledger/AnnChain/chain/commands/global"
 	"github.com/dappledger/AnnChain/chain/types"
-	"github.com/dappledger/AnnChain/gemmill"
 	gtypes "github.com/dappledger/AnnChain/gemmill/types"
 )
 
@@ -36,27 +34,34 @@ func NewShowCommand() *cobra.Command {
 		},
 	}
 
-	c.AddCommand(NewPubkeyCommand())
+	c.AddCommand(ShowPubkey())
 
 	return c
 }
 
-func NewPubkeyCommand() *cobra.Command {
+func ShowPubkey() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "pubkey",
 		Short: "print this node's public key",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			ang, err := gemmill.NewAngine(nil, &gemmill.Tunes{Runtime: viper.GetString("runtime")})
-			if err != nil {
-				cmd.Println("Create angine error: " + err.Error())
-				os.Exit(1)
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			var err error
+			runtime, _ := cmd.Flags().GetString("runtime")
+			if err = global.CheckAndReadRuntimeConfig(runtime); err == nil {
+				setFlags(cmd, global.GConf())
 			}
-			cmd.Println(ang.PrivValidator().PubKey)
+			return err
 		},
+		Run: showPubkey,
 	}
 
 	return c
+}
+
+func showPubkey(cmd *cobra.Command, args []string) {
+	angineconf := global.GConf()
+	privValidator := gtypes.LoadOrGenPrivValidator(angineconf.GetString("priv_validator_file"))
+	fmt.Println(privValidator.PubKey.KeyString())
 }
 
 func NewVersionCommand() *cobra.Command {
