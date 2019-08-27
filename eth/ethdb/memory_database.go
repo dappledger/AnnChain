@@ -69,6 +69,10 @@ func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 	return nil, errors.New("not found")
 }
 
+func (db *MemDatabase) GetWithPrefix(prefix, seekey []byte, limit uint32, cutLen int) ([]*KVResult, error) {
+	return nil, errors.New("memdb undefined function")
+}
+
 func (db *MemDatabase) Keys() [][]byte {
 	db.lock.RLock()
 	defer db.lock.RUnlock()

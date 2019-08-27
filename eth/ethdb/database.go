@@ -19,6 +19,7 @@
 package ethdb
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
@@ -40,6 +41,20 @@ const (
 )
 
 var OpenFileLimit = 64
+
+type KVResult struct {
+	K []byte
+	V []byte
+}
+
+func NewKVResult(k, v []byte) *KVResult {
+	kvR := new(KVResult)
+	kvR.K = make([]byte, len(k))
+	kvR.V = make([]byte, len(v))
+	copy(kvR.K, k)
+	copy(kvR.V, v)
+	return kvR
+}
 
 type LDBDatabase struct {
 	fn string      // filename for reporting
@@ -105,6 +120,33 @@ func (db *LDBDatabase) Put(key []byte, value []byte) error {
 
 func (db *LDBDatabase) Has(key []byte) (bool, error) {
 	return db.db.Has(key, nil)
+}
+
+func (db *LDBDatabase) GetWithPrefix(prefix, seekey []byte, limit uint32, cutLen int) ([]*KVResult, error) {
+	var (
+		count   uint32
+		results []*KVResult
+	)
+
+	iter := db.db.NewIterator(util.BytesPrefix(prefix), nil)
+	defer iter.Release()
+
+	if len(seekey) > 0 {
+		iter.Seek([]byte(seekey))
+		if 0 != bytes.Compare(iter.Key(), seekey) {
+			return results, errors.ErrNotFound
+		}
+	}
+
+	for iter.Next() {
+		results = append(results, NewKVResult(iter.Key()[cutLen:], iter.Value()))
+		count++
+		if count >= limit {
+			break
+		}
+	}
+
+	return results, iter.Error()
 }
 
 // Get returns the given key if it's present.

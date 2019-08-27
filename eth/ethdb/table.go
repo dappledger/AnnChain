@@ -38,6 +38,10 @@ func (dt *table) Has(key []byte) (bool, error) {
 	return dt.db.Has(append([]byte(dt.prefix), key...))
 }
 
+func (dt *table) GetWithPrefix(prefix, seekey []byte, limit uint32, cutLen int) ([]*KVResult, error) {
+	return dt.db.GetWithPrefix(append([]byte(dt.prefix), prefix...), seekey, limit, cutLen)
+}
+
 func (dt *table) Get(key []byte) ([]byte, error) {
 	return dt.db.Get(append([]byte(dt.prefix), key...))
 }

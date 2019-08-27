@@ -38,6 +38,8 @@ type (
 	}
 )
 
+type KVS []*KV
+
 var (
 	Op_TX uint16 = 0
 	Op_KV uint16 = 1
@@ -54,4 +56,6 @@ const (
 	QueryType_TxRaw           QueryType = 6
 	QueryTxLimit              QueryType = 9
 	QueryTypeContractByHeight QueryType = 10
+	QueryType_Key             QueryType = 11
+	QueryType_Key_Prefix      QueryType = 12
 )

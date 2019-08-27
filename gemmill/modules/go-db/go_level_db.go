@@ -18,11 +18,10 @@ import (
 	"fmt"
 	"path"
 
+	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-
-	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 )
 
 func init() {
