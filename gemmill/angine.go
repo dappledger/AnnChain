@@ -912,7 +912,7 @@ func authByCA(conf *viper.Viper, ppValidators **types.ValidatorSet) func(*p2p.No
 	return func(peerNodeInfo *p2p.NodeInfo) error {
 		// validator node must be signed by CA
 		// but normal node can bypass auth check if config says so
-		if !valset.HasAddress(peerNodeInfo.PubKey.Address()) && !conf.GetBool("non_validator_node_auth") {
+		if valset.HasAddress(peerNodeInfo.PubKey.Address()) && !conf.GetBool("non_validator_node_auth") {
 			return nil
 		}
 		msg, err := hex.DecodeString(peerNodeInfo.PubKey.KeyString())

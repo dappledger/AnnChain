@@ -92,13 +92,70 @@ func queryReceipt(ctx *cli.Context) error {
 	}
 
 	receiptForStorage := new(types.ReceiptForStorage)
-
 	err = rlp.DecodeBytes(rpcResult.Result.Data, receiptForStorage)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 127)
 	}
-	receiptJSON, _ := json.Marshal(receiptForStorage)
-	fmt.Println("query result:", string(receiptJSON))
+
+	rt, etx, err := getTxByHash(hashBytes)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	ethSigner := &types.HomesteadSigner{}
+	from, err := types.Sender(ethSigner, etx)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	response := map[string]interface{}{
+		"from":             from.Hex(),
+		"to":               etx.To(),
+		"blockHash":        fmt.Sprintf("0x%x", rt.BlockHash),
+		"blockNumber":      rt.BlockHeight,
+		"status":           fmt.Sprintf("0x%x", receiptForStorage.Status),
+		"transactionIndex": fmt.Sprintf("0x%x", rt.TransactionIndex),
+
+		"PostState":         common.Bytes2Hex(receiptForStorage.PostState),
+		"CumulativeGasUsed": receiptForStorage.CumulativeGasUsed,
+		"Bloom":             receiptForStorage.Bloom,
+		"Logs":              receiptForStorage.Logs,
+		"TxHash":            receiptForStorage.TxHash.Hex(),
+		"ContractAddress":   receiptForStorage.ContractAddress,
+		"GasUsed":           receiptForStorage.GasUsed,
+	}
+
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	fmt.Println("query result:", string(responseJSON))
 
 	return nil
+}
+
+func getTxByHash(hash []byte) (rt *gtypes.ResultTransaction, ethtx *types.Transaction, err error) {
+	res := new(gtypes.ResultQuery)
+	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
+
+	_, err = clientJSON.Call("transaction", []interface{}{hash}, res)
+	if err != nil {
+		return
+	}
+
+	data := res.Result.Data
+	rt = &gtypes.ResultTransaction{}
+	err = rlp.DecodeBytes(data, rt)
+	if err != nil {
+		return
+	}
+
+	ethtx = &types.Transaction{}
+	err = rlp.DecodeBytes(rt.RawTransaction, ethtx)
+	if err != nil {
+		return
+	}
+
+	return
 }

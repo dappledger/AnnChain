@@ -1,0 +1,434 @@
+{"level":"info","ts":1567075653.5483947,"msg":"app implemented tx pool"}
+{"level":"info","ts":1567075653.5757706,"msg":"ConsensusReactor ","fastSync":false}
+{"level":"info","ts":1567075653.5759585,"msg":"Catchup by replaying consensus messages","height":1}
+{"level":"info","ts":1567075653.5759711,"msg":"Replay: Done"}
+{"level":"warn","ts":1567075653.57599,"msg":"invalid archive.Threshold","archive_threshold":0}
+{"level":"info","ts":1567075653.5761132,"msg":"Starting RPC HTTP server on tcp socket 0.0.0.0:46657"}
+{"level":"info","ts":1567075654.5491476,"msg":"Timed out","dur":0.972686131,"height":1,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075654.5493433,"msg":"enterNewRound(1/0). Current: 1/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075654.5493803,"msg":"enterPropose(1/0). Current: 1/0/RoundStepNewRound"}
+{"level":"info","ts":1567075654.549387,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:0, LR:0, LS:0}"}
+{"level":"info","ts":1567075654.5499778,"msg":"Signed proposal height 1 round 0 proposal Proposal{1/0 1:0D9E46C8C2F0 (-1,:0:000000000000) /AD39A939356A.../}"}
+{"level":"info","ts":1567075654.55057,"msg":"enterPrevote(1/0). Current: 1/0/RoundStepPropose"}
+{"level":"info","ts":1567075654.551861,"msg":"enterPrecommit(1/0). Current: 1/0/RoundStepPrevote"}
+{"level":"info","ts":1567075654.5531628,"msg":"enterCommit(1/0). Current: 1/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075654.5534945,"msg":"Finalizing commit of block with 0 txs, height 1, hash D8A9BA7A5118DE92308CEB2F0CB2079681BD46AC, root "}
+{"level":"info","ts":1567075654.56424,"msg":"Executed block","height":1,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075654.5813832,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075655.5536408,"msg":"Timed out","dur":0.960075652,"height":2,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075655.5538552,"msg":"enterNewRound(2/0). Current: 2/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075655.5538938,"msg":"enterPropose(2/0). Current: 2/0/RoundStepNewRound"}
+{"level":"info","ts":1567075655.553911,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:1, LR:0, LS:3}"}
+{"level":"info","ts":1567075655.5556092,"msg":"Signed proposal height 2 round 0 proposal Proposal{2/0 1:3D3EA92F0624 (-1,:0:000000000000) /E5C6954D77D8.../}"}
+{"level":"info","ts":1567075655.5570729,"msg":"enterPrevote(2/0). Current: 2/0/RoundStepPropose"}
+{"level":"info","ts":1567075655.5651948,"msg":"enterPrecommit(2/0). Current: 2/0/RoundStepPrevote"}
+{"level":"info","ts":1567075655.5737062,"msg":"enterCommit(2/0). Current: 2/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075655.576,"msg":"Finalizing commit of block with 0 txs, height 2, hash CBAF47F4F06A7DAA9233BD53A527F510369999A9, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075655.5884495,"msg":"Executed block","height":2,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075655.6041389,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075656.57467,"msg":"Timed out","dur":0.961322326,"height":3,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075656.5750694,"msg":"enterNewRound(3/0). Current: 3/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075656.575106,"msg":"enterPropose(3/0). Current: 3/0/RoundStepNewRound"}
+{"level":"info","ts":1567075656.5751176,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:2, LR:0, LS:3}"}
+{"level":"info","ts":1567075656.5783982,"msg":"Signed proposal height 3 round 0 proposal Proposal{3/0 1:C368B08D9D3D (-1,:0:000000000000) /2AB21597CD78.../}"}
+{"level":"info","ts":1567075656.5793443,"msg":"enterPrevote(3/0). Current: 3/0/RoundStepPropose"}
+{"level":"info","ts":1567075656.5814729,"msg":"enterPrecommit(3/0). Current: 3/0/RoundStepPrevote"}
+{"level":"info","ts":1567075656.5835865,"msg":"enterCommit(3/0). Current: 3/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075656.5844285,"msg":"Finalizing commit of block with 0 txs, height 3, hash 959D5D49BAE7EF11C73312E9DF293BC012235A37, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075656.5950055,"msg":"Executed block","height":3,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075656.6120832,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075656.9079757,"msg":"Stopping Node"}
+{"level":"info","ts":1567075656.9082563,"msg":"Stopping P2P Switch"}
+{"level":"info","ts":1567075656.9082696,"msg":"Stopping DefaultListener"}
+{"level":"info","ts":1567075656.9083333,"msg":"Stopping MempoolReactor"}
+{"level":"info","ts":1567075656.9083447,"msg":"Stopping BlockchainReactor"}
+{"level":"info","ts":1567075656.9083502,"msg":"Stopping BlockPool"}
+{"level":"info","ts":1567075656.9083552,"msg":"Stopping ConsensusReactor"}
+{"level":"info","ts":1567075656.9083598,"msg":"Stopping ConsensusState"}
+{"level":"info","ts":1567075656.9083645,"msg":"Stopping TimeoutTicker"}
+{"level":"info","ts":1567075656.9083705,"msg":"Stopping PEXReactor"}
+{"level":"info","ts":1567075656.9084215,"msg":"Stopping WAL"}
+{"level":"info","ts":1567075656.9084342,"msg":"Stopping Group"}
+{"level":"info","ts":1567075659.1197238,"msg":"app implemented tx pool"}
+{"level":"info","ts":1567075659.1295815,"msg":"Replay Blocks","appHeight":3,"storeHeight":3,"stateHeight":3}
+{"level":"warn","ts":1567075659.129838,"msg":"invalid archive.Threshold","archive_threshold":0}
+{"level":"info","ts":1567075659.129859,"msg":"ConsensusReactor ","fastSync":false}
+{"level":"info","ts":1567075659.1300466,"msg":"Catchup by replaying consensus messages","height":4}
+{"level":"info","ts":1567075659.1301088,"msg":"Replay: New Step","height":4,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075659.1301212,"msg":"Replay: Done"}
+{"level":"info","ts":1567075659.1301734,"msg":"Starting RPC HTTP server on tcp socket 0.0.0.0:46657"}
+{"level":"info","ts":1567075660.122573,"msg":"Timed out","dur":0.989701235,"height":4,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075660.1227627,"msg":"enterNewRound(4/0). Current: 4/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075660.122843,"msg":"enterPropose(4/0). Current: 4/0/RoundStepNewRound"}
+{"level":"info","ts":1567075660.122869,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:3, LR:0, LS:3}"}
+{"level":"info","ts":1567075660.1255558,"msg":"Signed proposal height 4 round 0 proposal Proposal{4/0 1:81F75DAEB3A1 (-1,:0:000000000000) /5B89D7DCC755.../}"}
+{"level":"info","ts":1567075660.1263714,"msg":"enterPrevote(4/0). Current: 4/0/RoundStepPropose"}
+{"level":"info","ts":1567075660.1287453,"msg":"enterPrecommit(4/0). Current: 4/0/RoundStepPrevote"}
+{"level":"info","ts":1567075660.1309226,"msg":"enterCommit(4/0). Current: 4/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075660.131644,"msg":"Finalizing commit of block with 0 txs, height 4, hash 470B831018C977B56D3493C61E2F03574AB87381, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075660.1478677,"msg":"Executed block","height":4,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075660.1766772,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075661.1312113,"msg":"Timed out","dur":0.933746946,"height":5,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075661.131431,"msg":"enterNewRound(5/0). Current: 5/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075661.1314545,"msg":"enterPropose(5/0). Current: 5/0/RoundStepNewRound"}
+{"level":"info","ts":1567075661.1314623,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:4, LR:0, LS:3}"}
+{"level":"info","ts":1567075661.1321967,"msg":"Signed proposal height 5 round 0 proposal Proposal{5/0 1:7B4C74A17649 (-1,:0:000000000000) /1B723116BB53.../}"}
+{"level":"info","ts":1567075661.1336505,"msg":"enterPrevote(5/0). Current: 5/0/RoundStepPropose"}
+{"level":"info","ts":1567075661.13517,"msg":"enterPrecommit(5/0). Current: 5/0/RoundStepPrevote"}
+{"level":"info","ts":1567075661.1380587,"msg":"enterCommit(5/0). Current: 5/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075661.1396027,"msg":"Finalizing commit of block with 0 txs, height 5, hash 81C245A9AAE2C80C0D10E15F706A4C69A56FE169, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075661.1507359,"msg":"Executed block","height":5,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075661.167724,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075662.1389313,"msg":"Timed out","dur":0.959216496,"height":6,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075662.1391044,"msg":"enterNewRound(6/0). Current: 6/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075662.139133,"msg":"enterPropose(6/0). Current: 6/0/RoundStepNewRound"}
+{"level":"info","ts":1567075662.139145,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:5, LR:0, LS:3}"}
+{"level":"info","ts":1567075662.140594,"msg":"Signed proposal height 6 round 0 proposal Proposal{6/0 1:9DAAFE6698A6 (-1,:0:000000000000) /79D7CD30D657.../}"}
+{"level":"info","ts":1567075662.1413102,"msg":"enterPrevote(6/0). Current: 6/0/RoundStepPropose"}
+{"level":"info","ts":1567075662.1427116,"msg":"enterPrecommit(6/0). Current: 6/0/RoundStepPrevote"}
+{"level":"info","ts":1567075662.1441853,"msg":"enterCommit(6/0). Current: 6/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075662.1447613,"msg":"Finalizing commit of block with 0 txs, height 6, hash 35EBF841FC04325383D4D559F0E1EE81D3B94A09, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075662.1554594,"msg":"Executed block","height":6,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075662.1757612,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075663.1444542,"msg":"Timed out","dur":0.959591305,"height":7,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075663.144664,"msg":"enterNewRound(7/0). Current: 7/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075663.1446939,"msg":"enterPropose(7/0). Current: 7/0/RoundStepNewRound"}
+{"level":"info","ts":1567075663.1447062,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:6, LR:0, LS:3}"}
+{"level":"info","ts":1567075663.14575,"msg":"Signed proposal height 7 round 0 proposal Proposal{7/0 1:0B97F8D487F9 (-1,:0:000000000000) /06B99370CDEA.../}"}
+{"level":"info","ts":1567075663.1462576,"msg":"enterPrevote(7/0). Current: 7/0/RoundStepPropose"}
+{"level":"info","ts":1567075663.148095,"msg":"enterPrecommit(7/0). Current: 7/0/RoundStepPrevote"}
+{"level":"info","ts":1567075663.1498985,"msg":"enterCommit(7/0). Current: 7/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075663.1509485,"msg":"Finalizing commit of block with 0 txs, height 7, hash F2B63ADB71B9E82D724CEA25C42EA41F07955218, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075663.1621826,"msg":"Executed block","height":7,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075663.1787086,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075664.1504395,"msg":"Timed out","dur":0.962949785,"height":8,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075664.150593,"msg":"enterNewRound(8/0). Current: 8/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075664.150619,"msg":"enterPropose(8/0). Current: 8/0/RoundStepNewRound"}
+{"level":"info","ts":1567075664.150725,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:7, LR:0, LS:3}"}
+{"level":"info","ts":1567075664.1534688,"msg":"Signed proposal height 8 round 0 proposal Proposal{8/0 1:E8D5CA3DB38C (-1,:0:000000000000) /CC6295047453.../}"}
+{"level":"info","ts":1567075664.1539986,"msg":"enterPrevote(8/0). Current: 8/0/RoundStepPropose"}
+{"level":"info","ts":1567075664.1554508,"msg":"enterPrecommit(8/0). Current: 8/0/RoundStepPrevote"}
+{"level":"info","ts":1567075664.156902,"msg":"enterCommit(8/0). Current: 8/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075664.1576326,"msg":"Finalizing commit of block with 0 txs, height 8, hash 889EF9EDDE09189081255F9585685E05F00680E7, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075664.1769834,"msg":"Executed block","height":8,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075664.207853,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075665.1573136,"msg":"Timed out","dur":0.93601603,"height":9,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075665.1574187,"msg":"enterNewRound(9/0). Current: 9/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075665.1574366,"msg":"enterPropose(9/0). Current: 9/0/RoundStepNewRound"}
+{"level":"info","ts":1567075665.157444,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:8, LR:0, LS:3}"}
+{"level":"info","ts":1567075665.1579764,"msg":"Signed proposal height 9 round 0 proposal Proposal{9/0 1:7CFB8091E4E4 (-1,:0:000000000000) /6B9693F04975.../}"}
+{"level":"info","ts":1567075665.1624622,"msg":"enterPrevote(9/0). Current: 9/0/RoundStepPropose"}
+{"level":"info","ts":1567075665.1635983,"msg":"enterPrecommit(9/0). Current: 9/0/RoundStepPrevote"}
+{"level":"info","ts":1567075665.1648536,"msg":"enterCommit(9/0). Current: 9/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075665.165409,"msg":"Finalizing commit of block with 0 txs, height 9, hash 6076CA270B90D9331D5984F85A94C048788D9805, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075665.1765788,"msg":"Executed block","height":9,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075665.1939707,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075666.1652274,"msg":"Timed out","dur":0.962099447,"height":10,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075666.165456,"msg":"enterNewRound(10/0). Current: 10/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075666.1655314,"msg":"enterPropose(10/0). Current: 10/0/RoundStepNewRound"}
+{"level":"info","ts":1567075666.165546,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:9, LR:0, LS:3}"}
+{"level":"info","ts":1567075666.1691637,"msg":"Signed proposal height 10 round 0 proposal Proposal{10/0 1:FE33EE42F0D5 (-1,:0:000000000000) /D981EF39EEBA.../}"}
+{"level":"info","ts":1567075666.1700032,"msg":"enterPrevote(10/0). Current: 10/0/RoundStepPropose"}
+{"level":"info","ts":1567075666.1719282,"msg":"enterPrecommit(10/0). Current: 10/0/RoundStepPrevote"}
+{"level":"info","ts":1567075666.1738465,"msg":"enterCommit(10/0). Current: 10/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075666.174595,"msg":"Finalizing commit of block with 0 txs, height 10, hash 56F0981D7809E6E47A26348787655FA6A147E170, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075666.1875536,"msg":"Executed block","height":10,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075666.206349,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075667.1741974,"msg":"Timed out","dur":0.955446248,"height":11,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075667.1744702,"msg":"enterNewRound(11/0). Current: 11/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075667.174525,"msg":"enterPropose(11/0). Current: 11/0/RoundStepNewRound"}
+{"level":"info","ts":1567075667.1745422,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:10, LR:0, LS:3}"}
+{"level":"info","ts":1567075667.1755412,"msg":"Signed proposal height 11 round 0 proposal Proposal{11/0 1:4E2B3BF2A62A (-1,:0:000000000000) /25A98D6F8D56.../}"}
+{"level":"info","ts":1567075667.1764328,"msg":"enterPrevote(11/0). Current: 11/0/RoundStepPropose"}
+{"level":"info","ts":1567075667.1779778,"msg":"enterPrecommit(11/0). Current: 11/0/RoundStepPrevote"}
+{"level":"info","ts":1567075667.1798418,"msg":"enterCommit(11/0). Current: 11/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075667.1803977,"msg":"Finalizing commit of block with 0 txs, height 11, hash 46A4EC1090C09CB4888AF8BF6CAFE36092A0C103, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075667.190385,"msg":"Executed block","height":11,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075667.2085164,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075668.182871,"msg":"Timed out","dur":0.962470648,"height":12,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075668.1829994,"msg":"enterNewRound(12/0). Current: 12/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075668.1830556,"msg":"enterPropose(12/0). Current: 12/0/RoundStepNewRound"}
+{"level":"info","ts":1567075668.1831315,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:11, LR:0, LS:3}"}
+{"level":"info","ts":1567075668.1839797,"msg":"Signed proposal height 12 round 0 proposal Proposal{12/0 1:B45D2B075AE4 (-1,:0:000000000000) /449EF1A5A9A3.../}"}
+{"level":"info","ts":1567075668.1845589,"msg":"enterPrevote(12/0). Current: 12/0/RoundStepPropose"}
+{"level":"info","ts":1567075668.2010736,"msg":"enterPrecommit(12/0). Current: 12/0/RoundStepPrevote"}
+{"level":"info","ts":1567075668.202484,"msg":"enterCommit(12/0). Current: 12/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075668.203025,"msg":"Finalizing commit of block with 0 txs, height 12, hash 5C2553BBE40D44F59DFB949CDF0A717535C3C955, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075668.2223878,"msg":"Executed block","height":12,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075668.2509737,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075669.2029438,"msg":"Timed out","dur":0.942426678,"height":13,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075669.20313,"msg":"enterNewRound(13/0). Current: 13/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075669.2031796,"msg":"enterPropose(13/0). Current: 13/0/RoundStepNewRound"}
+{"level":"info","ts":1567075669.2031944,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:12, LR:0, LS:3}"}
+{"level":"info","ts":1567075669.2043574,"msg":"Signed proposal height 13 round 0 proposal Proposal{13/0 1:A00E5B079AAC (-1,:0:000000000000) /74690F94D86E.../}"}
+{"level":"info","ts":1567075669.206078,"msg":"enterPrevote(13/0). Current: 13/0/RoundStepPropose"}
+{"level":"info","ts":1567075669.2095811,"msg":"enterPrecommit(13/0). Current: 13/0/RoundStepPrevote"}
+{"level":"info","ts":1567075669.2156508,"msg":"enterCommit(13/0). Current: 13/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075669.225978,"msg":"Finalizing commit of block with 0 txs, height 13, hash C1DDA79F0CFD7F44153C9DF8A5602130026A88AA, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075669.2499857,"msg":"Executed block","height":13,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075669.2654874,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075670.2164395,"msg":"Timed out","dur":0.941483511,"height":14,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075670.2166994,"msg":"enterNewRound(14/0). Current: 14/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075670.2167356,"msg":"enterPropose(14/0). Current: 14/0/RoundStepNewRound"}
+{"level":"info","ts":1567075670.2167463,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:13, LR:0, LS:3}"}
+{"level":"info","ts":1567075670.2201324,"msg":"Signed proposal height 14 round 0 proposal Proposal{14/0 1:C97596B9D4B8 (-1,:0:000000000000) /B3D9620DD51F.../}"}
+{"level":"info","ts":1567075670.2212234,"msg":"enterPrevote(14/0). Current: 14/0/RoundStepPropose"}
+{"level":"info","ts":1567075670.2237115,"msg":"enterPrecommit(14/0). Current: 14/0/RoundStepPrevote"}
+{"level":"info","ts":1567075670.2252674,"msg":"enterCommit(14/0). Current: 14/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075670.2279086,"msg":"Finalizing commit of block with 0 txs, height 14, hash 4DFB9D8A000A7424CB379E7E1F84E54C043C84E2, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075670.2383785,"msg":"Executed block","height":14,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075670.2617986,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075671.2259393,"msg":"Timed out","dur":0.953634893,"height":15,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075671.2261233,"msg":"enterNewRound(15/0). Current: 15/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075671.2261617,"msg":"enterPropose(15/0). Current: 15/0/RoundStepNewRound"}
+{"level":"info","ts":1567075671.2261868,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:14, LR:0, LS:3}"}
+{"level":"info","ts":1567075671.2272308,"msg":"Signed proposal height 15 round 0 proposal Proposal{15/0 1:F1A5555588E7 (-1,:0:000000000000) /9651D34B10B4.../}"}
+{"level":"info","ts":1567075671.2276907,"msg":"enterPrevote(15/0). Current: 15/0/RoundStepPropose"}
+{"level":"info","ts":1567075671.2296433,"msg":"enterPrecommit(15/0). Current: 15/0/RoundStepPrevote"}
+{"level":"info","ts":1567075671.2322762,"msg":"enterCommit(15/0). Current: 15/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075671.2348943,"msg":"Finalizing commit of block with 0 txs, height 15, hash FE325F609844914A732B63A151490CA829417073, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075671.2472355,"msg":"Executed block","height":15,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075671.2640185,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075672.2329347,"msg":"Timed out","dur":0.959578819,"height":16,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075672.2331343,"msg":"enterNewRound(16/0). Current: 16/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075672.2331831,"msg":"enterPropose(16/0). Current: 16/0/RoundStepNewRound"}
+{"level":"info","ts":1567075672.2332036,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:15, LR:0, LS:3}"}
+{"level":"info","ts":1567075672.2341323,"msg":"Signed proposal height 16 round 0 proposal Proposal{16/0 1:28E17B4B2A63 (-1,:0:000000000000) /5E0423572B07.../}"}
+{"level":"info","ts":1567075672.2348423,"msg":"enterPrevote(16/0). Current: 16/0/RoundStepPropose"}
+{"level":"info","ts":1567075672.2366967,"msg":"enterPrecommit(16/0). Current: 16/0/RoundStepPrevote"}
+{"level":"info","ts":1567075672.2506087,"msg":"enterCommit(16/0). Current: 16/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075672.2529743,"msg":"Finalizing commit of block with 0 txs, height 16, hash 0DE7ACCBC7E95EEB068EB6790FDB052133576419, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075672.2718093,"msg":"Executed block","height":16,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075672.2949483,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075673.2514462,"msg":"Timed out","dur":0.946041499,"height":17,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075673.2515738,"msg":"enterNewRound(17/0). Current: 17/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075673.2515955,"msg":"enterPropose(17/0). Current: 17/0/RoundStepNewRound"}
+{"level":"info","ts":1567075673.251609,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:16, LR:0, LS:3}"}
+{"level":"info","ts":1567075673.2523944,"msg":"Signed proposal height 17 round 0 proposal Proposal{17/0 1:75ECBDE89C47 (-1,:0:000000000000) /C0969608BA5B.../}"}
+{"level":"info","ts":1567075673.2530665,"msg":"enterPrevote(17/0). Current: 17/0/RoundStepPropose"}
+{"level":"info","ts":1567075673.2562568,"msg":"enterPrecommit(17/0). Current: 17/0/RoundStepPrevote"}
+{"level":"info","ts":1567075673.260695,"msg":"enterCommit(17/0). Current: 17/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075673.2638261,"msg":"Finalizing commit of block with 0 txs, height 17, hash 62789F1D161570691086F7886646831A2D30A0DD, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075673.2765348,"msg":"Executed block","height":17,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075673.293967,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075674.261444,"msg":"Timed out","dur":0.957256908,"height":18,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075674.2617204,"msg":"enterNewRound(18/0). Current: 18/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075674.2618284,"msg":"enterPropose(18/0). Current: 18/0/RoundStepNewRound"}
+{"level":"info","ts":1567075674.2618697,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:17, LR:0, LS:3}"}
+{"level":"info","ts":1567075674.2631748,"msg":"Signed proposal height 18 round 0 proposal Proposal{18/0 1:29F221358819 (-1,:0:000000000000) /5B4D4FF43ED8.../}"}
+{"level":"info","ts":1567075674.2639534,"msg":"enterPrevote(18/0). Current: 18/0/RoundStepPropose"}
+{"level":"info","ts":1567075674.2720816,"msg":"enterPrecommit(18/0). Current: 18/0/RoundStepPrevote"}
+{"level":"info","ts":1567075674.2786713,"msg":"enterCommit(18/0). Current: 18/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075674.2813625,"msg":"Finalizing commit of block with 0 txs, height 18, hash E592ABFCA67852C2D222CE11EA05405C2A98C6E1, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075674.2932398,"msg":"Executed block","height":18,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075674.3120987,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075675.2794313,"msg":"Timed out","dur":0.956811161,"height":19,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075675.2796237,"msg":"enterNewRound(19/0). Current: 19/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075675.2796483,"msg":"enterPropose(19/0). Current: 19/0/RoundStepNewRound"}
+{"level":"info","ts":1567075675.2796583,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:18, LR:0, LS:3}"}
+{"level":"info","ts":1567075675.2804396,"msg":"Signed proposal height 19 round 0 proposal Proposal{19/0 1:FA2909A46FE4 (-1,:0:000000000000) /8FCC1ADDA725.../}"}
+{"level":"info","ts":1567075675.2811131,"msg":"enterPrevote(19/0). Current: 19/0/RoundStepPropose"}
+{"level":"info","ts":1567075675.2834299,"msg":"enterPrecommit(19/0). Current: 19/0/RoundStepPrevote"}
+{"level":"info","ts":1567075675.2884564,"msg":"enterCommit(19/0). Current: 19/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075675.2911928,"msg":"Finalizing commit of block with 0 txs, height 19, hash 2AE2F53F2064DEEB8576147A714314A315730AF4, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075675.3132503,"msg":"Executed block","height":19,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075675.3307202,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075676.2902431,"msg":"Timed out","dur":0.950364302,"height":20,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075676.2904878,"msg":"enterNewRound(20/0). Current: 20/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075676.2905786,"msg":"enterPropose(20/0). Current: 20/0/RoundStepNewRound"}
+{"level":"info","ts":1567075676.2906103,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:19, LR:0, LS:3}"}
+{"level":"info","ts":1567075676.2922072,"msg":"Signed proposal height 20 round 0 proposal Proposal{20/0 1:0492D61A8BF5 (-1,:0:000000000000) /281E3144E9B0.../}"}
+{"level":"info","ts":1567075676.2929716,"msg":"enterPrevote(20/0). Current: 20/0/RoundStepPropose"}
+{"level":"info","ts":1567075676.2950132,"msg":"enterPrecommit(20/0). Current: 20/0/RoundStepPrevote"}
+{"level":"info","ts":1567075676.3006463,"msg":"enterCommit(20/0). Current: 20/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075676.3031197,"msg":"Finalizing commit of block with 0 txs, height 20, hash 5C13A68136BBC0BFA321AA8C8DC76AD555BE6D51, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075676.3149104,"msg":"Executed block","height":20,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075676.331984,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075677.3010998,"msg":"Timed out","dur":0.959015906,"height":21,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075677.3013315,"msg":"enterNewRound(21/0). Current: 21/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075677.301361,"msg":"enterPropose(21/0). Current: 21/0/RoundStepNewRound"}
+{"level":"info","ts":1567075677.301372,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:20, LR:0, LS:3}"}
+{"level":"info","ts":1567075677.3021245,"msg":"Signed proposal height 21 round 0 proposal Proposal{21/0 1:971D585B0B1D (-1,:0:000000000000) /68FF54468C64.../}"}
+{"level":"info","ts":1567075677.3026729,"msg":"enterPrevote(21/0). Current: 21/0/RoundStepPropose"}
+{"level":"info","ts":1567075677.3042164,"msg":"enterPrecommit(21/0). Current: 21/0/RoundStepPrevote"}
+{"level":"info","ts":1567075677.3055959,"msg":"enterCommit(21/0). Current: 21/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075677.3062437,"msg":"Finalizing commit of block with 0 txs, height 21, hash 3558805F3A233949A5DF99610AB8FB8392064BE9, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075677.3182733,"msg":"Executed block","height":21,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075677.3374562,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075678.306278,"msg":"Timed out","dur":0.959559534,"height":22,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075678.3072023,"msg":"enterNewRound(22/0). Current: 22/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075678.3072941,"msg":"enterPropose(22/0). Current: 22/0/RoundStepNewRound"}
+{"level":"info","ts":1567075678.3073442,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:21, LR:0, LS:3}"}
+{"level":"info","ts":1567075678.308203,"msg":"Signed proposal height 22 round 0 proposal Proposal{22/0 1:2FE2EECD6FDA (-1,:0:000000000000) /25502D72A73B.../}"}
+{"level":"info","ts":1567075678.3086448,"msg":"enterPrevote(22/0). Current: 22/0/RoundStepPropose"}
+{"level":"info","ts":1567075678.3103094,"msg":"enterPrecommit(22/0). Current: 22/0/RoundStepPrevote"}
+{"level":"info","ts":1567075678.3125997,"msg":"enterCommit(22/0). Current: 22/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075678.316097,"msg":"Finalizing commit of block with 0 txs, height 22, hash 9FBC615F669D1CA48D92FCDFD958310A446ACA6B, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075678.3353524,"msg":"Executed block","height":22,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075678.3532763,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075679.3128788,"msg":"Timed out","dur":0.950620594,"height":23,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075679.313043,"msg":"enterNewRound(23/0). Current: 23/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075679.3130758,"msg":"enterPropose(23/0). Current: 23/0/RoundStepNewRound"}
+{"level":"info","ts":1567075679.3130875,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:22, LR:0, LS:3}"}
+{"level":"info","ts":1567075679.3140593,"msg":"Signed proposal height 23 round 0 proposal Proposal{23/0 1:7BCC9263BC85 (-1,:0:000000000000) /CC435E249F90.../}"}
+{"level":"info","ts":1567075679.3147433,"msg":"enterPrevote(23/0). Current: 23/0/RoundStepPropose"}
+{"level":"info","ts":1567075679.316218,"msg":"enterPrecommit(23/0). Current: 23/0/RoundStepPrevote"}
+{"level":"info","ts":1567075679.317592,"msg":"enterCommit(23/0). Current: 23/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075679.3183403,"msg":"Finalizing commit of block with 0 txs, height 23, hash 11896CF3C10C994D2E85C9C806C5A8F9B3BA4345, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075679.3311303,"msg":"Executed block","height":23,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075679.3480759,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075680.3184776,"msg":"Timed out","dur":0.960431184,"height":24,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075680.3187017,"msg":"enterNewRound(24/0). Current: 24/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075680.3187394,"msg":"enterPropose(24/0). Current: 24/0/RoundStepNewRound"}
+{"level":"info","ts":1567075680.318753,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:23, LR:0, LS:3}"}
+{"level":"info","ts":1567075680.3199525,"msg":"Signed proposal height 24 round 0 proposal Proposal{24/0 1:D56F565BA139 (-1,:0:000000000000) /1BC63BBF2F6D.../}"}
+{"level":"info","ts":1567075680.3206723,"msg":"enterPrevote(24/0). Current: 24/0/RoundStepPropose"}
+{"level":"info","ts":1567075680.3227847,"msg":"enterPrecommit(24/0). Current: 24/0/RoundStepPrevote"}
+{"level":"info","ts":1567075680.3257744,"msg":"enterCommit(24/0). Current: 24/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075680.327945,"msg":"Finalizing commit of block with 0 txs, height 24, hash 3309CDA85AB41D64E4B6C15ABDDCA769712F2021, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075680.3539295,"msg":"Executed block","height":24,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075680.3726223,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075681.3273506,"msg":"Timed out","dur":0.942811172,"height":25,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075681.3277986,"msg":"enterNewRound(25/0). Current: 25/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075681.327826,"msg":"enterPropose(25/0). Current: 25/0/RoundStepNewRound"}
+{"level":"info","ts":1567075681.3278341,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:24, LR:0, LS:3}"}
+{"level":"info","ts":1567075681.3286061,"msg":"Signed proposal height 25 round 0 proposal Proposal{25/0 1:4E9B00B5CA09 (-1,:0:000000000000) /B20C1EDCC950.../}"}
+{"level":"info","ts":1567075681.3290727,"msg":"enterPrevote(25/0). Current: 25/0/RoundStepPropose"}
+{"level":"info","ts":1567075681.3302987,"msg":"enterPrecommit(25/0). Current: 25/0/RoundStepPrevote"}
+{"level":"info","ts":1567075681.3313484,"msg":"enterCommit(25/0). Current: 25/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075681.33218,"msg":"Finalizing commit of block with 0 txs, height 25, hash A13F9F794B646BE2268CD9A79884AE30FCF099E8, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075681.3421764,"msg":"Executed block","height":25,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075681.360004,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075682.3317664,"msg":"Timed out","dur":0.962009859,"height":26,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075682.3321033,"msg":"enterNewRound(26/0). Current: 26/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075682.3321662,"msg":"enterPropose(26/0). Current: 26/0/RoundStepNewRound"}
+{"level":"info","ts":1567075682.3321877,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:25, LR:0, LS:3}"}
+{"level":"info","ts":1567075682.334335,"msg":"Signed proposal height 26 round 0 proposal Proposal{26/0 1:1BB6B09EC335 (-1,:0:000000000000) /F7E49F9336D5.../}"}
+{"level":"info","ts":1567075682.3355696,"msg":"enterPrevote(26/0). Current: 26/0/RoundStepPropose"}
+{"level":"info","ts":1567075682.337822,"msg":"enterPrecommit(26/0). Current: 26/0/RoundStepPrevote"}
+{"level":"info","ts":1567075682.3416631,"msg":"enterCommit(26/0). Current: 26/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075682.3452528,"msg":"Finalizing commit of block with 0 txs, height 26, hash EB1FE2FAE24BE3F797404EEC2C86F3945EF689D5, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075682.3571737,"msg":"Executed block","height":26,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075682.3774676,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075683.3426132,"msg":"Timed out","dur":0.955296292,"height":27,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075683.3427856,"msg":"enterNewRound(27/0). Current: 27/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075683.342898,"msg":"enterPropose(27/0). Current: 27/0/RoundStepNewRound"}
+{"level":"info","ts":1567075683.342915,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:26, LR:0, LS:3}"}
+{"level":"info","ts":1567075683.344008,"msg":"Signed proposal height 27 round 0 proposal Proposal{27/0 1:764D77493811 (-1,:0:000000000000) /8ECCD14DE1A4.../}"}
+{"level":"info","ts":1567075683.3447466,"msg":"enterPrevote(27/0). Current: 27/0/RoundStepPropose"}
+{"level":"info","ts":1567075683.3466613,"msg":"enterPrecommit(27/0). Current: 27/0/RoundStepPrevote"}
+{"level":"info","ts":1567075683.3478348,"msg":"enterCommit(27/0). Current: 27/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075683.3483162,"msg":"Finalizing commit of block with 0 txs, height 27, hash 4FFB76BE72A2028BB80D3F933DC4298D6703A40E, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075683.3605068,"msg":"Executed block","height":27,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075683.3801935,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075684.3497663,"msg":"Timed out","dur":0.958586294,"height":28,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075684.3500106,"msg":"enterNewRound(28/0). Current: 28/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075684.3500426,"msg":"enterPropose(28/0). Current: 28/0/RoundStepNewRound"}
+{"level":"info","ts":1567075684.350056,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:27, LR:0, LS:3}"}
+{"level":"info","ts":1567075684.3611512,"msg":"Signed proposal height 28 round 0 proposal Proposal{28/0 1:D36B13853E96 (-1,:0:000000000000) /5FB79046F839.../}"}
+{"level":"info","ts":1567075684.363284,"msg":"enterPrevote(28/0). Current: 28/0/RoundStepPropose"}
+{"level":"info","ts":1567075684.3713784,"msg":"enterPrecommit(28/0). Current: 28/0/RoundStepPrevote"}
+{"level":"info","ts":1567075684.3767781,"msg":"enterCommit(28/0). Current: 28/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075684.3780463,"msg":"Finalizing commit of block with 0 txs, height 28, hash D4BB8E91C2CB460107245A926410C620E9C0630C, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075684.388479,"msg":"Executed block","height":28,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075684.4062667,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075685.377468,"msg":"Timed out","dur":0.96130517,"height":29,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075685.377585,"msg":"enterNewRound(29/0). Current: 29/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075685.3776374,"msg":"enterPropose(29/0). Current: 29/0/RoundStepNewRound"}
+{"level":"info","ts":1567075685.3776538,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:28, LR:0, LS:3}"}
+{"level":"info","ts":1567075685.3782556,"msg":"Signed proposal height 29 round 0 proposal Proposal{29/0 1:1BB8670D9664 (-1,:0:000000000000) /896475C01622.../}"}
+{"level":"info","ts":1567075685.3789303,"msg":"enterPrevote(29/0). Current: 29/0/RoundStepPropose"}
+{"level":"info","ts":1567075685.3802783,"msg":"enterPrecommit(29/0). Current: 29/0/RoundStepPrevote"}
+{"level":"info","ts":1567075685.39004,"msg":"enterCommit(29/0). Current: 29/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075685.3905008,"msg":"Finalizing commit of block with 0 txs, height 29, hash B83BAFFDD23F28A9DF69B336BADF740A42197098, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075685.4003186,"msg":"Executed block","height":29,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075685.418396,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075686.3907666,"msg":"Timed out","dur":0.961165426,"height":30,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075686.3908994,"msg":"enterNewRound(30/0). Current: 30/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075686.390956,"msg":"enterPropose(30/0). Current: 30/0/RoundStepNewRound"}
+{"level":"info","ts":1567075686.3909812,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:29, LR:0, LS:3}"}
+{"level":"info","ts":1567075686.3917727,"msg":"Signed proposal height 30 round 0 proposal Proposal{30/0 1:2664AE6A0390 (-1,:0:000000000000) /B2F2311B0ADC.../}"}
+{"level":"info","ts":1567075686.3922124,"msg":"enterPrevote(30/0). Current: 30/0/RoundStepPropose"}
+{"level":"info","ts":1567075686.393564,"msg":"enterPrecommit(30/0). Current: 30/0/RoundStepPrevote"}
+{"level":"info","ts":1567075686.3947306,"msg":"enterCommit(30/0). Current: 30/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075686.395305,"msg":"Finalizing commit of block with 0 txs, height 30, hash AD17D5207AD17D76924A0864DC4E904B7D46EA01, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075686.406306,"msg":"Executed block","height":30,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075686.4233575,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075687.3953567,"msg":"Timed out","dur":0.961838771,"height":31,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075687.395811,"msg":"enterNewRound(31/0). Current: 31/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075687.3958778,"msg":"enterPropose(31/0). Current: 31/0/RoundStepNewRound"}
+{"level":"info","ts":1567075687.3960667,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:30, LR:0, LS:3}"}
+{"level":"info","ts":1567075687.399512,"msg":"Signed proposal height 31 round 0 proposal Proposal{31/0 1:3E8E9B8A260D (-1,:0:000000000000) /67493E0EA0B4.../}"}
+{"level":"info","ts":1567075687.4013963,"msg":"enterPrevote(31/0). Current: 31/0/RoundStepPropose"}
+{"level":"info","ts":1567075687.4098806,"msg":"enterPrecommit(31/0). Current: 31/0/RoundStepPrevote"}
+{"level":"info","ts":1567075687.4123938,"msg":"enterCommit(31/0). Current: 31/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075687.414046,"msg":"Finalizing commit of block with 0 txs, height 31, hash 3B57783A29937778B705AC84951EC0238F77D564, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075687.429595,"msg":"Executed block","height":31,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075687.4532561,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075688.4132917,"msg":"Timed out","dur":0.950328814,"height":32,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075688.4133914,"msg":"enterNewRound(32/0). Current: 32/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075688.413408,"msg":"enterPropose(32/0). Current: 32/0/RoundStepNewRound"}
+{"level":"info","ts":1567075688.413462,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:31, LR:0, LS:3}"}
+{"level":"info","ts":1567075688.4140682,"msg":"Signed proposal height 32 round 0 proposal Proposal{32/0 1:253CF91808B6 (-1,:0:000000000000) /CBD5E325358D.../}"}
+{"level":"info","ts":1567075688.414603,"msg":"enterPrevote(32/0). Current: 32/0/RoundStepPropose"}
+{"level":"info","ts":1567075688.4157865,"msg":"enterPrecommit(32/0). Current: 32/0/RoundStepPrevote"}
+{"level":"info","ts":1567075688.4170468,"msg":"enterCommit(32/0). Current: 32/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075688.4175758,"msg":"Finalizing commit of block with 0 txs, height 32, hash 69DFC0F2DD14DAC2788D356117138E53BB581A2E, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075688.429405,"msg":"Executed block","height":32,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075688.4446592,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075689.4172368,"msg":"Timed out","dur":0.963162242,"height":33,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075689.4173431,"msg":"enterNewRound(33/0). Current: 33/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075689.417359,"msg":"enterPropose(33/0). Current: 33/0/RoundStepNewRound"}
+{"level":"info","ts":1567075689.4173663,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:32, LR:0, LS:3}"}
+{"level":"info","ts":1567075689.418126,"msg":"Signed proposal height 33 round 0 proposal Proposal{33/0 1:47B3BF23F6F1 (-1,:0:000000000000) /2C521561FFFB.../}"}
+{"level":"info","ts":1567075689.4187756,"msg":"enterPrevote(33/0). Current: 33/0/RoundStepPropose"}
+{"level":"info","ts":1567075689.4203172,"msg":"enterPrecommit(33/0). Current: 33/0/RoundStepPrevote"}
+{"level":"info","ts":1567075689.421625,"msg":"enterCommit(33/0). Current: 33/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075689.422111,"msg":"Finalizing commit of block with 0 txs, height 33, hash 3FA3D4F47D3397103A9A2978F01AA74C5304CB77, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075689.4318562,"msg":"Executed block","height":33,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075689.449718,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075690.42322,"msg":"Timed out","dur":0.961712941,"height":34,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075690.4233327,"msg":"enterNewRound(34/0). Current: 34/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075690.423351,"msg":"enterPropose(34/0). Current: 34/0/RoundStepNewRound"}
+{"level":"info","ts":1567075690.4233692,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:33, LR:0, LS:3}"}
+{"level":"info","ts":1567075690.424218,"msg":"Signed proposal height 34 round 0 proposal Proposal{34/0 1:AB93B7A6BCEC (-1,:0:000000000000) /ED3434B76100.../}"}
+{"level":"info","ts":1567075690.4246817,"msg":"enterPrevote(34/0). Current: 34/0/RoundStepPropose"}
+{"level":"info","ts":1567075690.4271755,"msg":"enterPrecommit(34/0). Current: 34/0/RoundStepPrevote"}
+{"level":"info","ts":1567075690.4293826,"msg":"enterCommit(34/0). Current: 34/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075690.430307,"msg":"Finalizing commit of block with 0 txs, height 34, hash D1BC71F9EB162B510C0A000CE66FD2C50A1D3B19, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075690.4411197,"msg":"Executed block","height":34,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075690.4580069,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075691.4303663,"msg":"Timed out","dur":0.96248659,"height":35,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075691.4308174,"msg":"enterNewRound(35/0). Current: 35/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075691.4308934,"msg":"enterPropose(35/0). Current: 35/0/RoundStepNewRound"}
+{"level":"info","ts":1567075691.430918,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:34, LR:0, LS:3}"}
+{"level":"info","ts":1567075691.4317765,"msg":"Signed proposal height 35 round 0 proposal Proposal{35/0 1:F8065F8F45D9 (-1,:0:000000000000) /06421A538C85.../}"}
+{"level":"info","ts":1567075691.432668,"msg":"enterPrevote(35/0). Current: 35/0/RoundStepPropose"}
+{"level":"info","ts":1567075691.434601,"msg":"enterPrecommit(35/0). Current: 35/0/RoundStepPrevote"}
+{"level":"info","ts":1567075691.436329,"msg":"enterCommit(35/0). Current: 35/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075691.4370208,"msg":"Finalizing commit of block with 0 txs, height 35, hash 1852766843FCB3C6D5E643A4DFADD3A95FF5B8CB, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075691.4520898,"msg":"Executed block","height":35,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075691.467152,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075692.4463274,"msg":"Timed out","dur":0.958387585,"height":36,"round":0,"step":"RoundStepNewHeight"}
+{"level":"info","ts":1567075692.4465547,"msg":"enterNewRound(36/0). Current: 36/0/RoundStepNewHeight"}
+{"level":"info","ts":1567075692.4465854,"msg":"enterPropose(36/0). Current: 36/0/RoundStepNewRound"}
+{"level":"info","ts":1567075692.446598,"msg":"enterPropose: Our turn to propose","proposer":"F897B322D6F2BA28B077FB612FAE966A9210CFC7","privValidator":"PrivValidator{F897B322D6F2BA28B077FB612FAE966A9210CFC7 LH:35, LR:0, LS:3}"}
+{"level":"info","ts":1567075692.4476652,"msg":"Signed proposal height 36 round 0 proposal Proposal{36/0 1:0692834F13AC (-1,:0:000000000000) /8723916442B6.../}"}
+{"level":"info","ts":1567075692.453318,"msg":"enterPrevote(36/0). Current: 36/0/RoundStepPropose"}
+{"level":"info","ts":1567075692.468812,"msg":"enterPrecommit(36/0). Current: 36/0/RoundStepPrevote"}
+{"level":"info","ts":1567075692.476783,"msg":"enterCommit(36/0). Current: 36/0/RoundStepPrecommit"}
+{"level":"info","ts":1567075692.4798229,"msg":"Finalizing commit of block with 0 txs, height 36, hash C89A3BDDC22EAA92CBEF10889736CD15F7F0E1F3, root 1556944161db1cc3abf98042941f58fdd8654a6f5a244efa384118e0b48c569e"}
+{"level":"info","ts":1567075692.5020168,"msg":"Executed block","height":36,"txs":0,"valid":0,"invalid":0,"extended":0,"tps":0,"receiptHash":""}
+{"level":"info","ts":1567075692.5181463,"msg":"application save to db","appHash":"1556944161DB1CC3ABF98042941F58FDD8654A6F5A244EFA384118E0B48C569E","receiptHash":""}
+{"level":"info","ts":1567075693.0590587,"msg":"Stopping Node"}
+{"level":"info","ts":1567075693.0593374,"msg":"Stopping P2P Switch"}
+{"level":"info","ts":1567075693.0593488,"msg":"Stopping DefaultListener"}
+{"level":"info","ts":1567075693.0593905,"msg":"Stopping MempoolReactor"}
+{"level":"info","ts":1567075693.0593998,"msg":"Stopping BlockchainReactor"}
+{"level":"info","ts":1567075693.0594053,"msg":"Stopping BlockPool"}
+{"level":"info","ts":1567075693.0594115,"msg":"Stopping ConsensusReactor"}
+{"level":"info","ts":1567075693.0594156,"msg":"Stopping ConsensusState"}
+{"level":"info","ts":1567075693.0594199,"msg":"Stopping TimeoutTicker"}
+{"level":"info","ts":1567075693.05943,"msg":"Stopping PEXReactor"}
+{"level":"info","ts":1567075693.0594494,"msg":"Stopping WAL"}
+{"level":"info","ts":1567075693.0594544,"msg":"Stopping Group"}

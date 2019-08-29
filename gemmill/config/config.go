@@ -31,7 +31,7 @@ import (
 
 const (
 	RUNTIME_ENV     = "ANGINE_RUNTIME"
-	DEFAULT_RUNTIME = ".angine"
+	DEFAULT_RUNTIME = ".genesis"
 	DATADIR         = "data"
 	ARCHIVEDIR      = "data/archive"
 	CONFIGFILE      = "config.toml"
@@ -254,12 +254,10 @@ func DefaultConfig() (conf *viper.Viper) {
 	conf.Set("fast_sync", true)
 	conf.Set("skip_upnp", true)
 	conf.Set("log_path", "")
-	conf.Set("non_validator_node_auth", false)
+	conf.Set("non_validator_node_auth", true)
 	conf.SetDefault("tracerouter_msg_ttl", 5)
 	conf.Set("threshold_blocks", 0)
 	conf.SetDefault("block_size", 5000)
-	conf.Set("db_type", "sqlite3")
-	conf.Set("db_conn_str", "")
 
 	return conf
 }
