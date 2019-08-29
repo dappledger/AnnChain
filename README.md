@@ -3,6 +3,14 @@
 ![banner](docs/img/ann.png)
 
 <br/>
+
+
+
+
+
+
+AnnChain is the core engine of the new generation alliance chain of Zhongan Science and Technology. It has the characteristics of high security, high performance and high availability. It aims to provide a tightly integrated block chain system for enterprises. It is very suitable for business cooperation among commercial organizations with alliance nature, and also for high-frequency financial transactions and security. A demanding scene. Dozens of actual business scenarios have been applied.
+
 [![version](https://img.shields.io/github/v/tag/dappledger/AnnChain.svg?sort=semver)](https://github.com/dappledger/AnnChain/releases/latest)
 [![API Reference](https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/68747470733a2f2f676f646f632e6f72672f6769746875622e636f6d2f676f6c616e672f6764646f3f7374617475732e737667)](https://godoc.org/github.com/dappledger/AnnChain)
 [![Go version](https://img.shields.io/badge/go-1.12.0-blue.svg)](https://github.com/moovweb/gvm)
@@ -10,11 +18,9 @@
 [![Travis](https://travis-ci.org/dappledger/AnnChain.svg?branch=master)](https://travis-ci.org/dappledger/AnnChain)
 [![license](https://img.shields.io/github/license/dappledger/AnnChain.svg)](https://github.com/dappledger/AnnChain/blob/master/LICENSE)
 
-AnnChain is the core engine of the new generation alliance chain of Zhongan Science and Technology. It has the characteristics of high security, high performance and high availability. It aims to provide a tightly integrated block chain system for enterprises. It is very suitable for business cooperation among commercial organizations with alliance nature, and also for high-frequency financial transactions and security. A demanding scene. Dozens of actual business scenarios have been applied.
 | Branch | Tests                                                                                                                                                | Coverage                                                                                                                             |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| master | [![CircleCI](https://circleci.com/gh/dappledger/AnnChain/tree/master.svg?style=shield)](https://circleci.com/gh/dappledger/AnnChain/tree/master) | [![codecov](https://codecov.io/gh/dappledger/AnnChain/branch/master/graph/badge.svg)](https://codecov.io/gh/dappledger/AnnChain) |
-
+| master | [![CircleCI](https://circleci.com/gh/dappledger/AnnChain/tree/master.svg?style=shield)](https://circleci.com/gh/dappledger/AnnChain/tree/master)  | [![codecov](https://codecov.io/gh/dappledger/AnnChain/branch/master/graph/badge.svg)](https://codecov.io/gh/dappledger/AnnChain) |
 
 
 
