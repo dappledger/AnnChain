@@ -15,7 +15,7 @@ AnnChain is the core engine of the new generation alliance chain of Zhongan Scie
 
 | Branch | Tests                                                                                                                                                | Coverage                                                                                                                             |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| master | [![CircleCI](https://circleci.com/gh/dappledger/AnnChain/tree/master.svg?style=shield)](https://circleci.com/gh/dappledger/AnnChain/tree/master)  | [![codecov](https://codecov.io/gh/dappledger/AnnChain/branch/master/graph/badge.svg)](https://codecov.io/gh/dappledger/AnnChain) |
+| master | [![TravisCI](https://travis-ci.org/dappledger/AnnChain.svg?branch=master)](https://travis-ci.org/dappledger/AnnChain)  | [![codecov](https://codecov.io/gh/dappledger/AnnChain/branch/master/graph/badge.svg)](https://codecov.io/gh/dappledger/AnnChain) |
 
 
 
