@@ -76,8 +76,7 @@ services:
               fast_sync = true
               log_path = ""
               moniker = "anonymous"
-              non_validator_auth_by_ca = false
-              non_validator_node_auth = false
+              non_validator_node_auth = true
               p2p_laddr = "tcp://0.0.0.0:46000"
               rpc_laddr = "tcp://0.0.0.0:47000"
               seeds = "192.168.10.10:46000,192.168.10.11:46001,192.168.10.12:46002,192.168.10.13:46003"
@@ -117,8 +116,7 @@ services:
               fast_sync = true
               log_path = ""
               moniker = "anonymous"
-              non_validator_auth_by_ca = false
-              non_validator_node_auth = false
+              non_validator_node_auth = true
               p2p_laddr = "tcp://0.0.0.0:46001"
               rpc_laddr = "tcp://0.0.0.0:47001"
               seeds = "192.168.10.10:46000,192.168.10.11:46001,192.168.10.12:46002,192.168.10.13:46003"
@@ -158,8 +156,7 @@ services:
               fast_sync = true
               log_path = ""
               moniker = "anonymous"
-              non_validator_auth_by_ca = false
-              non_validator_node_auth = false
+              non_validator_node_auth = true
               p2p_laddr = "tcp://0.0.0.0:46002"
               rpc_laddr = "tcp://0.0.0.0:47002"
               seeds = "192.168.10.10:46000,192.168.10.11:46001,192.168.10.12:46002,192.168.10.13:46003"
@@ -199,8 +196,7 @@ services:
               fast_sync = true
               log_path = ""
               moniker = "anonymous"
-              non_validator_auth_by_ca = false
-              non_validator_node_auth = false
+              non_validator_node_auth = true
               p2p_laddr = "tcp://0.0.0.0:46003"
               rpc_laddr = "tcp://0.0.0.0:47003"
               seeds = "192.168.10.10:46000,192.168.10.11:46001,192.168.10.12:46002,192.168.10.13:46003"
