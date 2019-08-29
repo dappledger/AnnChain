@@ -245,7 +245,5 @@ func DefaultConf() *viper.Viper {
 	globalConf := viper.New()
 	// runtime, _ := cmd.Flags().GetString("runtime")
 
-	globalConf.SetDefault("db_type", "sqlite3")
-	globalConf.SetDefault("db_conn_str", "sqlite3") // some types of database will need this
 	return globalConf
 }
