@@ -30,19 +30,9 @@ var (
 		Usage:  "nodes who want to join a chain must first get a CA signature from one the CA nodes in that chain",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "sec",
-				Usage: "CA node's private key",
-				Value: "0",
-			},
-			cli.StringFlag{
 				Name:  "pub",
 				Value: "0",
 				Usage: "pubkeys of the nodes want to join, comma separated",
-			},
-			cli.StringFlag{
-				Name:  "crypto_type",
-				Value: "ZA",
-				Usage: "choose one of the three crypto_type types: \n\t'ZA' includes ed25519,ecdsa,ripemd160,keccak256,secretbox;",
 			},
 		},
 	}
