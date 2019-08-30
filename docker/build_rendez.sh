@@ -10,5 +10,5 @@ WORKDIR /genesis
 ENTRYPOINT ["genesis"]' > Dockerfile
 
 docker build -t genesis:latest -f Dockerfile ../build
-docker tag genesis:latest --
+docker tag genesis:latest annchain/genesis:latest
 rm Dockerfile
