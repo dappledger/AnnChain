@@ -9,51 +9,9 @@ services:
     networks:
       app_net:
         ipv4_address: 192.168.10.7
-  block-browser:
-    image: 
-    ports:
-      - '9090:9090'
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        echo 'appname = hubble
-              httpport = 9090
-              runmode ="dev"
-
-              # blockchain's api ,not app's api
-              api_addr = "validator-0:47000"
-              chain_id = "1024"
-
-              mogo_addr = "192.168.10.7:27017"
-              #mogo_user = hzc
-              #mogo_pwd = 123456
-
-              mogo_db = "ann-browser"
-              sync_job = 1
-              sync_from_height = 0' > conf/app.conf
-        block-browser
-    restart: always
-    networks:
-      app_net:
-        ipv4_address: 192.168.10.8
-  genesis-api:
-    image: 
-    ports:
-      - '8800:8800'
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        echo '{"ListenAddress": ":8800", "RPCAddress": "tcp://validator-0:47000", "GasLimit" : 10000000000 }' > api.conf
-        genesis-api -f api.conf
-    restart: always
-    networks:
-      app_net:
-        ipv4_address: 192.168.10.9
   validator-0:
     hostname: validator-0
-    image: 
+    image: annchain/genesis:latest
     ports:
       - '46000:46000'
       - '47000:47000'
@@ -93,7 +51,7 @@ services:
     restart: always
   validator-1:
     hostname: validator-1
-    image: 
+    image: annchain/genesis:latest
     ports:
       - '46001:46001'
       - '47001:47001'
@@ -133,7 +91,7 @@ services:
     restart: always
   validator-2:
     hostname: validator-2
-    image: 
+    image: annchain/genesis:latest
     ports:
       - '46002:46002'
       - '47002:47002'
@@ -173,7 +131,7 @@ services:
     restart: always
   validator-3:
     hostname: validator-3
-    image: 
+    image: annchain/genesis:latest
     ports:
       - '46003:46003'
       - '47003:47003'
