@@ -249,7 +249,6 @@ func DefaultConfig() (conf *viper.Viper) {
 	conf.Set("rpc_laddr", "tcp://0.0.0.0:46657")
 	conf.Set("seeds", "")
 	conf.Set("auth_by_ca", true)
-	conf.Set("non_validator_auth_by_ca", false)
 	conf.Set("signbyCA", "")
 	conf.Set("fast_sync", true)
 	conf.Set("skip_upnp", true)
