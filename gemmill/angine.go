@@ -27,6 +27,11 @@ import (
 	"sync"
 	"time"
 
+	rpcserver "github.com/dappledger/AnnChain/gemmill/rpc/server"
+
+	"github.com/dappledger/AnnChain/gemmill/consensus/pbft"
+	"github.com/dappledger/AnnChain/gemmill/consensus/raft"
+
 	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
@@ -71,7 +76,7 @@ type Angine struct {
 	dataArchive   *archive.Archive
 	conf          *viper.Viper
 	txPool        types.TxPool
-	consensus     *consensus.ConsensusState
+	consensus     consensus.Engine
 	traceRouter   *trace.Router
 	stateMachine  *state.State
 	p2pSwitch     *p2p.Switch
@@ -86,6 +91,8 @@ type Angine struct {
 	getAdminVote func([]byte, *types.Validator) ([]byte, error)
 
 	queryPayLoadTxParser func([]byte) ([]byte, error)
+
+	apis []map[string]*rpcserver.RPCFunc
 }
 
 type Tunes struct {
@@ -192,6 +199,10 @@ func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 	return
 }
 
+func (a *Angine) APIs() []map[string]*rpcserver.RPCFunc {
+	return a.apis
+}
+
 func (a *Angine) SetQueryPayLoadTxParser(fn func([]byte) ([]byte, error)) {
 	a.queryPayLoadTxParser = fn
 }
@@ -260,10 +271,6 @@ func closeDBs(a *Angine) {
 	}
 }
 
-// func (e *Angine) SetAdminVoteRPC(f func([]byte, *types.Validator) ([]byte, error)) {
-// 	e.getAdminVote = f
-// }
-
 func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	conf := ang.tune.Conf
 	conf.Set("chain_id", stateM.ChainID)
@@ -283,14 +290,37 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	}
 	memReactor := mempool.NewTxReactor(conf, txPool)
 
-	consensusState := consensus.NewConsensusState(conf, stateM, blockStore, txPool)
-	consensusState.SetPrivValidator(ang.privValidator)
-	consensusReactor := consensus.NewConsensusReactor(consensusState, fastSync)
-	consensusState.BindReactor(consensusReactor)
+	var consensusEngine consensus.Engine
 
-	bcReactor.SetBlockVerifier(func(bID types.BlockID, h int64, lc *types.Commit) error {
-		return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)
-	})
+	if conf.Get("consensus") == "raft" {
+
+		consensusState, err := raft.NewConsensusState(conf, *ang.eventSwitch, blockStore, stateM, txPool, ang.privValidator)
+		if err != nil {
+			log.Fatal("assembleStateMachine with raft err", zap.Error(err))
+		}
+		consensusEngine = consensusState
+
+		bcReactor.SetBlockVerifier(func(bID types.BlockID, h int64, lc *types.Commit) error { return nil })
+
+		ang.apis = append(ang.apis, consensusState.NewPublicAPI().API())
+
+	} else {
+
+		consensusState := pbft.NewConsensusState(conf, stateM, blockStore, txPool)
+		consensusState.SetPrivValidator(ang.privValidator)
+
+		consensusReactor := pbft.NewConsensusReactor(consensusState, fastSync)
+		consensusState.BindReactor(consensusReactor)
+		ang.p2pSwitch.AddReactor("CONSENSUS", consensusReactor)
+		setEventSwitch(*ang.eventSwitch, bcReactor, memReactor, consensusReactor)
+
+		consensusEngine = consensusState
+
+		bcReactor.SetBlockVerifier(func(bID types.BlockID, h int64, lc *types.Commit) error {
+			return stateM.Validators.VerifyCommit(stateM.ChainID, bID, h, lc)
+		})
+	}
+
 	bcReactor.SetBlockExecuter(func(blk *types.Block, pst *types.PartSet, c *types.Commit) error {
 		blockStore.SaveBlock(blk, pst, c)
 		if err := stateM.ApplyBlock(*ang.eventSwitch, blk, pst.Header(), txPool, -1); err != nil {
@@ -304,7 +334,6 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 
 	ang.p2pSwitch.AddReactor("MEMPOOL", memReactor)
 	ang.p2pSwitch.AddReactor("BLOCKCHAIN", bcReactor)
-	ang.p2pSwitch.AddReactor("CONSENSUS", consensusReactor)
 
 	var addrBook *p2p.AddrBook
 	if conf.GetBool("pex_reactor") {
@@ -317,16 +346,17 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 		ang.p2pSwitch.SetAuthByCA(authByCA(conf, &stateM.Validators))
 	}
 
-	setEventSwitch(*ang.eventSwitch, bcReactor, memReactor, consensusReactor)
+	setEventSwitch(*ang.eventSwitch, bcReactor, memReactor, consensusEngine)
 
 	ang.blockstore = blockStore
-	ang.consensus = consensusState
+	ang.consensus = consensusEngine
 	ang.txPool = txPool
 
 	ang.stateMachine = stateM
 	ang.genesis = stateM.GenesisDoc
 	ang.addrBook = addrBook
 	ang.stateMachine.SetBlockExecutable(ang)
+	ang.stateMachine.SetBlockVerifier(consensusEngine)
 
 	ang.InitPlugins()
 	for _, p := range ang.plugins {
@@ -633,10 +663,14 @@ func (e *Angine) GetNumPeers() int {
 }
 
 func (e *Angine) GetConsensusStateInfo() (string, []string) {
-	roundState := e.consensus.GetRoundState()
+	c, ok := e.consensus.(*pbft.ConsensusState)
+	if !ok {
+		return "", nil
+	}
+	roundState := c.GetRoundState()
 	peerRoundStates := make([]string, 0, e.p2pSwitch.Peers().Size())
 	for _, p := range e.p2pSwitch.Peers().List() {
-		peerState := p.Data.Get(types.PeerStateKey).(*consensus.PeerState)
+		peerState := p.Data.Get(types.PeerStateKey).(*pbft.PeerState)
 		peerRoundState := peerState.GetRoundState()
 		peerRoundStateStr := p.Key + ":" + string(wire.JSONBytes(peerRoundState))
 		peerRoundStates = append(peerRoundStates, peerRoundStateStr)
@@ -1145,7 +1179,13 @@ const (
 
 func (ag *Angine) HealthStatus() int {
 	cur := time.Now().Unix()
-	lcommitTime := ag.consensus.CommitTime.Unix()
+	c, ok := ag.consensus.(*pbft.ConsensusState)
+	if !ok {
+		return http.StatusNoContent
+	}
+
+	lcommitTime := c.CommitTime.Unix()
+
 	if cur > lcommitTime+TIME_OUT_HEALTH {
 		return int(http.StatusInternalServerError)
 	}

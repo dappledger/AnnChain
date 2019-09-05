@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package consensus
+package pbft
 
 import (
 	"bytes"
@@ -1594,4 +1594,40 @@ func CompareHRS(h1, r1 int64, s1 RoundStepType, h2, r2 int64, s2 RoundStepType) 
 		return 1
 	}
 	return 0
+}
+
+func (cs *ConsensusState) ValidateBlock(block *types.Block) error {
+
+	// Basic block validation.
+	s := cs.state
+	err := block.ValidateBasic(s.ChainID, s.LastBlockHeight, s.LastBlockID, s.LastBlockTime, s.AppHash, s.ReceiptsHash)
+	if err != nil {
+		return err
+	}
+
+	if err := block.ValidateCommit(); err != nil {
+		return err
+	}
+
+	if !s.Validators.HasAddress(block.ProposerAddress) {
+		return fmt.Errorf("Block.Header.ProposerAddress, %X, is not a validator", block.ProposerAddress)
+	}
+
+	// Validate block LastCommit.
+	if block.Height == 1 {
+		if len(block.LastCommit.Precommits) != 0 {
+			return errors.New("Block at height 1 (first block) should have no LastCommit precommits")
+		}
+	} else {
+		if len(block.LastCommit.Precommits) != s.LastValidators.Size() {
+			return errors.New(gcmn.Fmt("Invalid block commit size. Expected %v, got %v",
+				s.LastValidators.Size(), len(block.LastCommit.Precommits)))
+		}
+		err := s.LastValidators.VerifyCommit(
+			s.ChainID, s.LastBlockID, block.Height-1, block.LastCommit)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

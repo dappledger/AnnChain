@@ -85,14 +85,6 @@ func (b *Block) ValidateBasic(chainID string, lastBlockHeight int64, lastBlockID
 	if !b.LastBlockID.Equals(lastBlockID) {
 		return errors.New(gcmn.Fmt("Wrong Block.Header.LastBlockID.  Expected %v, got %v", lastBlockID, b.LastBlockID))
 	}
-	if !bytes.Equal(b.LastCommitHash, b.LastCommit.Hash()) {
-		return errors.New(gcmn.Fmt("Wrong Block.Header.LastCommitHash.  Expected %X, got %X", b.LastCommitHash, b.LastCommit.Hash()))
-	}
-	if b.Header.Height != 1 {
-		if err := b.LastCommit.ValidateBasic(); err != nil {
-			return err
-		}
-	}
 	if !bytes.Equal(b.DataHash, b.Data.Hash()) {
 		return errors.New(gcmn.Fmt("Wrong Block.Header.DataHash.  Expected %X, got %X", b.DataHash, b.Data.Hash()))
 	}
@@ -103,6 +95,20 @@ func (b *Block) ValidateBasic(chainID string, lastBlockHeight int64, lastBlockID
 		return errors.New(gcmn.Fmt("Wrong Block.Header.ReceiptsHash.  Expected %X, got %X", receiptsHash, b.ReceiptsHash))
 	}
 	// NOTE: the AppHash and ValidatorsHash are validated later.
+	return nil
+}
+
+func (b *Block) ValidateCommit() error {
+
+	if !bytes.Equal(b.LastCommitHash, b.LastCommit.Hash()) {
+		return errors.New(gcmn.Fmt("Wrong Block.Header.LastCommitHash.  Expected %X, got %X", b.LastCommitHash, b.LastCommit.Hash()))
+	}
+
+	if b.Header.Height != 1 {
+		if err := b.LastCommit.ValidateBasic(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -183,6 +189,7 @@ type Header struct {
 	AppHash         []byte    `json:"app_hash"`         // state after txs from the previous block
 	ReceiptsHash    []byte    `json:"recepits_hash"`    // recepits_hash from previous block
 	ProposerAddress []byte    `json:"proposer_address"`
+	Extra           []byte    `json:"extra"` // doesn't included in header hash
 }
 
 // NOTE: hash is nil if required fields are missing.
