@@ -46,6 +46,77 @@ cd AnnChain
 make
 ```
 
+## Supported Consensus
+
+AnnChain supports bft and raft consensus as valid consensus options,and bft is the default.if you want to use raft, you can operate like this:
+
+##### First, set consensus to raft in config.toml file:
+
+``` shell
+consensus = "raft"
+```
+
+##### Then, add raft peers config file raft-cluster.json into the runtime dir(take four nodes for example):
+
+``` shell
+{
+    "advertise": "ann7939-validator8fc99df2-2.default.svc.cluster.local:23000",
+    "local": {
+        "bind": "0.0.0.0:23000",
+        "pub_key": [
+            1,
+            "35EC28D113DB8D057140F903BAB049770CABAD4C2838509602552511C3F2D2E3"
+        ],
+        "rpc": "ann7939-validator8fc99df2-2.default.svc.cluster.local:47000"
+    },
+    "peers": [
+        {
+            "bind": "ann7939-validator480649ca-0.default.svc.cluster.local:23000",
+            "pub_key": [
+                1,
+                "7B788FD0A5A1504C438B2D6B5602717C07F5E82D25175B4065B75C46017B770D"
+            ],
+            "rpc": "ann7939-validator480649ca-0.default.svc.cluster.local:47000"
+        },
+        {
+            "bind": "ann7939-validatorb14a47dc-1.default.svc.cluster.local:23000",
+            "pub_key": [
+                1,
+                "1FE0A5560BB9376348CB8F218BDA2011280606571DB20B841FA9F7560143796D"
+            ],
+            "rpc": "ann7939-validatorb14a47dc-1.default.svc.cluster.local:47000"
+        },
+        {
+            "bind": "ann7939-validator8fc99df2-2.default.svc.cluster.local:23000",
+            "pub_key": [
+                1,
+                "35EC28D113DB8D057140F903BAB049770CABAD4C2838509602552511C3F2D2E3"
+            ],
+            "rpc": "ann7939-validator8fc99df2-2.default.svc.cluster.local:47000"
+        },
+        {
+            "bind": "ann7939-validatore78bd527-3.default.svc.cluster.local:23000",
+            "pub_key": [
+                1,
+                "3C521E9D3D942654FA1E6C52E7B3A4EDE059E047FB4DF4F00F04C092149002EA"
+            ],
+            "rpc": "10.103.237.176:47000"
+        }
+    ]
+}
+```
+
+* advertise: advertise address is used for others peers to connect.
+
+* local.bind: local bind address for raft protocl.
+
+* local.pub_key: node's pubkey, same as pbft pubkey.
+
+* local.rpc: node's rpc bind address.
+
+* peers: others node's bind address and pub_key info, including it selft.
+
+
 ## Quick Start
 
 #### Single node
