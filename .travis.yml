@@ -7,7 +7,7 @@ jobs:
       go: 1.12.5
       before_install:
         - curl https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | tar -xz
-        - mkdir $HOME/.gopkgsi
+        - mkdir $HOME/.gopkgs
         - export PATH=`pwd`/go/bin:$PATH
         - export GOROOT=`pwd`/go
         - export GOPATH=$HOME/.gopkgs
