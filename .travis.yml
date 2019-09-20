@@ -1,5 +1,4 @@
-nguage: go
-go_import_path: https://github.com/dappledger/AnnChain
+language: go
 sudo: false
 jobs:
   include:
@@ -8,7 +7,7 @@ jobs:
       go: 1.12.5
       before_install:
         - curl https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | tar -xz
-        - mkdir $HOME/.gopkgs
+        - mkdir $HOME/.gopkgsi
         - export PATH=`pwd`/go/bin:$PATH
         - export GOROOT=`pwd`/go
         - export GOPATH=$HOME/.gopkgs
@@ -16,4 +15,6 @@ jobs:
         - ./get_pkgs.sh
         - make
       script:
-        - make test
+        - go test ./eth/rlp -coverprofile=coverage.txt -covermode=atomic
+      after_success:
+        - bash <(curl -s https://codecov.io/bash)
