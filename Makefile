@@ -49,7 +49,6 @@ test-gemmill:
 	go test -v ./gemmill/modules/go-common
 	go test -v ./gemmill/modules/go-db
 	go test -v ./gemmill/modules/go-events
-	go test -v ./gemmill/modules/go-flowrate/flowrate
 	go test -v ./gemmill/modules/go-log
 	go test -v ./gemmill/modules/go-merkle
 	go test -v ./gemmill/p2p
