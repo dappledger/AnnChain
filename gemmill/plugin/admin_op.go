@@ -98,7 +98,7 @@ func (s *AdminOp) DeliverTx(tx []byte, i int) (bool, error) {
 	return false, s.ProcessAdminOP(cmd, nil)
 }
 
-func (s *AdminOp) ExecTX(app AdminApp, tx []byte) (error) {
+func (s *AdminOp) ExecTX(app AdminApp, tx []byte) error {
 	data := agtypes.UnwrapTx(tx)
 	cmd := &agtypes.AdminOPCmd{}
 	if err := json.Unmarshal(data, cmd); err != nil {
@@ -116,7 +116,7 @@ func (s *AdminOp) ExecBlock(p *ExecBlockParams) (*ExecBlockReturns, error) {
 	// Run ExTxs of block
 	for i, tx := range p.Block.Data.ExTxs {
 		if _, err := s.DeliverTx(tx, i); err != nil {
-			return nil, fmt.Errorf("[Plugin AdminOp ExecBlock]:%s", zap.Error(err))
+			return nil, fmt.Errorf("[Plugin AdminOp ExecBlock]:%s", err.Error())
 		}
 	}
 

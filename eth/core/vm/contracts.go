@@ -73,15 +73,15 @@ func RunPrecompiledContract(p PrecompiledContract, input []byte, contract *Contr
 	return nil, ErrOutOfGas
 }
 
-func (c *AdminOP) SetCallback(cb func(app *AdminDBApp,data []byte) error) {
+func (c *AdminOP) SetCallback(cb func(app *AdminDBApp, data []byte) error) {
 	c.callback = cb
 }
 
-type AdminCallback func(app *AdminDBApp,data []byte) error
+type AdminCallback func(app *AdminDBApp, data []byte) error
 
 type AdminOP struct {
 	callback AdminCallback
-	state StateDB
+	state    StateDB
 }
 
 type AdminDBApp struct {
@@ -89,11 +89,11 @@ type AdminDBApp struct {
 	Addr []byte
 }
 
-func (app *AdminDBApp)From()[]byte{
+func (app *AdminDBApp) From() []byte {
 	return app.Addr
 }
 
-func (app *AdminDBApp)GetNonce()uint64{
+func (app *AdminDBApp) GetNonce() uint64 {
 	var addr common.Address
 	addr.SetBytes(app.Addr)
 	return app.StateDB.GetNonce(addr)
@@ -103,7 +103,7 @@ func (c *AdminOP) RequiredGas(input []byte) uint64 {
 	return 0
 }
 
-func (c *AdminOP)SetState(s StateDB){
+func (c *AdminOP) SetState(s StateDB) {
 	c.state = s
 }
 
@@ -114,14 +114,14 @@ func (c *AdminOP) Run(input []byte) ([]byte, error) {
 	if int(offset) > len(input) {
 		offset = uint64(len(input))
 	}
-	from := input[32:32+20]
-	data := input[32+20:offset]
+	from := input[32 : 32+20]
+	data := input[32+20 : offset]
 	app := &AdminDBApp{
 		c.state,
 		from,
 	}
 	if c.callback != nil {
-		return nil, c.callback(app,data)
+		return nil, c.callback(app, data)
 	}
 	return nil, fmt.Errorf("admin callback not set")
 }

@@ -246,8 +246,13 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		}
 		// consume the gas and return an error if not enough gas is available.
 		// cost is explicitly set so that the capture state defer method can get the proper cost
-		cost, err = opBaseGasCall(operation, in.gasTable, in.evm, contract, stack, mem, memorySize)
-		if err != nil || !useGas(&in.evm.gasLeft, cost) {
+		//		cost, err = opBaseGasCall(operation, in.gasTable, in.evm, contract, stack, mem, memorySize)
+		//		fmt.Println("zzz4", in.evm.gasLeft, cost, op)
+		//		if err != nil || !useGas(&in.evm.gasLeft, cost) {
+		//			return nil, ErrOutOfGas
+		//		}
+		cost, err = operation.gasCost(in.gasTable, in.evm, contract, stack, mem, memorySize)
+		if err != nil || !contract.UseGas(cost) {
 			return nil, ErrOutOfGas
 		}
 

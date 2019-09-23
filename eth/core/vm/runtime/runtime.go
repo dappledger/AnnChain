@@ -153,7 +153,6 @@ func Create(input []byte, cfg *Config) ([]byte, common.Address, uint64, error) {
 // be set.
 func Call(address common.Address, input []byte, cfg *Config) ([]byte, uint64, error) {
 	setDefaults(cfg)
-
 	vmenv := NewEnv(cfg)
 
 	sender := cfg.State.GetOrNewStateObject(cfg.Origin)
