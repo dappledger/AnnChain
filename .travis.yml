@@ -1,7 +1,6 @@
-language: 
-	- go
+language: go
 go:
-	- "1.12.8"
+  - "1.12.8"
 sudo: false
 jobs:
   include:
