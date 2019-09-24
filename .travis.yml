@@ -1,4 +1,7 @@
-language: go
+language: 
+	- go
+go:
+	- "1.12.8"
 sudo: false
 jobs:
   include:
@@ -12,10 +15,10 @@ jobs:
         - export GOROOT=`pwd`/go
         - export GOPATH=$HOME/.gopkgs
       before_script:
-        - ./get_pkgs.sh
+        - ./get_pkgs.sh && ./coverage.sh
         - make
       script:
         - make test
-        - ./coverage.sh
+        - go test -race -coverprofile=coverage.txt -covermode=atomic
       after_success:
         - bash <(curl -s https://codecov.io/bash)
