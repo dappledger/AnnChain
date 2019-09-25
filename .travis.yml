@@ -17,7 +17,6 @@ jobs:
         - ./get_pkgs.sh && ./coverage.sh
         - make
       script:
-        - make test
-        - go test ./... -coverprofile=coverage.txt -covermode=atomic
+        - go test ./eth/... -coverprofile=coverage.txt -covermode=atomic
       after_success:
         - bash <(curl -s https://codecov.io/bash)
