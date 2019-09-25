@@ -6,9 +6,9 @@ jobs:
   include:
     - stage: build
       os: linux
-      go: 1.12.5
+      go: 1.12.8
       before_install:
-        - curl https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | tar -xz
+        - curl https://dl.google.com/go/go1.12.8.linux-amd64.tar.gz | tar -xz
         - mkdir $HOME/.gopkgs
         - export PATH=`pwd`/go/bin:$PATH
         - export GOROOT=`pwd`/go
@@ -17,6 +17,6 @@ jobs:
         - ./get_pkgs.sh && ./coverage.sh
         - make
       script:
-        - go test ./eth/... -coverprofile=coverage.txt -covermode=atomic
+        - go test ./gemmill/... -coverprofile=coverage.txt -covermode=atomic
       after_success:
         - bash <(curl -s https://codecov.io/bash)
