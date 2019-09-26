@@ -118,3 +118,18 @@ github.com/dappledger/AnnChain/gemmill/modules/go-log.TestLog
 testing.tRunner
 	/usr/lib/go-1.12/src/testing/testing.go:865
 2019-09-24T10:21:47.930+0800	INFO	go-log/log_test.go:28	info log
+2019-09-25T16:49:43.630+0800	ERROR	go-log/log_test.go:26	error log
+github.com/dappledger/AnnChain/gemmill/modules/go-log.Error
+	/home/kele/go/src/github.com/dappledger/AnnChain/gemmill/modules/go-log/zap.go:100
+github.com/dappledger/AnnChain/gemmill/modules/go-log.TestLog
+	/home/kele/go/src/github.com/dappledger/AnnChain/gemmill/modules/go-log/log_test.go:26
+testing.tRunner
+	/usr/lib/go-1.12/src/testing/testing.go:865
+2019-09-25T16:49:43.631+0800	WARN	go-log/log_test.go:27	warn log
+github.com/dappledger/AnnChain/gemmill/modules/go-log.Warn
+	/home/kele/go/src/github.com/dappledger/AnnChain/gemmill/modules/go-log/zap.go:92
+github.com/dappledger/AnnChain/gemmill/modules/go-log.TestLog
+	/home/kele/go/src/github.com/dappledger/AnnChain/gemmill/modules/go-log/log_test.go:27
+testing.tRunner
+	/usr/lib/go-1.12/src/testing/testing.go:865
+2019-09-25T16:49:43.631+0800	INFO	go-log/log_test.go:28	info log
