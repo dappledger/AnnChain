@@ -13,6 +13,7 @@ jobs:
         - export PATH=`pwd`/go/bin:$PATH
         - export GOROOT=`pwd`/go
         - export GOPATH=$HOME/.gopkgs
+        - go get -t -v ./...
       before_script:
         - ./get_pkgs.sh && ./coverage.sh
         - make
