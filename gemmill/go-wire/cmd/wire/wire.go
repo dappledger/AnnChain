@@ -19,8 +19,8 @@ import (
 	"os"
 	"strings"
 
-	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/go-wire/expr"
+	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 )
 
 func main() {
@@ -45,4 +45,9 @@ func main() {
 	}
 
 	fmt.Println(gcmn.Fmt("%X", gotBytes))
+}
+
+func Exit(s string) {
+	fmt.Printf(s + "\n")
+	os.Exit(1)
 }
