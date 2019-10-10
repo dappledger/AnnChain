@@ -83,7 +83,7 @@ func TestExecute(t *testing.T) {
 		byte(vm.PUSH1), 32,
 		byte(vm.PUSH1), 0,
 		byte(vm.RETURN),
-	}, nil, nil)
+	}, nil, &Config{EVMConfig: vm.Config{EVMGasLimit: 100000000}})
 	if err != nil {
 		t.Fatal("didn't expect error", err)
 	}
@@ -106,7 +106,7 @@ func TestCall(t *testing.T) {
 		byte(vm.RETURN),
 	})
 
-	ret, _, err := Call(address, nil, &Config{State: state})
+	ret, _, err := Call(address, nil, &Config{State: state, EVMConfig: vm.Config{EVMGasLimit: 100000000}})
 	if err != nil {
 		t.Fatal("didn't expect error", err)
 	}

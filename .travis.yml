@@ -1,4 +1,4 @@
-nguage: go
+language: go
 go_import_path: https://github.com/dappledger/AnnChain
 sudo: false
 jobs:
@@ -17,3 +17,6 @@ jobs:
         - make
       script:
         - make test
+        - go test ./gemmill/... -coverprofile=coverage.txt -covermode=atomic
+      after_success:
+        - bash <(curl -s https://codecov.io/bash)

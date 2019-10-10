@@ -19,6 +19,8 @@ package hexutil
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"math/big"
 	"testing"
 )
@@ -55,15 +57,17 @@ func referenceBytes(s string) []byte {
 	return b
 }
 
+var errJSONEOF = errors.New("unexpected end of JSON input")
+
 var unmarshalBytesTests = []unmarshalTest{
 	// invalid encoding
-	{input: "", wantErr: errNonString},
-	{input: "null", wantErr: errNonString},
-	{input: "10", wantErr: errNonString},
-	{input: `"0"`, wantErr: ErrMissingPrefix},
-	{input: `"0x0"`, wantErr: ErrOddLength},
-	{input: `"0xxx"`, wantErr: ErrSyntax},
-	{input: `"0x01zz01"`, wantErr: ErrSyntax},
+	{input: "", wantErr: errJSONEOF},
+	{input: "null", wantErr: errNonString(bytesT)},
+	{input: "10", wantErr: errNonString(bytesT)},
+	{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, bytesT)},
+	{input: `"0x0"`, wantErr: wrapTypeError(ErrOddLength, bytesT)},
+	{input: `"0xxx"`, wantErr: wrapTypeError(ErrSyntax, bytesT)},
+	{input: `"0x01zz01"`, wantErr: wrapTypeError(ErrSyntax, bytesT)},
 
 	// valid encoding
 	{input: `""`, want: referenceBytes("")},
@@ -80,7 +84,7 @@ var unmarshalBytesTests = []unmarshalTest{
 func TestUnmarshalBytes(t *testing.T) {
 	for _, test := range unmarshalBytesTests {
 		var v Bytes
-		err := v.UnmarshalJSON([]byte(test.input))
+		err := json.Unmarshal([]byte(test.input), &v)
 		if !checkError(t, test.input, err, test.wantErr) {
 			continue
 		}
@@ -104,7 +108,7 @@ func BenchmarkUnmarshalBytes(b *testing.B) {
 func TestMarshalBytes(t *testing.T) {
 	for _, test := range encodeBytesTests {
 		in := test.input.([]byte)
-		out, err := Bytes(in).MarshalJSON()
+		out, err := json.Marshal(Bytes(in))
 		if err != nil {
 			t.Errorf("%x: %v", in, err)
 			continue
@@ -122,14 +126,18 @@ func TestMarshalBytes(t *testing.T) {
 
 var unmarshalBigTests = []unmarshalTest{
 	// invalid encoding
-	{input: "", wantErr: errNonString},
-	{input: "null", wantErr: errNonString},
-	{input: "10", wantErr: errNonString},
-	{input: `"0"`, wantErr: ErrMissingPrefix},
-	{input: `"0x"`, wantErr: ErrEmptyNumber},
-	{input: `"0x01"`, wantErr: ErrLeadingZero},
-	{input: `"0xx"`, wantErr: ErrSyntax},
-	{input: `"0x1zz01"`, wantErr: ErrSyntax},
+	{input: "", wantErr: errJSONEOF},
+	{input: "null", wantErr: errNonString(bigT)},
+	{input: "10", wantErr: errNonString(bigT)},
+	{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, bigT)},
+	{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, bigT)},
+	{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, bigT)},
+	{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, bigT)},
+	{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, bigT)},
+	{
+		input:   `"0x10000000000000000000000000000000000000000000000000000000000000000"`,
+		wantErr: wrapTypeError(ErrBig256Range, bigT),
+	},
 
 	// valid encoding
 	{input: `""`, want: big.NewInt(0)},
@@ -153,7 +161,7 @@ var unmarshalBigTests = []unmarshalTest{
 func TestUnmarshalBig(t *testing.T) {
 	for _, test := range unmarshalBigTests {
 		var v Big
-		err := v.UnmarshalJSON([]byte(test.input))
+		err := json.Unmarshal([]byte(test.input), &v)
 		if !checkError(t, test.input, err, test.wantErr) {
 			continue
 		}
@@ -177,7 +185,7 @@ func BenchmarkUnmarshalBig(b *testing.B) {
 func TestMarshalBig(t *testing.T) {
 	for _, test := range encodeBigTests {
 		in := test.input.(*big.Int)
-		out, err := (*Big)(in).MarshalJSON()
+		out, err := json.Marshal((*Big)(in))
 		if err != nil {
 			t.Errorf("%d: %v", in, err)
 			continue
@@ -195,15 +203,15 @@ func TestMarshalBig(t *testing.T) {
 
 var unmarshalUint64Tests = []unmarshalTest{
 	// invalid encoding
-	{input: "", wantErr: errNonString},
-	{input: "null", wantErr: errNonString},
-	{input: "10", wantErr: errNonString},
-	{input: `"0"`, wantErr: ErrMissingPrefix},
-	{input: `"0x"`, wantErr: ErrEmptyNumber},
-	{input: `"0x01"`, wantErr: ErrLeadingZero},
-	{input: `"0xfffffffffffffffff"`, wantErr: ErrUint64Range},
-	{input: `"0xx"`, wantErr: ErrSyntax},
-	{input: `"0x1zz01"`, wantErr: ErrSyntax},
+	{input: "", wantErr: errJSONEOF},
+	{input: "null", wantErr: errNonString(uint64T)},
+	{input: "10", wantErr: errNonString(uint64T)},
+	{input: `"0"`, wantErr: wrapTypeError(ErrMissingPrefix, uint64T)},
+	{input: `"0x"`, wantErr: wrapTypeError(ErrEmptyNumber, uint64T)},
+	{input: `"0x01"`, wantErr: wrapTypeError(ErrLeadingZero, uint64T)},
+	{input: `"0xfffffffffffffffff"`, wantErr: wrapTypeError(ErrUint64Range, uint64T)},
+	{input: `"0xx"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
+	{input: `"0x1zz01"`, wantErr: wrapTypeError(ErrSyntax, uint64T)},
 
 	// valid encoding
 	{input: `""`, want: uint64(0)},
@@ -219,7 +227,7 @@ var unmarshalUint64Tests = []unmarshalTest{
 func TestUnmarshalUint64(t *testing.T) {
 	for _, test := range unmarshalUint64Tests {
 		var v Uint64
-		err := v.UnmarshalJSON([]byte(test.input))
+		err := json.Unmarshal([]byte(test.input), &v)
 		if !checkError(t, test.input, err, test.wantErr) {
 			continue
 		}
@@ -241,7 +249,7 @@ func BenchmarkUnmarshalUint64(b *testing.B) {
 func TestMarshalUint64(t *testing.T) {
 	for _, test := range encodeUint64Tests {
 		in := test.input.(uint64)
-		out, err := Uint64(in).MarshalJSON()
+		out, err := json.Marshal(Uint64(in))
 		if err != nil {
 			t.Errorf("%d: %v", in, err)
 			continue

@@ -19,8 +19,8 @@ import (
 	"os"
 	"strings"
 
-	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/go-wire/expr"
+	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 )
 
 func main() {
@@ -37,11 +37,11 @@ func main() {
 	// fmt.Println(input)
 	got, err := expr.ParseReader(input, strings.NewReader(input))
 	if err != nil {
-		Exit("Error parsing input: " + err.Error())
+		gcmn.Exit("Error parsing input: " + err.Error())
 	}
 	gotBytes, err := got.(expr.Byteful).Bytes()
 	if err != nil {
-		Exit("Error serializing parsed input: " + err.Error())
+		gcmn.Exit("Error serializing parsed input: " + err.Error())
 	}
 
 	fmt.Println(gcmn.Fmt("%X", gotBytes))
