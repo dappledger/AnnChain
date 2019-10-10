@@ -18,6 +18,8 @@ require (
 	github.com/gorilla/websocket v0.0.0-20170718202341-a69d9f6de432
 	github.com/hashicorp/golang-lru v0.5.0
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/hashicorp/raft v1.1.1
+	github.com/hashicorp/raft-boltdb v0.0.0-20190605210249-ef2e128ed477
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmhodges/levigo v1.0.0
 	github.com/kr/pretty v0.1.0 // indirect
@@ -43,7 +45,7 @@ require (
 	go.uber.org/zap v0.0.0-20170802171341-e68420e36ce8
 	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
 	golang.org/x/net v0.0.0-20190501004415-9ce7a6920f09 // indirect
-	golang.org/x/sys v0.0.0-20190418153312-f0ce4c0180be
+	golang.org/x/sys v0.0.0-20190602015325-4c4f7f33c9ed
 	golang.org/x/text v0.3.1-0.20181227161524-e6919f6577db // indirect
 	golang.org/x/tools v0.0.0-20190517183331-d88f79806bbd
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
