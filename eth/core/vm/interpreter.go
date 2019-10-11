@@ -114,7 +114,7 @@ func NewEVMInterpreter(evm *EVM, cfg Config) *EVMInterpreter {
 		}
 
 		// Edit by zhongan
-		cfg.JumpTable = byzantiumInstructionSet
+		cfg.JumpTable = constantinopleInstructionSet
 	}
 
 	return &EVMInterpreter{
