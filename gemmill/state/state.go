@@ -42,6 +42,10 @@ type IBlockExecutable interface {
 	EndBlock(*types.Block, events.Fireable, *types.PartSetHeader, []*types.ValidatorAttr, *types.ValidatorSet) error
 }
 
+type BlockVerifier interface {
+	ValidateBlock(*types.Block) error
+}
+
 // NOTE: not goroutine-safe.
 type State struct {
 	started bool
@@ -50,6 +54,7 @@ type State struct {
 	mtx             sync.Mutex
 	db              dbm.DB
 	blockExecutable IBlockExecutable
+	blockVerifier   BlockVerifier
 
 	// should not change
 	GenesisDoc *types.GenesisDoc
@@ -106,6 +111,7 @@ func (s *State) Copy() *State {
 	return &State{
 		db:              s.db,
 		blockExecutable: s.blockExecutable,
+		blockVerifier:   s.blockVerifier,
 
 		GenesisDoc:         s.GenesisDoc,
 		ChainID:            s.ChainID,
@@ -189,6 +195,10 @@ func (s *State) Bytes() []byte {
 		gcmn.PanicCrisis(*err)
 	}
 	return buf.Bytes()
+}
+
+func (s *State) SetBlockVerifier(verifier BlockVerifier) {
+	s.blockVerifier = verifier
 }
 
 // Mutate state variables to match block and validators

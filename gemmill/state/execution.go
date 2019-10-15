@@ -145,34 +145,7 @@ func (s *State) ValidateBlock(block *types.Block) error {
 }
 
 func (s *State) validateBlock(block *types.Block) error {
-	// Basic block validation.
-	err := block.ValidateBasic(s.ChainID, s.LastBlockHeight, s.LastBlockID, s.LastBlockTime, s.AppHash, s.ReceiptsHash)
-	if err != nil {
-		return err
-	}
-
-	if !s.Validators.HasAddress(block.ProposerAddress) {
-		return fmt.Errorf("Block.Header.ProposerAddress, %X, is not a validator", block.ProposerAddress)
-	}
-
-	// Validate block LastCommit.
-	if block.Height == 1 {
-		if len(block.LastCommit.Precommits) != 0 {
-			return errors.New("Block at height 1 (first block) should have no LastCommit precommits")
-		}
-	} else {
-		if len(block.LastCommit.Precommits) != s.LastValidators.Size() {
-			return errors.New(gcmn.Fmt("Invalid block commit size. Expected %v, got %v",
-				s.LastValidators.Size(), len(block.LastCommit.Precommits)))
-		}
-		err := s.LastValidators.VerifyCommit(
-			s.ChainID, s.LastBlockID, block.Height-1, block.LastCommit)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return s.blockVerifier.ValidateBlock(block)
 }
 
 // ApplyBlock executes the block, then commits and updates the mempool atomically

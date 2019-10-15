@@ -208,7 +208,14 @@ func (n *Node) StartRPC() ([]net.Listener, error) {
 		mux := http.NewServeMux()
 		// wm := rpcserver.NewWebsocketManager(rpcRoutes, n.evsw)
 		// mux.HandleFunc("/websocket", wm.WebsocketHandler)
-		rpcserver.RegisterRPCFuncs(mux, n.rpcRoutes())
+		routes := n.rpcRoutes()
+		for _, v := range n.Angine.APIs() {
+			for n, h := range v {
+				routes[n] = h
+			}
+		}
+		rpcserver.RegisterRPCFuncs(mux, routes)
+
 		listener, err := rpcserver.StartHTTPServer(listenAddr, mux)
 		if err != nil {
 			return nil, err

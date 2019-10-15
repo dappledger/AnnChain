@@ -18,6 +18,7 @@ import (
 
 	"gopkg.in/urfave/cli.v1"
 
+	"github.com/dappledger/AnnChain/chain/types"
 	"github.com/dappledger/AnnChain/cmd/client/commands"
 	"github.com/dappledger/AnnChain/cmd/client/commons"
 )
@@ -27,7 +28,7 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = "anntool"
-	app.Version = "0.6"
+	app.Version = types.GetVersion()
 
 	app.Commands = []cli.Command{
 		commands.SignCommand,

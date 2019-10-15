@@ -17,10 +17,11 @@ import (
 	"fmt"
 
 	"gopkg.in/urfave/cli.v1"
+
+	"github.com/dappledger/AnnChain/chain/types"
 )
 
 var (
-	VERSION         string
 	VersionCommands = cli.Command{
 		Name:   "version",
 		Action: ShowVersion,
@@ -36,5 +37,5 @@ var (
 )
 
 func ShowVersion(ctx *cli.Context) {
-	fmt.Println("version:", VERSION)
+	fmt.Println("version:", types.GetVersion())
 }
