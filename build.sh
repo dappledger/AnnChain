@@ -30,15 +30,11 @@ run()
         genesis )
             build $prev"/cmd/genesis" "genesis"
             ;;
-        api )
-            build $prev"/cmd/api" "genesis-api" 
-            ;;
         gtool )
             build $prev"/cmd/client" "gtool"
             ;;
         * )
             build $prev"/cmd/genesis" "genesis"
-            build $prev"/cmd/api" "genesis-api" 
             build $prev"/cmd/client" "gtool"
             ;;
     esac
