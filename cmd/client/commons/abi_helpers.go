@@ -138,8 +138,11 @@ func ParseArg(input abi.Argument, value interface{}) (interface{}, error) {
 		if typeName == "bytes" {
 			return utils.ParseBytes(value)
 		}
-	case typeName == "string":
-		return utils.ParseString(value)
+	case strings.Index(typeName, "string") == 0:
+		if typeName == "string" {
+			return utils.ParseString(value)
+		}
+		return utils.ParseStringSlice(value)
 	}
 	return nil, fmt.Errorf("type %v of %v is unsupported", typeName, input.Name)
 }
