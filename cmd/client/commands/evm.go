@@ -14,13 +14,11 @@
 package commands
 
 import (
-	_ "encoding/json"
-	"errors"
+	json2 "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/big"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/bitly/go-simplejson"
@@ -283,7 +281,9 @@ func readContract(ctx *cli.Context) error {
 	}
 
 	parseResult, _ := UnpackResult(function, *aabbii, string(rpcResult.Result.Data))
-	fmt.Println("parse result:", reflect.TypeOf(parseResult), parseResult)
+	responseJSON, err := json2.Marshal(parseResult)
+
+	fmt.Println("result:", string(responseJSON))
 
 	return nil
 }
@@ -291,10 +291,7 @@ func readContract(ctx *cli.Context) error {
 func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, error) {
 	m, ok := abiDef.Methods[method]
 	if !ok {
-		return nil, errors.New("no such method")
-	}
-	if len(m.Outputs) == 0 {
-		return nil, errors.New("method " + m.Name + " doesn't have any returns")
+		return nil, fmt.Errorf("No such method")
 	}
 	if len(m.Outputs) == 1 {
 		var result interface{}
@@ -308,7 +305,6 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 			if err != nil {
 				return nil, err
 			}
-
 			idx := 0
 			for idx = 0; idx < len(b); idx++ {
 				if b[idx] != 0 {
@@ -320,8 +316,9 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 		}
 		return result, nil
 	}
+
 	d := ParseData(output)
-	var result []interface{}
+	result := make([]interface{}, m.Outputs.LengthNonIndexed())
 	if err := abiDef.Unpack(&result, method, d); err != nil {
 		fmt.Println("fail to unpack outpus:", err)
 		return nil, err
@@ -329,12 +326,12 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 
 	retVal := map[string]interface{}{}
 	for i, output := range m.Outputs {
+		var value interface{}
 		if strings.Index(output.Type.String(), "bytes") == 0 {
 			b, err := bytesN2Slice(result[i], m.Outputs[0].Type.Size)
 			if err != nil {
 				return nil, err
 			}
-
 			idx := 0
 			for idx = 0; idx < len(b); idx++ {
 				if b[idx] != 0 {
@@ -342,9 +339,14 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 				}
 			}
 			b = b[idx:]
-			retVal[output.Name] = fmt.Sprintf("0x%x", b)
+			value = fmt.Sprintf("0x%x", b)
 		} else {
-			retVal[output.Name] = result[i]
+			value = result[i]
+		}
+		if len(output.Name) == 0 {
+			retVal[fmt.Sprintf("%v", i)] = value
+		} else {
+			retVal[output.Name] = value
 		}
 	}
 	return retVal, nil

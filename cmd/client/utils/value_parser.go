@@ -459,6 +459,26 @@ func ParseString(value interface{}) (string, error) {
 	return fmt.Sprintf("%s", value), nil
 }
 
+func ParseStringSlice(value interface{}) ([]string, error) {
+	if value == nil {
+		return nil, fmt.Errorf("value cannot be nil")
+	}
+	values, ok := value.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("cannot convert %v to []interface{}", value)
+	}
+
+	retVals := []string{}
+	for _, v := range values {
+		retVal, err := ParseString(v)
+		if err != nil {
+			return nil, err
+		}
+		retVals = append(retVals, retVal)
+	}
+	return retVals, nil
+}
+
 func parseScientificNotation(str string) (string, error) {
 	eIndex := strings.Index(str, "e+")
 	if eIndex == -1 || eIndex == 0 {
