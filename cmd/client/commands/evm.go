@@ -20,6 +20,7 @@ import (
 	"math/big"
 	"os"
 	"strings"
+	"errors"
 
 	"github.com/bitly/go-simplejson"
 	"gopkg.in/urfave/cli.v1"
@@ -280,8 +281,15 @@ func readContract(ctx *cli.Context) error {
 		return cli.NewExitError(err.Error(), 127)
 	}
 
-	parseResult, _ := UnpackResult(function, *aabbii, string(rpcResult.Result.Data))
+	parseResult, err := UnpackResult(function, *aabbii, string(rpcResult.Result.Data))
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
 	responseJSON, err := json2.Marshal(parseResult)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
 
 	fmt.Println("result:", string(responseJSON))
 
@@ -291,7 +299,7 @@ func readContract(ctx *cli.Context) error {
 func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, error) {
 	m, ok := abiDef.Methods[method]
 	if !ok {
-		return nil, fmt.Errorf("No such method")
+		return nil, errors.New("no such method")
 	}
 	if len(m.Outputs) == 1 {
 		var result interface{}
@@ -320,7 +328,7 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 	d := ParseData(output)
 	result := make([]interface{}, m.Outputs.LengthNonIndexed())
 	if err := abiDef.Unpack(&result, method, d); err != nil {
-		fmt.Println("fail to unpack outpus:", err)
+		fmt.Println("fail to unpack output:", err)
 		return nil, err
 	}
 
