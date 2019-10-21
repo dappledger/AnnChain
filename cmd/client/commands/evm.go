@@ -14,13 +14,12 @@
 package commands
 
 import (
-	_ "encoding/json"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/bitly/go-simplejson"
@@ -97,7 +96,7 @@ var (
 
 func createContract(ctx *cli.Context) error {
 	nonce := ctx.Uint64("nonce")
-	json, err := getCallParamsJSON(ctx)
+	jsonParams, err := getCallParamsJSON(ctx)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 127)
 	}
@@ -105,8 +104,8 @@ func createContract(ctx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 127)
 	}
-	params := json.Get("params").MustArray()
-	bytecode := common.Hex2Bytes(json.Get("bytecode").MustString())
+	params := jsonParams.Get("params").MustArray()
+	bytecode := common.Hex2Bytes(jsonParams.Get("bytecode").MustString())
 	if len(bytecode) == 0 {
 		return cli.NewExitError("please give me the bytecode the contract", 127)
 	}
@@ -167,7 +166,7 @@ func createContract(ctx *cli.Context) error {
 }
 
 func callContract(ctx *cli.Context) error {
-	json, err := getCallParamsJSON(ctx)
+	jsonParams, err := getCallParamsJSON(ctx)
 	if err != nil {
 		return err
 	}
@@ -175,9 +174,9 @@ func callContract(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	function := json.Get("function").MustString()
-	params := json.Get("params").MustArray()
-	contractAddress := gcmn.SanitizeHex(json.Get("contract").MustString())
+	function := jsonParams.Get("function").MustString()
+	params := jsonParams.Get("params").MustArray()
+	contractAddress := gcmn.SanitizeHex(jsonParams.Get("contract").MustString())
 	args, err := commons.ParseArgs(function, *aabbii, params)
 	if err != nil {
 		panic(err)
@@ -226,7 +225,7 @@ func callContract(ctx *cli.Context) error {
 }
 
 func readContract(ctx *cli.Context) error {
-	json, err := getCallParamsJSON(ctx)
+	jsonParams, err := getCallParamsJSON(ctx)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 127)
 	}
@@ -234,12 +233,12 @@ func readContract(ctx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), 127)
 	}
-	function := json.Get("function").MustString()
+	function := jsonParams.Get("function").MustString()
 	if !aabbii.Methods[function].Const {
 		fmt.Printf("we can only read constant method, %s is not! Any consequence is on you.\n", function)
 	}
-	params := json.Get("params").MustArray()
-	contractAddress := gcmn.SanitizeHex(json.Get("contract").MustString())
+	params := jsonParams.Get("params").MustArray()
+	contractAddress := gcmn.SanitizeHex(jsonParams.Get("contract").MustString())
 	args, err := commons.ParseArgs(function, *aabbii, params)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 127)
@@ -282,8 +281,17 @@ func readContract(ctx *cli.Context) error {
 		return cli.NewExitError(err.Error(), 127)
 	}
 
-	parseResult, _ := UnpackResult(function, *aabbii, string(rpcResult.Result.Data))
-	fmt.Println("parse result:", reflect.TypeOf(parseResult), parseResult)
+	parseResult, err := UnpackResult(function, *aabbii, string(rpcResult.Result.Data))
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	responseJSON, err := json.Marshal(parseResult)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	fmt.Println("result:", string(responseJSON))
 
 	return nil
 }
@@ -292,9 +300,6 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 	m, ok := abiDef.Methods[method]
 	if !ok {
 		return nil, errors.New("no such method")
-	}
-	if len(m.Outputs) == 0 {
-		return nil, errors.New("method " + m.Name + " doesn't have any returns")
 	}
 	if len(m.Outputs) == 1 {
 		var result interface{}
@@ -308,7 +313,6 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 			if err != nil {
 				return nil, err
 			}
-
 			idx := 0
 			for idx = 0; idx < len(b); idx++ {
 				if b[idx] != 0 {
@@ -320,21 +324,22 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 		}
 		return result, nil
 	}
+
 	d := ParseData(output)
-	var result []interface{}
+	result := make([]interface{}, m.Outputs.LengthNonIndexed())
 	if err := abiDef.Unpack(&result, method, d); err != nil {
-		fmt.Println("fail to unpack outpus:", err)
+		fmt.Println("fail to unpack output:", err)
 		return nil, err
 	}
 
 	retVal := map[string]interface{}{}
 	for i, output := range m.Outputs {
+		var value interface{}
 		if strings.Index(output.Type.String(), "bytes") == 0 {
 			b, err := bytesN2Slice(result[i], m.Outputs[0].Type.Size)
 			if err != nil {
 				return nil, err
 			}
-
 			idx := 0
 			for idx = 0; idx < len(b); idx++ {
 				if b[idx] != 0 {
@@ -342,21 +347,26 @@ func UnpackResult(method string, abiDef abi.ABI, output string) (interface{}, er
 				}
 			}
 			b = b[idx:]
-			retVal[output.Name] = fmt.Sprintf("0x%x", b)
+			value = fmt.Sprintf("0x%x", b)
 		} else {
-			retVal[output.Name] = result[i]
+			value = result[i]
+		}
+		if len(output.Name) == 0 {
+			retVal[fmt.Sprintf("%v", i)] = value
+		} else {
+			retVal[output.Name] = value
 		}
 	}
 	return retVal, nil
 }
 
 func existContract(ctx *cli.Context) error {
-	json, err := getCallParamsJSON(ctx)
+	jsonParams, err := getCallParamsJSON(ctx)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 127)
 	}
-	bytecode := json.Get("bytecode").MustString()
-	contractAddress := json.Get("contract").MustString()
+	bytecode := jsonParams.Get("bytecode").MustString()
+	contractAddress := jsonParams.Get("contract").MustString()
 	if contractAddress == "" || bytecode == "" {
 		return cli.NewExitError("missing params", 127)
 	}

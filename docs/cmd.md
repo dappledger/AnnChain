@@ -173,7 +173,7 @@ Privkey for user: //account's private key
 ##### Result
 
 ```
-parse result {type , value}
+result：value
 ```
 
 ##### Demo
@@ -182,7 +182,7 @@ parse result {type , value}
 ./build/gtool --backend "tcp://127.0.0.1:46657" evm read --abif ./scripts/examples/evm/sample.abi --callf ./scripts/examples/evm/sample_read.json
 Privkey for user : 
 C579D84396CC7D425AFD5ED700140ECA3A0EF9D7E6FB007C4C09CBDE0359D6AF
-parse result: *big.Int 100
+result: 100
 ```
 
 sample_read.json  
