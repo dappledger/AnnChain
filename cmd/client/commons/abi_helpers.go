@@ -95,14 +95,14 @@ func ParseArg(input abi.Argument, value interface{}) (interface{}, error) {
 		return utils.ParseInt64(value)
 	case strings.HasPrefix(typeName, "int64"):
 		return utils.ParseInt64Slice(value)
+	case typeName == "uint256" || typeName == "uint128" ||
+		typeName == "int256" || typeName == "int128":
+		return utils.ParseBigInt(value)
 	case strings.HasPrefix(typeName, "uint256") ||
 		strings.HasPrefix(typeName, "uint128") ||
 		strings.HasPrefix(typeName, "int256") ||
 		strings.HasPrefix(typeName, "int128"):
 		return utils.ParseBigIntSlice(value)
-	case typeName == "uint256" || typeName == "uint128" ||
-		typeName == "int256" || typeName == "int128":
-		return utils.ParseBigInt(value)
 	case typeName == "bytes8":
 		return utils.ParseBytesM(value, 8)
 	case strings.HasPrefix(typeName, "bytes8"):

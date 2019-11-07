@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math/big"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"go.uber.org/zap"
@@ -47,6 +48,8 @@ const (
 	AppName         = "evm"
 	DatabaseCache   = 128
 	DatabaseHandles = 1024
+	MaxKey          = 256
+	MaxValue        = 4096
 
 	// With 2.2 GHz Intel Core i7, 16 GB 2400 MHz DDR4, 256GB SSD, we tested following contract, it takes about 24157 gas and 171.193µs.
 	// function setVal(uint256 _val) public {
@@ -78,6 +81,7 @@ func (bc *BlockChainEvm) GetHeader(hash common.Hash, number uint64) *etypes.Head
 
 var (
 	ReceiptsPrefix = []byte("receipts-")
+	KvPrefix       = []byte("kvstore-")
 
 	EmptyTrieRoot = common.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
 
@@ -106,6 +110,7 @@ type EVMApp struct {
 	currentState *estate.StateDB
 
 	receipts etypes.Receipts
+	kvs      rtypes.KVs
 	Signer   etypes.Signer
 }
 
@@ -233,6 +238,45 @@ func (app *EVMApp) OnPrevote(height, round int64, block *gtypes.Block) (interfac
 	return nil, nil
 }
 
+func (app *EVMApp) executeOriginTx(blockHash common.Hash, state *estate.StateDB, txIndex int, raw []byte, tx *etypes.Transaction) (*etypes.Receipt, error) {
+	gp := new(core.GasPool).AddGas(math.MaxUint64)
+
+	txBytes, err := rlp.EncodeToBytes(tx)
+	if err != nil {
+		return nil, err
+	}
+	txhash := gtypes.Tx(txBytes).Hash()
+	state.Prepare(common.BytesToHash(txhash), blockHash, txIndex)
+
+	bc := NewBlockChain(app.stateDb)
+	receipt, _, err := core.ApplyTransaction(
+		app.chainConfig,
+		bc,
+		nil, // coinbase ,maybe use local account
+		gp,
+		state,
+		app.currentHeader,
+		tx,
+		new(uint64),
+		evmConfig)
+
+	if err != nil {
+		return nil, err
+	}
+	return receipt, nil
+}
+
+func (app *EVMApp) executeKVTx(state *estate.StateDB, tx *etypes.Transaction) (*rtypes.KV, error) {
+	txData := tx.Data()[len(rtypes.KVTxType):]
+	kvData := &rtypes.KV{}
+	if err := rlp.DecodeBytes(txData, kvData); err != nil {
+		return nil, err
+	}
+	from, _ := etypes.Sender(app.Signer, tx)
+	state.SetNonce(from, state.GetNonce(from)+1)
+	return kvData, nil
+}
+
 func (app *EVMApp) genExecFun(block *gtypes.Block, res *gtypes.ExecuteResult) BeginExecFunc {
 	blockHash := common.BytesToHash(block.Hash())
 	app.currentHeader = makeCurrentHeader(block, block.Header)
@@ -241,33 +285,24 @@ func (app *EVMApp) genExecFun(block *gtypes.Block, res *gtypes.ExecuteResult) Be
 		state := app.currentState
 		stateSnapshot := state.Snapshot()
 		temReceipt := make([]*etypes.Receipt, 0)
+		temKv := make([]*rtypes.KV, 0)
 
 		execFunc := func(txIndex int, raw []byte, tx *etypes.Transaction) error {
-			gp := new(core.GasPool).AddGas(math.MaxBig256.Uint64())
-
-			txBytes, err := rlp.EncodeToBytes(tx)
-			if err != nil {
-				return err
+			txType := common.Bytes2Hex(tx.Data())
+			if strings.HasPrefix(txType, common.Bytes2Hex(rtypes.KVTxType)) {
+				kv, err := app.executeKVTx(state, tx)
+				if err != nil {
+					return err
+				}
+				temKv = append(temKv, kv)
+			} else {
+				receipt, err := app.executeOriginTx(blockHash, state, txIndex, raw, tx)
+				if err != nil {
+					return err
+				}
+				temReceipt = append(temReceipt, receipt)
 			}
-			txhash := gtypes.Tx(txBytes).Hash()
-			state.Prepare(common.BytesToHash(txhash), blockHash, txIndex)
 
-			bc := NewBlockChain(app.stateDb)
-			receipt, _, err := core.ApplyTransaction(
-				app.chainConfig,
-				bc,
-				nil, // coinbase ,maybe use local account
-				gp,
-				state,
-				app.currentHeader,
-				tx,
-				new(uint64),
-				evmConfig)
-
-			if err != nil {
-				return err
-			}
-			temReceipt = append(temReceipt, receipt)
 			return nil
 		}
 
@@ -276,10 +311,12 @@ func (app *EVMApp) genExecFun(block *gtypes.Block, res *gtypes.ExecuteResult) Be
 				log.Warn("[evm execute],apply transaction", zap.Error(err))
 				state.RevertToSnapshot(stateSnapshot)
 				temReceipt = nil
+				temKv = nil
 				res.InvalidTxs = append(res.InvalidTxs, gtypes.ExecuteInvalidTx{Bytes: raw, Error: err})
 				return true
 			}
 			app.receipts = append(app.receipts, temReceipt...)
+			app.kvs = append(app.kvs, temKv...)
 			res.ValidTxs = append(res.ValidTxs, raw)
 			return true
 		}
@@ -291,7 +328,7 @@ func makeCurrentHeader(block *gtypes.Block, header *gtypes.Header) *etypes.Heade
 	return &etypes.Header{
 		ParentHash: common.BytesToHash(block.Header.LastBlockID.Hash),
 		Difficulty: big.NewInt(0),
-		GasLimit:   math.MaxBig256.Uint64(),
+		GasLimit:   math.MaxUint64,
 		Time:       big.NewInt(block.Header.Time.Unix()),
 		Number:     big.NewInt(header.Height),
 	}
@@ -373,16 +410,34 @@ func (app *EVMApp) CheckTx(bs []byte) error {
 		txhash := gtypes.Tx(bs).Hash()
 		return fmt.Errorf("nonce(%d) different with getNonce(%d), transaction already exists %v", nonce, getNonce, hex.EncodeToString(txhash))
 	}
+
 	// Transactor should have enough funds to cover the costs
 	// cost == V + GP * GL
 	if app.state.GetBalance(from).Cmp(tx.Cost()) < 0 {
 		return fmt.Errorf("not enough funds")
 	}
+
+	txType := common.Bytes2Hex(tx.Data())
+
+	if strings.HasPrefix(txType, common.Bytes2Hex(rtypes.KVTxType)) {
+		txData := tx.Data()[len(rtypes.KVTxType):]
+		kvData := &rtypes.KV{}
+		if err := rlp.DecodeBytes(txData, kvData); err != nil {
+			return fmt.Errorf("rlp decode to kv error %s", err.Error())
+		}
+		if len(kvData.Key) > MaxKey || len(kvData.Value) > MaxValue {
+			return fmt.Errorf("key or value too big,MaxKey:%v,MaxValue:%v", MaxKey, MaxValue)
+		}
+		if ok, _ := app.stateDb.Has(append(KvPrefix, kvData.Key...)); ok {
+			return fmt.Errorf("duplicate key :%v", kvData.Key)
+		}
+	}
+
 	return nil
 }
 
 func (app *EVMApp) SaveReceipts() ([]byte, error) {
-	savedReceipts := make([][]byte, 0, len(app.receipts))
+	savedReceipts := make([][]byte, 0, len(app.receipts)+len(app.kvs))
 	receiptBatch := app.stateDb.NewBatch()
 
 	for _, receipt := range app.receipts {
@@ -398,6 +453,19 @@ func (app *EVMApp) SaveReceipts() ([]byte, error) {
 		}
 		savedReceipts = append(savedReceipts, storageReceiptBytes)
 	}
+
+	for _, kv := range app.kvs {
+		kvBytes, err := rlp.EncodeToBytes(kv)
+		if err != nil {
+			return nil, fmt.Errorf("wrong rlp encode:%v", err.Error())
+		}
+		key := append(KvPrefix, kv.Key...)
+		if err := receiptBatch.Put(key, kv.Value); err != nil {
+			return nil, fmt.Errorf("batch receipt failed:%v", err.Error())
+		}
+		savedReceipts = append(savedReceipts, kvBytes)
+	}
+
 	if err := receiptBatch.Write(); err != nil {
 		return nil, fmt.Errorf("persist receipts failed:%v", err.Error())
 	}
@@ -443,6 +511,10 @@ func (app *EVMApp) Query(query []byte) (res gtypes.Result) {
 		res = app.queryPayLoad(load)
 	case rtypes.QueryType_TxRaw:
 		res = app.queryTransaction(load)
+	case rtypes.QueryType_Key:
+		res = app.queryKey(load)
+	case rtypes.QueryType_Key_Prefix:
+		res = app.queryKeyWithPrefix(load)
 	default:
 		res = gtypes.NewError(gtypes.CodeType_BaseInvalidInput, "unimplemented query")
 	}
@@ -515,7 +587,7 @@ func (app *EVMApp) queryContract(load []byte, height uint64) gtypes.Result {
 		vmEnv = vm.NewEVM(envCxt, state, app.chainConfig, evmConfig)
 	}
 
-	gpl := new(core.GasPool).AddGas(math.MaxBig256.Uint64())
+	gpl := new(core.GasPool).AddGas(math.MaxUint64)
 	res, _, _, err := core.ApplyMessage(vmEnv, txMsg, gpl) // we don't care about gasUsed
 	if err != nil {
 		log.Warn("query apply msg err", zap.Error(err))
@@ -528,7 +600,7 @@ func makeETHHeader(header *gtypes.Header) *etypes.Header {
 	return &etypes.Header{
 		ParentHash: common.BytesToHash(header.LastBlockID.Hash),
 		Difficulty: big.NewInt(0),
-		GasLimit:   math.MaxBig256.Uint64(),
+		GasLimit:   math.MaxUint64,
 		Time:       big.NewInt(header.Time.Unix()),
 		Number:     big.NewInt(header.Height),
 	}
@@ -597,6 +669,43 @@ func (app *EVMApp) queryPayLoad(txHashBytes []byte) gtypes.Result {
 
 	res.Code = gtypes.CodeType_OK
 	return res
+}
+
+func (app *EVMApp) queryKey(load []byte) gtypes.Result {
+	value, err := app.stateDb.Get(append(KvPrefix, load...))
+	if err != nil {
+		return gtypes.NewError(gtypes.CodeType_InternalError, "fail to get value for key:"+string(load))
+	}
+	return gtypes.NewResultOK(value, "")
+}
+
+func (app *EVMApp) queryKeyWithPrefix(load []byte) gtypes.Result {
+	st := &struct {
+		Prefix  []byte
+		LastKey []byte
+		Limit   uint32
+	}{}
+	if err := rlp.DecodeBytes(load, st); err != nil {
+		return gtypes.NewError(gtypes.CodeType_WrongRLP, "rlp decode error:"+string(load))
+	}
+	if st.Limit > 200 {
+		st.Limit = 200
+	}
+
+	var lastKey []byte
+	if len(st.LastKey) != 0 {
+		lastKey = append(KvPrefix, st.LastKey...)
+	}
+
+	kvs, err := app.stateDb.GetWithPrefix(append(KvPrefix, st.Prefix...), lastKey, st.Limit, len(KvPrefix))
+	if err != nil {
+		return gtypes.NewError(gtypes.CodeType_InternalError, "fail to get value for key:"+string(st.LastKey))
+	}
+	bytKvs, err := rlp.EncodeToBytes(kvs)
+	if err != nil {
+		return gtypes.NewError(gtypes.CodeType_WrongRLP, "rlp encode error:"+err.Error())
+	}
+	return gtypes.NewResultOK(bytKvs, "")
 }
 
 func (app *EVMApp) SetCore(core gtypes.Core) {

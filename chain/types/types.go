@@ -30,7 +30,14 @@ type (
 		Message string
 	}
 
-	QueryType = byte
+	KV struct {
+		Key   []byte
+		Value []byte
+	}
+
+	KVs []*KV
+
+	QueryType       = byte
 )
 
 const (
@@ -44,4 +51,8 @@ const (
 	QueryType_TxRaw           QueryType = 6
 	QueryTxLimit              QueryType = 9
 	QueryTypeContractByHeight QueryType = 10
+	QueryType_Key             QueryType = 11
+	QueryType_Key_Prefix      QueryType = 12
 )
+
+var KVTxType = []byte("kvTx-")
