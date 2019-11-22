@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/dappledger/AnnChain/chain/types"
+	"github.com/dappledger/AnnChain/eth/common/hexutil"
 	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 	rpc "github.com/dappledger/AnnChain/gemmill/rpc/server"
 	gtypes "github.com/dappledger/AnnChain/gemmill/types"
