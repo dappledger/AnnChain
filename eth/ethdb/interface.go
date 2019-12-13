@@ -36,6 +36,7 @@ type Database interface {
 	Deleter
 	Get(key []byte) ([]byte, error)
 	Has(key []byte) (bool, error)
+	GetWithPrefix([]byte, []byte, uint32, int) ([]*KVResult, error)
 	Close()
 	NewBatch() Batch
 }
