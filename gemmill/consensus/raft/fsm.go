@@ -28,6 +28,7 @@ type BlockChainFSM struct {
 	appliedCh       chan *types.Block
 	blockStore      *blockchain.BlockStore
 	mut             sync.Mutex
+	onUpdateState   func(s *state.State)
 }
 
 func newBlockChainFSM(conf *config, mempool types.TxPool, blockStore *blockchain.BlockStore, state *state.State) *BlockChainFSM {
@@ -69,6 +70,9 @@ func (b *BlockChainFSM) Apply(l *raft.Log) interface{} {
 	stateCopy.Save()
 
 	b.state = stateCopy
+	if b.onUpdateState != nil {
+		b.onUpdateState(b.state)
+	}
 	end := time.Now()
 	log.Info("BlockChainFSM Applied Block", zap.Int64("height", block.Height), zap.Int("txs num", len(block.Data.Txs)), zap.Duration("taken", end.Sub(start)))
 
