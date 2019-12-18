@@ -299,3 +299,7 @@ L1:
 func (cs *ConsensusState) NewPublicAPI() *PublicAPI {
 	return &PublicAPI{cs}
 }
+
+func (cs *ConsensusState) SetOnUpdateStatus(onUpdateState func(s *state.State)) {
+	cs.fsm.onUpdateState = onUpdateState
+}

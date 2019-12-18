@@ -357,6 +357,7 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	ang.addrBook = addrBook
 	ang.stateMachine.SetBlockExecutable(ang)
 	ang.stateMachine.SetBlockVerifier(consensusEngine)
+	ang.consensus.SetOnUpdateStatus(ang.UpdateStateMachine)
 
 	ang.InitPlugins()
 	for _, p := range ang.plugins {
@@ -1008,6 +1009,11 @@ func (ang *Angine) InitPlugins() {
 
 		}
 	}
+}
+
+//UpdateStateMachine
+func (ang *Angine) UpdateStateMachine(s *state.State) {
+	ang.stateMachine = s
 }
 
 func ensureQueryDB(dbDir string) (*dbm.GoLevelDB, error) {
