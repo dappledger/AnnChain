@@ -99,7 +99,10 @@ func (pexR *PEXReactor) RemovePeer(peer *Peer, reason interface{}) {
 // Implements Reactor
 // Handles incoming PEX messages.
 func (pexR *PEXReactor) Receive(chID byte, src *Peer, msgBytes []byte) {
-
+	start := time.Now()
+	defer func() {
+		src.AuditLog(chID, msgBytes, start, pexR.String())
+	}()
 	// decode message
 	_, msg, err := DecodeMessage(msgBytes)
 	if err != nil {
