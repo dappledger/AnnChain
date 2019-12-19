@@ -48,7 +48,7 @@ type ethTxPool struct {
 	waitingBeats    map[common.Address]time.Time    // Last heartbeat from each known address
 	broadcastQueue  *clist.CList                    // list of txs to broadcast
 	all             map[common.Hash]types.Tx        // tx cache for lookup
-	extTxs          *clist.CList                    // extra transcations except Ethereum Transaction, eg. adminOP
+	extTxs          *clist.CList                    // extra transcations except Ethereum Transaction, eg. adminOp
 	mtx             sync.Mutex
 	app             *EVMApp
 	waitingLifeTime time.Duration // Maximum amount of time non-executable transaction are queued
@@ -133,7 +133,7 @@ func (tp *ethTxPool) Reap(maxTxs int) []types.Tx {
 
 	allTxs := make([]types.Tx, 0, maxTxs)
 
-	// reap adminOP txs
+	// reap adminOp txs
 	if extTxs := tp.reapAdminOP(maxTxs); len(extTxs) == maxTxs {
 		return extTxs
 	} else {
@@ -177,7 +177,7 @@ func (tp *ethTxPool) ReceiveTx(rawTx types.Tx) error {
 	return nil
 }
 
-// receive and handle adminOP txs
+// receive and handle adminOp txs
 func (tp *ethTxPool) handleAdminOP(tx types.Tx) error {
 	tp.Lock()
 	defer tp.Unlock()
