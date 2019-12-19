@@ -22,7 +22,7 @@ services:
         mkdir -p logs
         mkdir -p /genesis
         genesis init --runtime="/genesis" --log_path="logs/genesis.log" --app="evm" --chainid=9102
-        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /genesis/genesis.json
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"adminOp,querycache"}' > /genesis/genesis.json
         echo 'app_name = "evm"
               auth_by_ca = false
               block_size = 5000
@@ -60,7 +60,7 @@ services:
         mkdir -p logs
         mkdir -p /genesis
         genesis init --runtime="/genesis" --log_path="logs/genesis.log" --app="evm" --chainid=9102
-        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /genesis/genesis.json
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"adminOp,querycache"}' > /genesis/genesis.json
         echo 'app_name = "evm"
               auth_by_ca = false
               block_size = 5000
@@ -98,7 +98,7 @@ services:
         mkdir -p logs
         mkdir -p /genesis
         genesis init --runtime="/genesis" --log_path="logs/genesis.log" --app="evm" --chainid=9102
-        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /genesis/genesis.json
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"adminOp,querycache"}' > /genesis/genesis.json
         echo 'app_name = "evm"
               auth_by_ca = false
               block_size = 5000
@@ -136,7 +136,7 @@ services:
         mkdir -p logs
         mkdir -p /genesis
         genesis init --runtime="/genesis" --log_path="logs/genesis.log" --app="evm" --chainid=9102
-        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"specialop,querycache"}' > /genesis/genesis.json
+        echo '{"genesis_time":"0001-01-01T00:00:00.000Z","chain_id":"9102","validators":[{"pub_key":[1,"1C93767F98D451F9A5464938ABDEECBEF9BE4606190D446D9057EC3E90009AD8"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"9C5A3B4C2C99FD432B5D638696600FE4F76084A20BAE933E3A97AD8FE2663637"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"0749EDC56F28D9B0943CD1C9E261CB7547A3060F36882077BA372CCD1B5A9963"],"amount":100,"name":"","is_ca":true,"rpc":""},{"pub_key":[1,"576CF4053E3F9C1778C8276378DDA072178F0212FF1E2300E064B73DE3AB5850"],"amount":100,"name":"","is_ca":true,"rpc":""}],"app_hash":"","plugins":"adminOp,querycache"}' > /genesis/genesis.json
         echo 'app_name = "evm"
               auth_by_ca = false
               block_size = 5000
