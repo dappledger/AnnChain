@@ -233,7 +233,7 @@ type AdminOPUser struct {
 	//node info;
 	privs []crypto.PrivKey
 	//msg info;
-	adminOPData []byte
+	adminOpData []byte
 }
 
 func NewAdminOPUser(ctx *cli.Context) (*AdminOPUser, error) {
@@ -254,7 +254,7 @@ func NewAdminOPUser(ctx *cli.Context) (*AdminOPUser, error) {
 		Addr:        addr,
 		Nonce:       nonce,
 		privs:       privKeys,
-		adminOPData: nil,
+		adminOpData: nil,
 	}
 	return user, nil
 }
@@ -273,7 +273,7 @@ func getNonce(addrBytes []byte) (uint64, error) {
 }
 
 func (au *AdminOPUser) AdminTxData() []byte {
-	return gtypes.TagAdminOPTx(au.adminOPData)
+	return gtypes.TagAdminOPTx(au.adminOpData)
 }
 
 func (au *AdminOPUser) MakeAddPeerMsg(privKey crypto.PrivKey) error {
@@ -288,7 +288,7 @@ func (au *AdminOPUser) MakeAddPeerMsg(privKey crypto.PrivKey) error {
 	}
 	sig := privKey.Sign(scmd.Msg)
 	scmd.SelfSign = crypto.GetNodeSigBytes(sig)
-	au.adminOPData, err = json.Marshal(scmd)
+	au.adminOpData, err = json.Marshal(scmd)
 	return err
 }
 
@@ -298,7 +298,7 @@ func (au *AdminOPUser) MakeUpdateNodeMsg(pub string, power int64) error {
 		return err
 	}
 	scmd, err := au.ContractsAdminCmd(vAttr)
-	au.adminOPData, err = json.Marshal(scmd)
+	au.adminOpData, err = json.Marshal(scmd)
 	return err
 }
 
@@ -308,7 +308,7 @@ func (au *AdminOPUser) MakeRemoveNodeMsg(pub string) error {
 		return err
 	}
 	scmd, err := au.ContractsAdminCmd(vAttr)
-	au.adminOPData, err = json.Marshal(scmd)
+	au.adminOpData, err = json.Marshal(scmd)
 	return err
 }
 
