@@ -18,11 +18,15 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"time"
 
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
+	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
+	"github.com/dappledger/AnnChain/utils"
 
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 type Peer struct {
@@ -180,4 +184,11 @@ func (p *Peer) Equals(other *Peer) bool {
 
 func (p *Peer) Get(key string) interface{} {
 	return p.Data.Get(key)
+}
+
+func (p *Peer) AuditLog(chID byte, msgBytes []byte, begin time.Time, reactorName string) {
+	traceId := utils.NewTraceId(begin)
+	duration := time.Since(begin)
+	log.Audit().Info("receive  message", zap.String("trace_id", traceId.String()), zap.String("reactor", reactorName), zap.String("from", p.RemoteAddr),
+		zap.Int("msg length", len(msgBytes)), zap.Uint8("channel_id", chID), zap.Stringer("duration", duration))
 }

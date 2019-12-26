@@ -29,12 +29,12 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/gorilla/websocket"
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-events"
 	log "github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	gtypes "github.com/dappledger/AnnChain/gemmill/rpc/types"
+	"github.com/gorilla/websocket"
 )
 
 // Adds a route for each function in the funcMap, as well as general jsonrpc and websocket handlers for all functions.
@@ -128,6 +128,10 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc) http.HandlerFunc {
 			WriteRPCResponseHTTP(w, gtypes.NewRPCResponse("", nil, fmt.Sprintf("Error unmarshalling request: %v", err.Error())))
 			return
 		}
+		if rww, ok := w.(*ResponseWriterWrapper); ok {
+			rww.recordJsonRpcMethod(request.Method)
+			rww.recordRequest(b)
+		}
 		if len(r.URL.Path) > 1 {
 			WriteRPCResponseHTTP(w, gtypes.NewRPCResponse(request.ID, nil, fmt.Sprintf("Invalid JSONRPC endpoint %s", r.URL.Path)))
 			return
@@ -146,6 +150,7 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc) http.HandlerFunc {
 			WriteRPCResponseHTTP(w, gtypes.NewRPCResponse(request.ID, nil, fmt.Sprintf("Error converting json params to arguments: %v", err.Error())))
 			return
 		}
+
 		returns := rpcFunc.f.Call(args)
 		// log.Debugw("HTTPJSONRPC", "method", request.Method, "args", args, "returns", returns)
 		result, err := unreflectResult(returns)

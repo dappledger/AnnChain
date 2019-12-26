@@ -26,6 +26,7 @@ import (
 
 var logger *zap.Logger
 var slogger *zap.SugaredLogger
+var auditLogger *zap.Logger
 
 func ensureDir(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -37,6 +38,26 @@ func ensureDir(dir string) error {
 	return nil
 }
 
+func productionLogger(logPath string) *zap.Logger {
+	zapEncodeConfig := zap.NewProductionEncoderConfig()
+	jsonEncoder := zapcore.NewJSONEncoder(zapEncodeConfig)
+
+	w := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   logPath,
+		MaxSize:    512, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28, // days
+	})
+	core := zapcore.NewCore(
+		jsonEncoder,
+		w,
+		zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl >= zapcore.InfoLevel
+		}),
+	)
+	return zap.New(core)
+}
+
 func Initialize(env, logpath string) (*zap.Logger, error) {
 	if err := ensureDir(path.Dir(logpath)); err != nil {
 		return nil, err
@@ -46,25 +67,8 @@ func Initialize(env, logpath string) (*zap.Logger, error) {
 		logpath = "output.log"
 	}
 	if env == "production" {
-		zapEncodeConfig := zap.NewProductionEncoderConfig()
-		jsonEncoder := zapcore.NewJSONEncoder(zapEncodeConfig)
-
-		w := zapcore.AddSync(&lumberjack.Logger{
-			Filename:   logpath,
-			MaxSize:    512, // megabytes
-			MaxBackups: 3,
-			MaxAge:     28, // days
-		})
-		core := zapcore.NewCore(
-			jsonEncoder,
-			w,
-			zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl >= zapcore.InfoLevel
-			}),
-		)
-		return zap.New(core), nil
+		return productionLogger(logpath), nil
 	}
-
 	zapConf := zap.NewDevelopmentConfig()
 	zapConf.OutputPaths = []string{logpath}
 	opt := zap.AddCallerSkip(1)
@@ -74,6 +78,46 @@ func Initialize(env, logpath string) (*zap.Logger, error) {
 func SetLog(l *zap.Logger) {
 	logger = l
 	slogger = l.Sugar()
+}
+
+func SetAuditLog(l *zap.Logger) {
+	auditLogger = l
+}
+
+func setDefaultAuditLog() {
+	if auditLogger != nil {
+		return
+	}
+	zapEncodeConfig := zap.NewProductionEncoderConfig()
+	jsonEncoder := zapcore.NewJSONEncoder(zapEncodeConfig)
+
+	w := zapcore.AddSync(os.Stdout)
+	core := zapcore.NewCore(
+		jsonEncoder,
+		w,
+		zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl >= zapcore.InfoLevel
+		}),
+	)
+	auditLogger = zap.New(core)
+}
+
+func InitAuditLog(logPath string) (*zap.Logger, error) {
+	if err := ensureDir(path.Dir(logPath)); err != nil {
+		return nil, err
+	}
+	if logPath == "" {
+		logPath = "audit.log"
+	}
+	return productionLogger(logPath), nil
+}
+
+func Audit() (l *zap.Logger) {
+	//for tests that didn't initialize audit logs
+	if auditLogger == nil {
+		setDefaultAuditLog()
+	}
+	return auditLogger
 }
 
 func Info(msg string, fields ...zapcore.Field) {

@@ -154,6 +154,12 @@ func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 		return nil, err
 	}
 	log.SetLog(logger)
+	auditLogger, err := getAuditLogger(conf)
+	if err != nil {
+		fmt.Println("failed to get audit logger: ", err)
+		return nil, err
+	}
+	log.SetAuditLog(auditLogger)
 	crypto.NodeInit(crypto.CryptoType)
 	privValidator, err := types.LoadPrivValidator(conf.GetString("priv_validator_file"))
 	if err != nil {
@@ -620,6 +626,10 @@ func (e *Angine) BroadcastTxCommit(tx []byte) (err error) {
 	defer func() {
 		(*e.eventSwitch).(events.EventSwitch).RemoveListenerForEvent(eventString, "angine")
 	}()
+	broadCastTimeOut := viper.GetInt64("broadcast_tx_time_out")
+	if broadCastTimeOut <= 0 {
+		broadCastTimeOut = 30
+	}
 	select {
 	case c := <-committed: // in EventDataTx, Only Code and Error is used
 		if c.Code == types.CodeType_OK {
@@ -627,7 +637,7 @@ func (e *Angine) BroadcastTxCommit(tx []byte) (err error) {
 		}
 		err = errors.New(c.Error)
 		return
-	case <-time.NewTimer(60 * 2 * time.Second).C:
+	case <-time.NewTimer(time.Duration(broadCastTimeOut) * time.Second).C:
 		err = errors.New("Timed out waiting for transaction to be included in a block")
 		return
 	}
@@ -1086,6 +1096,15 @@ func getLogger(conf *viper.Viper) (*zap.Logger, error) {
 		logpath = filepath.Join(dir, "output.log")
 	}
 	return log.Initialize(conf.GetString("environment"), logpath)
+}
+
+func getAuditLogger(conf *viper.Viper) (*zap.Logger, error) {
+	logPath := conf.GetString("audit_log_path")
+	if logPath == "" {
+		dir, _ := os.Getwd()
+		logPath = filepath.Join(dir, "audit.log")
+	}
+	return log.InitAuditLog(logPath)
 }
 
 func getOrMakeState(conf *viper.Viper, stateDB dbm.DB, genesis *types.GenesisDoc) (*state.State, error) {
