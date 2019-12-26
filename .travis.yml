@@ -1,22 +1,21 @@
 language: go
-go_import_path: https://github.com/dappledger/AnnChain
-sudo: false
+go_import_path: github.com/dappledger/AnnChain
+os : linux
 jobs:
   include:
     - stage: build
       os: linux
       go: 1.12.5
-      before_install:
-        - curl https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | tar -xz
-        - mkdir $HOME/.gopkgs
-        - export PATH=`pwd`/go/bin:$PATH
-        - export GOROOT=`pwd`/go
-        - export GOPATH=$HOME/.gopkgs
+      env: GO111MODULE=on TEST_PLATFORM=binary TEST_GENESIS_IMAGE=$GOPATH/src/github.com/dappledger/AnnChain/build/genesis TEST_CONSENSUS_TYPE=pbft
       before_script:
-        - ./get_pkgs.sh
         - make
       script:
         - make test
         - go test ./gemmill/... -coverprofile=coverage.txt -covermode=atomic
+        - cd ..
+        - git clone -b $TRAVIS_BRANCH --depth=10 https://github.com/dappledger/ann-tests.git
+        - git clone -b $TRAVIS_BRANCH --depth=10 https://github.com/dappledger/ann-go-sdk.git
+        - cd ann-tests
+        - make test-bdd
       after_success:
         - bash <(curl -s https://codecov.io/bash)
