@@ -28,7 +28,11 @@ var (
 )
 
 func GetVersion() string {
-	return Version
+	if len(commitVer) < CommitPrefixLength {
+		commitVer = "unknown"
+	}
+
+	return fmt.Sprintf("%s-%s", Version, commitVer)
 }
 
 func GetCommitVersion() string {
@@ -37,7 +41,6 @@ func GetCommitVersion() string {
 	}
 
 	ctype := fmt.Sprintf("(crypto: %s)", crypto.CryptoType)
-
 	return fmt.Sprintf("%s-%s-%s", Version, commitVer, ctype)
 }
 

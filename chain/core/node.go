@@ -176,7 +176,7 @@ func makeNodeInfo(conf *viper.Viper, pubkey crypto.PubKey, p2pHost string, p2pPo
 		Moniker:     conf.GetString("moniker"),
 		Network:     conf.GetString("chain_id"),
 		SigndPubKey: conf.GetString("signbyCA"),
-		Version:     types.GetVersion(),
+		Version:     types.GetCommitVersion(),
 		Other: []string{
 			cmn.Fmt("wire_version=%v", wire.Version),
 			cmn.Fmt("p2p_version=%v", p2p.Version),
