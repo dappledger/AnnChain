@@ -155,12 +155,15 @@ func (bcR *BlockchainReactor) RemovePeer(peer *p2p.Peer, reason interface{}) {
 
 // Implements Reactor
 func (bcR *BlockchainReactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
+	start := time.Now()
+	defer func() {
+		src.AuditLog(chID, msgBytes, start, bcR.String())
+	}()
 	_, msg, err := DecodeMessage(msgBytes)
 	if err != nil {
 		log.Warn("Error decoding message", zap.String("error", err.Error()))
 		return
 	}
-
 	//log.Debugw("Receive", "src", src, "chID", chID, "msg", msg)
 
 	switch msg := msg.(type) {

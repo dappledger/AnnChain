@@ -17,6 +17,7 @@ package trace
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -99,6 +100,10 @@ func (tr *Reactor) RemovePeer(peer *p2p.Peer, reason interface{}) {}
 
 // Receive is the main entrance of handling data flow
 func (tr *Reactor) Receive(chID byte, src *p2p.Peer, msgBytes []byte) {
+	start := time.Now()
+	defer func() {
+		src.AuditLog(chID, msgBytes, start, tr.String())
+	}()
 	_, msg, err := DecodeMessage(msgBytes)
 	if err != nil {
 		log.Warn("error decoding message", zap.Error(err))

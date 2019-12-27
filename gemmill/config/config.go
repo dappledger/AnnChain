@@ -253,6 +253,8 @@ func DefaultConfig() (conf *viper.Viper) {
 	conf.Set("fast_sync", true)
 	conf.Set("skip_upnp", true)
 	conf.Set("log_path", "")
+	conf.Set("audit_log_path", "audit.log")
+	conf.Set("broadcast_tx_time_out", 30)
 	conf.Set("non_validator_node_auth", true)
 	conf.SetDefault("tracerouter_msg_ttl", 5)
 	conf.Set("threshold_blocks", 0)

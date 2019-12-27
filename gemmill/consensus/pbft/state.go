@@ -274,6 +274,8 @@ type ConsensusState struct {
 	done chan struct{}
 
 	// badvoteCollector types.IBadVoteCollector
+
+	onUpdateState func(s *sm.State)
 }
 
 func NewConsensusState(conf *viper.Viper, state *sm.State, blockStore *bc.BlockStore, pool types.TxPool) *ConsensusState {
@@ -372,6 +374,10 @@ func (cs *ConsensusState) SetTimeoutTicker(timeoutTicker TimeoutTicker) {
 	cs.mtx.Lock()
 	defer cs.mtx.Unlock()
 	cs.timeoutTicker = timeoutTicker
+}
+
+func (cs *ConsensusState) SetOnUpdateStatus(onUpdateState func(s *sm.State)) {
+	cs.onUpdateState = onUpdateState
 }
 
 func (cs *ConsensusState) LoadCommit(height int64) *types.Commit {
@@ -634,6 +640,9 @@ func (cs *ConsensusState) updateToState(state *sm.State) {
 	cs.LastValidators = state.LastValidators
 
 	cs.state = state
+	if cs.onUpdateState != nil {
+		cs.onUpdateState(cs.state)
+	}
 
 	// Finally, broadcast RoundState
 	cs.newStep()
