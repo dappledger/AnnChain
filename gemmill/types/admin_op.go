@@ -26,7 +26,7 @@ type SigInfo struct {
 }
 
 type AdminOPCmd struct {
-	CmdType  string    `json:"cmdtype"` //type for what kind of adminOP
+	CmdType  string    `json:"cmdtype"` //type for what kind of adminOp
 	Msg      []byte    `json:"msg"`
 	SelfSign []byte    `json:"sigs"`
 	Time     time.Time `json:"time"`
