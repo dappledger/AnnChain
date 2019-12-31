@@ -1,10 +1,10 @@
-# AnnChain/[简体中文](README_CN.md)
+# AnnChain/[English](README.md)
 
 ![banner](docs/img/ann.png)
 
 <br/>
 
-AnnChain is the core engine of the new generation alliance chain of Zhongan Science and Technology. It has the characteristics of high security, high performance and high availability. It aims to provide a tightly integrated block chain system for enterprises. It is very suitable for business cooperation among commercial organizations with alliance nature, and also for high-frequency financial transactions and security. A demanding scene. Dozens of actual business scenarios have been applied.
+AnnChain 是众安科技的新一代联盟链的核心引擎，具有高安全、高性能、高可用特性。旨在为企业提供一个高集成的区块链系统。联盟的特性，使它非常适合商业组织之间的商业合作，以及安全高频金融事务,等要求很高的场景。已经在几十个实际的业务场景中得到了应用。
 
 [![version](https://img.shields.io/github/v/tag/dappledger/AnnChain.svg?sort=semver)](https://github.com/dappledger/AnnChain/releases/latest)
 [![API Reference](https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/68747470733a2f2f676f646f632e6f72672f6769746875622e636f6d2f676f6c616e672f6764646f3f7374617475732e737667)](https://godoc.org/github.com/dappledger/AnnChain)
@@ -20,19 +20,18 @@ AnnChain is the core engine of the new generation alliance chain of Zhongan Scie
 
 
 ## Releases
-
-Automated builds are available for stable [releases](https://github.com/dappledger/AnnChain/releases).
-
+自动构建的稳定 [发布版](https://github.com/dappledger/AnnChain/releases).
 
 
-## Requirements
 
-| Requirement | Notes              |
+## 环境要求
+
+| 要求 | 描述              |
 | ----------- | ------------------ |
-| Go version  | Go1.12.0 or higher |
+| Go 版本  | Go1.12.0 或更高 |
 
 
-## Building the source 
+## 源码编译
 
 ``` shell
 export GOPATH=$HOME/.gopkgs
@@ -46,17 +45,17 @@ cd AnnChain
 make
 ```
 
-## Supported Consensus
+## 支持的共识
 
-AnnChain supports bft and raft consensus as valid consensus options,and bft is the default.if you want to use raft, you can operate like this:
+AnnChain 支持 bft 共识和 raft 共识，bft为默认共识。如果需要使用raft,可按如下操作。
 
-##### First, set consensus to raft in config.toml file:
+##### 第一步, 在config.toml文件设设置共识为raft :
 
 ``` shell
 consensus = "raft"
 ```
 
-##### Then, add raft peers config file raft-cluster.json into the runtime dir(take four nodes for example):
+##### 然后, 在运行目录增加 raft 节点配置 文件 raft-cluster.json以四个节点为例):
 
 ``` shell
 {
@@ -106,20 +105,20 @@ consensus = "raft"
 }
 ```
 
-* advertise: advertise address is used for others peers to connect.
+* advertise: advertise 广播地址用于节点之间相连
 
-* local.bind: local bind address for raft protocl.
+* local.bind:  raft 协议的本地绑定端口
 
-* local.pub_key: node's pubkey, same as pbft pubkey.
+* local.pub_key: 节点的公钥 类似与 pbft 公钥
 
-* local.rpc: node's rpc bind address.
+* local.rpc: 节点的 rpc 绑定地址
 
-* peers: others node's bind address and pub_key info, including it selft.
+* peers: 其他节点的绑定地址公钥信息，包括自己
 
 
-## Quick Start
+## 快速入手
 
-#### Single node
+#### 单节点
 
 ``` shell
 ./build/genesis init
@@ -127,7 +126,7 @@ consensus = "raft"
 ./build/genesis run
 ```
 
-#### Local cluster using docker-compose
+#### 使用docker-compose的本地集群
 
 ``` shell
 ## start cluster
@@ -137,26 +136,26 @@ consensus = "raft"
 ➜  docker-compose down
 ```
 
-## Usage
+## 用法
 
-[Command Tool](docs/cmd.md)
+[命令行工具](docs/cmd_CN.md)
 <br/>
 [Golang SDK](https://github.com/dappledger/AnnChain-go-sdk)
 <br/>
 [Java SDK](https://github.com/dappledger/ann-java-sdk)
 
 
-## Applications
+## 应用
 
-- [Explorer](https://github.com/dappledger/ann-explorer)
+- [浏览器](https://github.com/dappledger/ann-explorer)
 
 
 
-## Contributing
+## 贡献
 
-If you have any questions,please [report](https://github.com/dappledger/AnnChain/issues).
+如果您有任何问题，请[提交](https://github.com/dappledger/AnnChain/issues).
 <br/>
-If you'd like to contribute code, please fork, fix, commit and send a [pull request](https://github.com/dappledger/AnnChain/pulls) for the maintainers to review and merge into the main code base
+如果喜欢贡献代码, 请先fork, 修复问题, 提交代码， 再发送[合并请求](https://github.com/dappledger/AnnChain/pulls) 供项目维护者审阅代码和合并。
 
 
 

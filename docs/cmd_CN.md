@@ -1,9 +1,8 @@
-# AnnChain Command Tool/[简体中文](cmd_CN.md)
+# AnnChain 命令行工具/[English](cmd.md)
+此文档不涉及AnnChain的部署，只涉及使用AnnChain命令行工具以及 Go/Java sdk 进行合约相关操作
 
-This document is about AnnChain's usage. It does not involve AnnChain installation, node deployment and start-up. 
-This note uses gtool to deploy and execute smart contracts, also can use the Go/Java SDK to perform contract-related operations.
 
-## Create Account
+## 创建账号
 
 
 ```
@@ -13,20 +12,20 @@ privkey: C579D84396CC7D425AFD5ED700140ECA3A0EF9D7E6FB007C4C09CBDE0359D6AF
 address: 771403C283A3F46CDA462F7AEFF5DFD28B00F106
 ```
 
-## Create Contract
+## 创建合约
 
 
-Nodes need to be started before performing intelligent contract-related operations.
-The default node has been started for the following actions
+在进行智能合约相关操作之前，节点需要在运行
 
-##### Command
+
+##### 命令
 
 ```
 gtool --backend <validator's IP:RPC Port> evm create --abif <abi filepath> --callf <input json filepath> --nonce <account nonce>
 Privkey for user: //account's private key
 ```
 
-##### Result
+##### 结果
 
 ```
 contract address 
@@ -114,14 +113,14 @@ sample.json
 }
 ```
 
-| parameter     | description         |
+| 参数     | 描述         |
 | -------- | ------------ |
-| bytecode | Contract bytecode |
-| params   | Input parameter of calling function      |
+| bytecode | 合约字节码 |
+| params   | 调用函数的输入参数     |
 
-## Execute Contract
+## 执行合约
 
-##### Command
+##### 命令
 
 ```
 gtool --backend <validator's IP:RPC Port> evm call --abif <abi filepath> --callf <input json filepath> --nonce <account nonce>
@@ -129,7 +128,7 @@ Privkey for user: //account's private key
 ```
 
 
-##### Result
+##### 结果
 
 ```
 tx result 
@@ -155,22 +154,22 @@ sample_execute.json
 }
 ```
 
-| parameter     | description     |
+| 参数     | 描述     |
 | -------- | -------- |
 | contract | Contract address |
 | function | Which contract's function do you want to call |
 | params   | Input parameter of calling function |
 
-## Read Contract
+## 读取合约
 
-##### Command
+##### 命令
 
 ```
 gtool --backend <validator's IP:RPC Port> evm read --abif <abi filepath> --callf <input json filepath> 
 Privkey for user: //account's private key
 ```
 
-##### Result
+##### 结果
 
 ```
 result：value
@@ -202,15 +201,15 @@ sample_read.json
 | function | Which contract's function do you want to call |
 | params   | Input parameter of calling function |
 
-## Query Nonce
+## 查询 Nonce
 
-##### Command
+##### 命令
 
 ```
 gtool --backend <validator's IP:RPC Port>  query nonce --address <account address>
 ```
 
-##### Result
+##### 结果
 
 ```
 query result nonce
@@ -223,7 +222,7 @@ query result nonce
 query result: 2
 ```
 
-## Query Receipt
+## 查询 Receipt
 
 ##### Commadn
 
@@ -231,7 +230,7 @@ query result: 2
 gtool --backend <validator's IP:RPC Port> query receipt --hash <tx hash>
 ```
 
-##### Result
+##### 命令
 
 ```
 query result receipt
@@ -244,19 +243,19 @@ query result receipt
 query result: {"root":null,"status":1,"cumulativeGasUsed":21656,"logsBloom":"0x00000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000020000000000000000000000000000000000000000000000000000000000000","logs":[{"address":"0xae119075bd77de2d8e32629bdb439d967a1ecfe6","topics":["0xb45ab3e8c50935ce2fa51d37817fd16e7358a3087fd93a9ac7fbddb22a926c35"],"data":"0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000064","blockNumber":"0x64e","transactionHash":"0x2b41d9c05a7be5b85586c53b5a2d3cacc1ded323a18f1c62c51bc2aea0953b55","transactionIndex":"0x0","blockHash":"0x000000000000000000000000ec83a146ca731fdffe4bef69ad260d7389732e87","logIndex":"0x0","removed":false}],"transactionHash":"0x2b41d9c05a7be5b85586c53b5a2d3cacc1ded323a18f1c62c51bc2aea0953b55","contractAddress":"0x0000000000000000000000000000000000000000","gasUsed":21656}
 ```
 
-## New Node Synchronous Chain's Data
+## 新节点同步链的数据
 
 If a new node wants to join the chain, it needs to synchronize the chain data in the first. The details are as follows:
 
-#### Initialize a new node
+#### 初始化一个新节点
 
-##### Command
+##### 命令
 
 ```
 ./build/genesis init
 ```
 
-##### Result
+##### 结果
 
 ```
 Log dir is:  ./
@@ -264,16 +263,16 @@ Initialized chain_id: genesis-SyaIbH genesis_file: /root/.genesis/genesis.json p
 Check the files generated, make sure everything is OK.
 ```
 
-The node's information can be found from `priv_validator.json`
+节点信息存储在 `priv_validator.json` 
 
-- The node's private key is `C25E861FC9083455FB1D47CDB1DCBC49597370C4A7E014C07D6D8E7BF9849F95FB192BF3F6D8B2DD2FA8CAE2F5E9B6B64597CD88BC7778820646B68A7E9D02F9`
-- The node's public key is `FB192BF3F6D8B2DD2FA8CAE2F5E9B6B64597CD88BC7778820646B68A7E9D02F9`
+- 节点私钥为 `C25E861FC9083455FB1D47CDB1DCBC49597370C4A7E014C07D6D8E7BF9849F95FB192BF3F6D8B2DD2FA8CAE2F5E9B6B64597CD88BC7778820646B68A7E9D02F9`
+- 节点公钥为 `FB192BF3F6D8B2DD2FA8CAE2F5E9B6B64597CD88BC7778820646B68A7E9D02F9`
 
-#### Update `config.toml`
+#### 更新 `config.toml`
 
 - `seeds` 
 
-  Filling in the  `p2p_laddr` of the nodes which are validators in the chain in order to get the current state of the chain.
+   将链中的验证者（validators）的地址填入字段 `p2p_laddr`
 
   ##### Demo
 
@@ -283,9 +282,9 @@ The node's information can be found from `priv_validator.json`
 
 - `signbyca`
 
-  If `auth_by_ca`is true, CA node's signature must be filled in `signbyca`. The details are as follows:
+  如果 `auth_by_ca`为 true, CA 节点的签名必须填入字段 `signbyca`. 具体如下:
 
-  ##### Command
+  ##### 命令
 
   ```
   ./build/gtool sign --pub <new node's public key>
@@ -313,17 +312,17 @@ The node's information can be found from `priv_validator.json`
 
 #### Update `genesis.json`
 
-`genesis.json` should be replaced by CA nodes' `genesis.json` .Then run the node:
+`genesis.json` 需要被替换成 CA 节点的 `genesis.json` .然后运行节点:
 
 ```
 ./build/genesis run
 ```
 
-## Add Validator Node
+## 增加验证（ Validator） 节点
 
-If the new node wants to vote, It must be a validator node. The details are as follows:
+如果新节点想投票，它应该是验证者节点，详情如下：
 
-##### Command
+##### 命令
 
 ```
 ./build/gtool admin add_peer --nPrivs <the number of CA nodes which needed to validate the behavior>
@@ -331,7 +330,7 @@ Input Privkey of addnode  for user: //new node's private key
 Now fetch CA-Node;need n private keys; please input n' keys: //CA nodes' private keys，n is the number of CA nodes which needed to validate the behavior
 ```
 
-##### Result
+##### 结果
 
 ```
 hash //tx hash
@@ -348,18 +347,18 @@ Now fetch CA-Node;need 1 private keys; please input 1' keys:
 hash= 0x288f30b4e5904b2cddf3d157bb7a4820229c947bf0ee00c51019f136071d8e19
 ```
 
-## Update Validator Node's Voting Power
+## 更新验证者（ Validator）的 投票系数( Voting Power)
 
-If the new node wants to update voting power, It must be a validator node in the first. The initial power is 0.
+如果新节点想更新投票系数，它需要是个验证者节点，而且初始的投票系数需为0
 
-##### Command
+##### 命令
 
 ```
 ./build/gtool admin change_node --validator_pubkey <new node's public key> --power <new voting power> --nPrivs <the number of CA nodes which needed to validate the behavior>
 need n private keys; please input n' keys: //CA nodes' private keys，n is the number of CA nodes which needed to validate the behavior
 ```
 
-##### Result
+##### 结果
 
 ```
 hash //tx hash
@@ -374,14 +373,14 @@ need 1 private keys; please input 1' keys:
 hash= 0x110ee98edba177ede906e5d8175d9f787bfed61f3bb841537327d6f8128c6dbe
 ```
 
-## Remove Node
+## 删除节点
 
 ```
 ./build/gtool admin remove_node --validator_pubkey <the public key of the node which needed to be removed> --nPrivs <the number of CA nodes which needed to validate the behavior>
 need n private keys; please input n' keys //CA nodes' private keys，n is the number of CA nodes which needed to validate the behavior
 ```
 
-##### Result
+##### 结果
 
 ```
 hash //tx hash
