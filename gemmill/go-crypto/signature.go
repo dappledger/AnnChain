@@ -21,6 +21,7 @@ import (
 
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
+	pbcrypto "github.com/dappledger/AnnChain/gemmill/protos/crypto"
 )
 
 const (
@@ -34,6 +35,7 @@ type Signature interface {
 	String() string
 	Equals(Signature) bool
 	KeyString() string
+	ToPbData() *pbcrypto.Signature
 }
 
 // Types of Signature implementations

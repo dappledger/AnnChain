@@ -16,6 +16,7 @@ package rpcclient
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -56,10 +57,61 @@ func makeHTTPClient(remoteAddr string) (string, *http.Client) {
 	address, dialer := makeHTTPDialer(remoteAddr)
 	return "http://" + address, &http.Client{
 		Transport: &http.Transport{
-			Dial: dialer,
+			Dial:            dialer,
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 		Timeout: time.Second * 5,
 	}
+}
+
+// network - name of the network (for example, "tcp", "unix")
+// s - rest of the address (for example, "192.0.2.1:25", "[2001:db8::1]:80")
+// TODO: Deprecate support for IP:PORT or /path/to/socket
+func parseRemoteAddr(remoteAddr string) (network string, s string, err error) {
+	parts := strings.SplitN(remoteAddr, "://", 2)
+	var protocol, address string
+	switch len(parts) {
+	case 1:
+		// default to tcp if nothing specified
+		protocol, address = "tcp", remoteAddr
+	case 2:
+		protocol, address = parts[0], parts[1]
+	default:
+		return "", "", fmt.Errorf("invalid addr: %s", remoteAddr)
+	}
+
+	return protocol, address, nil
+}
+
+func toClientAddress(remoteAddr string) (string, error) {
+	clientProtocol, trimmedAddress, err := toClientAddrAndParse(remoteAddr)
+	if err != nil {
+		return "", err
+	}
+	return clientProtocol + "://" + trimmedAddress, nil
+}
+
+// protocol - client's protocol (for example, "http", "https", "wss", "ws", "tcp")
+// trimmedS - rest of the address (for example, "192.0.2.1:25", "[2001:db8::1]:80") with "/" replaced with "."
+func toClientAddrAndParse(remoteAddr string) (network string, trimmedS string, err error) {
+	protocol, address, err := parseRemoteAddr(remoteAddr)
+	if err != nil {
+		return "", "", err
+	}
+
+	// protocol to use for http operations, to support both http and https
+	var clientProtocol string
+	// default to http for unknown protocols (ex. tcp)
+	switch protocol {
+	case "http", "https":
+		clientProtocol = protocol
+	default:
+		clientProtocol = "http"
+	}
+
+	// replace / with . for http requests (kvstore domain)
+	trimmedAddress := strings.Replace(address, "/", ".", -1)
+	return clientProtocol, trimmedAddress, nil
 }
 
 //------------------------------------------------------------------------------------
@@ -79,6 +131,24 @@ func NewClientJSONRPC(remote string) *ClientJSONRPC {
 	address, client := makeHTTPClient(remote)
 	return &ClientJSONRPC{
 		address: address,
+		client:  client,
+	}
+}
+
+// NewJSONRPCClientWithHTTPClient returns a JSONRPCClient pointed at the given address using a custom http client
+// The function panics if the provided client is nil or remote is invalid.
+func NewClientJSONRPCWithHTTPClient(remote string, client *http.Client) *ClientJSONRPC {
+	if client == nil {
+		panic("nil http.Client provided")
+	}
+
+	clientAddress, err := toClientAddress(remote)
+	if err != nil {
+		panic(fmt.Sprintf("invalid remote %s: %s", remote, err))
+	}
+
+	return &ClientJSONRPC{
+		address: clientAddress,
 		client:  client,
 	}
 }

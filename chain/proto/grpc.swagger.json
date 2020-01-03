@@ -1,0 +1,1258 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "chain/proto/grpc.proto",
+    "version": "1.0"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/blacklist": {
+      "get": {
+        "operationId": "Blacklist",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultRefuseList"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/block": {
+      "get": {
+        "operationId": "Block",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultBlock"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Height",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/blockchain": {
+      "get": {
+        "operationId": "BlockchainInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultBlockchainInfo"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "MinHeight",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "MaxHeight",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/broadcast_tx_async": {
+      "post": {
+        "operationId": "BroadcastTx",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultBroadcastTx"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/grpcCmdBroadcastTx"
+            }
+          }
+        ],
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/broadcast_tx_commit": {
+      "post": {
+        "operationId": "BroadcastTxCommit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultBroadcastTxCommit"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/grpcCmdBroadcastTx"
+            }
+          }
+        ],
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/core_version": {
+      "get": {
+        "operationId": "CoreVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultCoreVersion"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/dump_consensus_state": {
+      "get": {
+        "operationId": "DumpConsensusState",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultDumpConsensusState"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/genesis": {
+      "get": {
+        "operationId": "Genesis",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultGenesis"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/info": {
+      "get": {
+        "operationId": "Info",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultInfo"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/last_height": {
+      "get": {
+        "operationId": "LastHeight",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultLastHeight"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/net_info": {
+      "get": {
+        "operationId": "NetInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultNetInfo"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/num_archived_blocks": {
+      "get": {
+        "operationId": "NumArchivedBlocks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultNumArchivedBlocks"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/num_unconfirmed_txs": {
+      "get": {
+        "operationId": "NumUnconfirmedTxs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultUnconfirmedTxs"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/query": {
+      "post": {
+        "operationId": "Query",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultQuery"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/grpcCmdQuery"
+            }
+          }
+        ],
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/querytx": {
+      "post": {
+        "operationId": "QueryTx",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultNumLimitTx"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/grpcCmdQuery"
+            }
+          }
+        ],
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "operationId": "Status",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultStatus"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/transaction": {
+      "get": {
+        "operationId": "GetTransactionByHash",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultQuery"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Hash",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/unconfirmed_txs": {
+      "get": {
+        "operationId": "UnconfirmedTxs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultUnconfirmedTxs"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/unsafe_flush_mempool": {
+      "post": {
+        "operationId": "UnsafeFlushMempool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultUnsafeFlushMempool"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/grpcEmptyRequest"
+            }
+          }
+        ],
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/validators": {
+      "get": {
+        "operationId": "Validators",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultValidators"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/api/v1/za_surveillance": {
+      "get": {
+        "operationId": "ZaSurveillance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultSurveillance"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/rpcResultHealthInfo"
+            }
+          }
+        },
+        "tags": [
+          "RpcService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "cryptoKeyType": {
+      "type": "string",
+      "enum": [
+        "Ed25519",
+        "Secp256k1"
+      ],
+      "default": "Ed25519"
+    },
+    "cryptoPubKey": {
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "type": "string",
+          "format": "byte"
+        },
+        "type": {
+          "$ref": "#/definitions/cryptoKeyType"
+        }
+      }
+    },
+    "cryptoSignature": {
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "type": "string",
+          "format": "byte"
+        },
+        "type": {
+          "$ref": "#/definitions/cryptoKeyType"
+        }
+      }
+    },
+    "grpcCmdBroadcastTx": {
+      "type": "object",
+      "properties": {
+        "Tx": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "grpcCmdQuery": {
+      "type": "object",
+      "properties": {
+        "Query": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "grpcEmptyRequest": {
+      "type": "object"
+    },
+    "p2pChannelStatus": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "SendQueueCapacity": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "SendQueueSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "Priority": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "RecentlySent": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "p2pConnectionStatus": {
+      "type": "object",
+      "properties": {
+        "SendMonitor": {
+          "$ref": "#/definitions/p2pFlowStatus"
+        },
+        "RecvMonitor": {
+          "$ref": "#/definitions/p2pFlowStatus"
+        },
+        "Channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/p2pChannelStatus"
+          }
+        }
+      }
+    },
+    "p2pFlowStatus": {
+      "type": "object",
+      "properties": {
+        "Active": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "Start": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Duration": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Idle": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Bytes": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Samples": {
+          "type": "string",
+          "format": "int64"
+        },
+        "InstRate": {
+          "type": "string",
+          "format": "int64"
+        },
+        "CurRate": {
+          "type": "string",
+          "format": "int64"
+        },
+        "AvgRate": {
+          "type": "string",
+          "format": "int64"
+        },
+        "PeakRate": {
+          "type": "string",
+          "format": "int64"
+        },
+        "BytesRem": {
+          "type": "string",
+          "format": "int64"
+        },
+        "TimeRem": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Progress": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "p2pNodeInfo": {
+      "type": "object",
+      "properties": {
+        "PubKey": {
+          "$ref": "#/definitions/cryptoPubKey"
+        },
+        "SigndPubKey": {
+          "type": "string"
+        },
+        "Moniker": {
+          "type": "string"
+        },
+        "Network": {
+          "type": "string"
+        },
+        "RemoteAddr": {
+          "type": "string"
+        },
+        "ListenAddr": {
+          "type": "string"
+        },
+        "Version": {
+          "type": "string"
+        },
+        "Other": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcPeer": {
+      "type": "object",
+      "properties": {
+        "NodeInfo": {
+          "$ref": "#/definitions/p2pNodeInfo"
+        },
+        "IsOutbound": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "ConnectionStatus": {
+          "$ref": "#/definitions/p2pConnectionStatus"
+        }
+      }
+    },
+    "rpcResultBlock": {
+      "type": "object",
+      "properties": {
+        "BlockMeta": {
+          "$ref": "#/definitions/typesBlockMeta"
+        },
+        "Block": {
+          "$ref": "#/definitions/typesBlock"
+        }
+      }
+    },
+    "rpcResultBlockchainInfo": {
+      "type": "object",
+      "properties": {
+        "LastHeight": {
+          "type": "string",
+          "format": "int64"
+        },
+        "BlockMetas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/typesBlockMeta"
+          }
+        }
+      }
+    },
+    "rpcResultBroadcastTx": {
+      "type": "object",
+      "properties": {
+        "Code": {
+          "$ref": "#/definitions/typesCodeType"
+        },
+        "Data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "TxHash": {
+          "type": "string"
+        },
+        "Log": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcResultBroadcastTxCommit": {
+      "type": "object",
+      "properties": {
+        "Code": {
+          "$ref": "#/definitions/typesCodeType"
+        },
+        "Data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "TxHash": {
+          "type": "string"
+        },
+        "Log": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcResultCoreVersion": {
+      "type": "object",
+      "properties": {
+        "Version": {
+          "type": "string"
+        },
+        "AppName": {
+          "type": "string"
+        },
+        "AppVersion": {
+          "type": "string"
+        },
+        "Hash": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcResultDumpConsensusState": {
+      "type": "object",
+      "properties": {
+        "RoundState": {
+          "type": "string"
+        },
+        "PeerRoundStates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcResultGenesis": {
+      "type": "object",
+      "properties": {
+        "Genesis": {
+          "$ref": "#/definitions/typesGenesisDoc"
+        }
+      }
+    },
+    "rpcResultHealthInfo": {
+      "type": "object",
+      "properties": {
+        "Status": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "rpcResultInfo": {
+      "type": "object",
+      "properties": {
+        "Data": {
+          "type": "string"
+        },
+        "Version": {
+          "type": "string"
+        },
+        "LastBlockHeight": {
+          "type": "string",
+          "format": "int64"
+        },
+        "LastBlockAppHash": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcResultLastHeight": {
+      "type": "object",
+      "properties": {
+        "LastHeight": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "rpcResultNetInfo": {
+      "type": "object",
+      "properties": {
+        "Listening": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "Listeners": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "peers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcPeer"
+          }
+        }
+      }
+    },
+    "rpcResultNumArchivedBlocks": {
+      "type": "object",
+      "properties": {
+        "Num": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "rpcResultNumLimitTx": {
+      "type": "object",
+      "properties": {
+        "Num": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "rpcResultQuery": {
+      "type": "object",
+      "properties": {
+        "Result": {
+          "$ref": "#/definitions/typesResult"
+        }
+      }
+    },
+    "rpcResultRefuseList": {
+      "type": "object",
+      "properties": {
+        "Result": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcResultStatus": {
+      "type": "object",
+      "properties": {
+        "NodeInfo": {
+          "$ref": "#/definitions/p2pNodeInfo"
+        },
+        "PubKey": {
+          "$ref": "#/definitions/cryptoPubKey"
+        },
+        "LatestBlockHash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "LatestAppHash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "LatestBlockHeight": {
+          "type": "string",
+          "format": "int64"
+        },
+        "LatestBlockTime": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "rpcResultSurveillance": {
+      "type": "object",
+      "properties": {
+        "NanoSecsPerTx": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Height": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Addr": {
+          "type": "string"
+        },
+        "IsValidator": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "NumValidators": {
+          "type": "string",
+          "format": "int64"
+        },
+        "NumPeers": {
+          "type": "string",
+          "format": "int64"
+        },
+        "RunningTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "PubKey": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcResultUnconfirmedTxs": {
+      "type": "object",
+      "properties": {
+        "N": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Txs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "byte"
+          }
+        }
+      }
+    },
+    "rpcResultUnsafeFlushMempool": {
+      "type": "object"
+    },
+    "rpcResultValidator": {
+      "type": "object",
+      "properties": {
+        "Address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "PubKey": {
+          "type": "string"
+        },
+        "VotingPower": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Accum": {
+          "type": "string",
+          "format": "int64"
+        },
+        "IsCA": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "rpcResultValidators": {
+      "type": "object",
+      "properties": {
+        "BlockHeight": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Validators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rpcResultValidator"
+          }
+        }
+      }
+    },
+    "typesBlock": {
+      "type": "object",
+      "properties": {
+        "Header": {
+          "$ref": "#/definitions/typesHeader"
+        },
+        "Data": {
+          "$ref": "#/definitions/typesData"
+        },
+        "LastCommit": {
+          "$ref": "#/definitions/typesCommit"
+        }
+      }
+    },
+    "typesBlockID": {
+      "type": "object",
+      "properties": {
+        "Hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "PartsHeader": {
+          "$ref": "#/definitions/typesPartSetHeader"
+        }
+      }
+    },
+    "typesBlockMeta": {
+      "type": "object",
+      "properties": {
+        "Hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "Header": {
+          "$ref": "#/definitions/typesHeader"
+        },
+        "PartsHeader": {
+          "$ref": "#/definitions/typesPartSetHeader"
+        }
+      }
+    },
+    "typesCodeType": {
+      "type": "string",
+      "enum": [
+        "OK",
+        "InternalError",
+        "EncodingError",
+        "BadNonce",
+        "Unauthorized",
+        "InsufficientFunds",
+        "UnknownRequest",
+        "InvalidTx",
+        "BaseDuplicateAddress",
+        "BaseEncodingError",
+        "BaseInsufficientFees",
+        "BaseInsufficientFunds",
+        "BaseInsufficientGasPrice",
+        "BaseInvalidInput",
+        "BaseInvalidOutput",
+        "BaseInvalidPubKey",
+        "BaseInvalidSequence",
+        "BaseInvalidSignature",
+        "BaseUnknownAddress",
+        "BaseUnknownPubKey",
+        "BaseUnknownPlugin",
+        "WrongRLP",
+        "SaveFailed",
+        "GovUnknownEntity",
+        "GovUnknownGroup",
+        "GovUnknownProposal",
+        "GovDuplicateGroup",
+        "GovDuplicateMember",
+        "GovDuplicateProposal",
+        "GovDuplicateVote",
+        "GovInvalidMember",
+        "GovInvalidVote",
+        "GovInvalidVotingPower"
+      ],
+      "default": "OK",
+      "title": "- InternalError: General response codes, 0 ~ 99\n - BaseDuplicateAddress: Reserved for basecoin, 100 ~ 199\n - GovUnknownEntity: Reserved for governance, 200 ~ 299"
+    },
+    "typesCommit": {
+      "type": "object",
+      "properties": {
+        "BlockID": {
+          "$ref": "#/definitions/typesBlockID"
+        },
+        "Precommits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/typesVote"
+          }
+        }
+      }
+    },
+    "typesData": {
+      "type": "object",
+      "properties": {
+        "Txs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        "ExTxs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        "Hash": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "typesGenesisDoc": {
+      "type": "object",
+      "properties": {
+        "GenesisTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "ChainID": {
+          "type": "string"
+        },
+        "Validators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/typesGenesisValidator"
+          }
+        },
+        "AppHash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "Plugins": {
+          "type": "string"
+        }
+      }
+    },
+    "typesGenesisValidator": {
+      "type": "object",
+      "properties": {
+        "Pubkey": {
+          "$ref": "#/definitions/cryptoPubKey"
+        },
+        "Amount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "IsCA": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "RPCAddress": {
+          "type": "string"
+        }
+      }
+    },
+    "typesHeader": {
+      "type": "object",
+      "properties": {
+        "ChainID": {
+          "type": "string"
+        },
+        "Height": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "NumTxs": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Maker": {
+          "type": "string",
+          "format": "byte"
+        },
+        "LastBlockID": {
+          "$ref": "#/definitions/typesBlockID"
+        },
+        "LastCommitHash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "DataHash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "ValidatorsHash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "AppHash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "ReceiptsHash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "ProposerAddress": {
+          "type": "string",
+          "format": "byte"
+        },
+        "Extra": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "typesPartSetHeader": {
+      "type": "object",
+      "properties": {
+        "Total": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "Hash": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "typesResult": {
+      "type": "object",
+      "properties": {
+        "Code": {
+          "$ref": "#/definitions/typesCodeType"
+        },
+        "Data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "Log": {
+          "type": "string"
+        }
+      }
+    },
+    "typesVote": {
+      "type": "object",
+      "properties": {
+        "ValidatorAddress": {
+          "type": "string",
+          "format": "byte"
+        },
+        "ValidatorIndex": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "Height": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Round": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Type": {
+          "$ref": "#/definitions/typesVoteType"
+        },
+        "BlockID": {
+          "$ref": "#/definitions/typesBlockID"
+        },
+        "Signature": {
+          "$ref": "#/definitions/cryptoSignature"
+        }
+      }
+    },
+    "typesVoteType": {
+      "type": "string",
+      "enum": [
+        "None",
+        "Prevote",
+        "Precommit"
+      ],
+      "default": "None"
+    }
+  }
+}

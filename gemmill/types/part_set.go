@@ -21,10 +21,10 @@ import (
 	"io"
 	"sync"
 
+	"github.com/dappledger/AnnChain/gemmill/go-hash"
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-merkle"
-	"github.com/dappledger/AnnChain/gemmill/go-hash"
 )
 
 var (
@@ -111,7 +111,7 @@ func NewPartSetFromData(data []byte, partSize int) *PartSet {
 	for i := 0; i < total; i++ {
 		part := &Part{
 			Index: i,
-			Bytes: data[i*partSize: gcmn.MinInt(len(data), (i+1)*partSize)],
+			Bytes: data[i*partSize : gcmn.MinInt(len(data), (i+1)*partSize)],
 		}
 		parts[i] = part
 		parts_[i] = part

@@ -37,7 +37,7 @@ type (
 
 	KVs []*KV
 
-	QueryType       = byte
+	QueryType = byte
 )
 
 const (

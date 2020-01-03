@@ -43,9 +43,9 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/dappledger/AnnChain/gemmill/go-hash"
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
-	"github.com/dappledger/AnnChain/gemmill/go-hash"
 )
 
 func SimpleHashFromTwoHashes(left []byte, right []byte) []byte {

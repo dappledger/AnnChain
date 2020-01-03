@@ -150,7 +150,7 @@ func RegisterInterface(o interface{}, ctypes ...ConcreteType) *TypeInfo {
 		toByte[crt] = typeByte
 	}
 	typeInfo := &TypeInfo{
-		Type: it,
+		Type:                  it,
 		IsRegisteredInterface: true,
 		ByteToType:            toType,
 		TypeToByte:            toByte,

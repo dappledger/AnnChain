@@ -247,6 +247,8 @@ func DefaultConfig() (conf *viper.Viper) {
 	conf.Set("moniker", "anonymous")
 	conf.Set("p2p_laddr", "tcp://0.0.0.0:46656")
 	conf.Set("rpc_laddr", "tcp://0.0.0.0:46657")
+	conf.Set("grpc_laddr", "tcp://0.0.0.0:20981")
+	conf.Set("grpc_gateway_port", 20980)
 	conf.Set("seeds", "")
 	conf.Set("auth_by_ca", true)
 	conf.Set("signbyCA", "")

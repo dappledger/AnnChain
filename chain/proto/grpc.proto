@@ -1,0 +1,186 @@
+syntax = "proto3";
+
+package grpc;
+import "gemmill/protos/rpc/rpc.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+option go_package ="github.com/dappledger/AnnChain/chain/proto";
+// Enable custom Marshal method.
+option (gogoproto.marshaler_all) = true;
+// Enable custom Unmarshal method.
+option (gogoproto.unmarshaler_all) = true;
+// Enable custom Size method (Required by Marshal and Unmarshal).
+option (gogoproto.sizer_all) = true;
+// Enable registration with golang/protobuf for the grpc-gateway.
+option (gogoproto.goproto_registration) = true;
+// Enable generation of XXX_MessageName methods for grpc-go/status.
+option (gogoproto.messagename_all) = true;
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info: {
+    version: "1.0";
+  };
+  schemes: HTTP;
+};
+service RpcService {
+	rpc Status (EmptyRequest) returns (rpc.ResultStatus) {
+		option (google.api.http) = {
+            get: "/api/v1/status"
+        };
+	}
+	rpc Genesis (EmptyRequest) returns (rpc.ResultGenesis) {
+		option (google.api.http) = {
+            get: "/api/v1/genesis"
+
+        };
+	}
+	rpc Health (EmptyRequest) returns (rpc.ResultHealthInfo){
+		option (google.api.http) = {
+            get: "/health"
+
+        };
+	}
+	rpc Block(CmdBlock) returns (rpc.ResultBlock){
+		option (google.api.http) = {
+            get: "/api/v1/block"
+
+        };
+    }
+	rpc BlockchainInfo(CmdBlockchainInfo) returns (rpc.ResultBlockchainInfo){
+		option (google.api.http) = {
+            get: "/api/v1/blockchain"
+
+        };
+	}
+	rpc DumpConsensusState(EmptyRequest) returns (rpc.ResultDumpConsensusState){
+		option (google.api.http) = {
+            get: "/api/v1/dump_consensus_state"
+        };
+	}
+	rpc UnconfirmedTxs(EmptyRequest) returns (rpc.ResultUnconfirmedTxs) {
+		option (google.api.http) = {
+            get: "/api/v1/unconfirmed_txs"
+
+        };
+	}
+	rpc NumUnconfirmedTxs(EmptyRequest) returns (rpc.ResultUnconfirmedTxs){
+		option (google.api.http) = {
+            get: "/api/v1/num_unconfirmed_txs"
+
+        };
+	}
+	rpc NumArchivedBlocks(EmptyRequest) returns (rpc.ResultNumArchivedBlocks){
+		option (google.api.http) = {
+            get: "/api/v1/num_archived_blocks"
+        };
+	}
+	rpc UnsafeFlushMempool(EmptyRequest) returns (rpc.ResultUnsafeFlushMempool){
+		option (google.api.http) = {
+            post: "/api/v1/unsafe_flush_mempool"
+            body:"*"
+        };
+	}
+	rpc BroadcastTx(CmdBroadcastTx) returns (rpc.ResultBroadcastTx){
+		option (google.api.http) = {
+            post: "/api/v1/broadcast_tx_async"
+  			body:"*"
+        };
+	}
+	rpc BroadcastTxCommit(CmdBroadcastTx) returns (rpc.ResultBroadcastTxCommit){
+		option (google.api.http) = {
+            post: "/api/v1/broadcast_tx_commit"
+            body :"*"
+        };
+	}
+	rpc QueryTx(CmdQuery) returns (rpc.ResultNumLimitTx){
+		option (google.api.http) = {
+            post: "/api/v1/querytx"
+            body:"*"
+        };
+	}
+	rpc Query(CmdQuery) returns (rpc.ResultQuery){
+		option (google.api.http) = {
+            post: "/api/v1/query"
+            body:"*"
+        };
+	}
+	rpc GetTransactionByHash(CmdHash) returns (rpc.ResultQuery){
+		option (google.api.http) = {
+            get: "/api/v1/transaction"
+        };
+	}
+	rpc Info(EmptyRequest) returns (rpc.ResultInfo){
+		option (google.api.http) = {
+            get: "/api/v1/info"
+        };
+	}
+	rpc Validators(EmptyRequest) returns (rpc.ResultValidators){
+		option (google.api.http) = {
+            get: "/api/v1/validators"
+
+        };
+	}
+	rpc CoreVersion(EmptyRequest) returns (rpc.ResultCoreVersion){
+		option (google.api.http) = {
+            get: "/api/v1/core_version"
+        };
+	}
+	rpc LastHeight(EmptyRequest) returns (rpc.ResultLastHeight){
+		option (google.api.http) = {
+            get: "/api/v1/last_height"
+        };
+	}
+	rpc ZaSurveillance(EmptyRequest) returns (rpc.ResultSurveillance){
+		option (google.api.http) = {
+            get: "/api/v1/za_surveillance"
+        };
+	}
+	rpc NetInfo(EmptyRequest) returns (rpc.ResultNetInfo){
+		option (google.api.http) = {
+            get: "/api/v1/net_info"
+        };
+	}
+	rpc Blacklist(EmptyRequest) returns (rpc.ResultRefuseList){
+		option (google.api.http) = {
+            get: "/api/v1/blacklist"
+        };
+	}
+}
+
+
+message EmptyRequest {}
+
+message CmdChainID{
+	string ChainID = 1;
+}
+
+message CmdRequestSpecialOP{
+	string ChainID = 1;
+	bytes Tx = 2;
+}
+
+message CmdBlockchainInfo{
+	int64 MinHeight = 1;
+	int64 MaxHeight = 2;
+}
+
+message CmdBlock{
+	int64 Height = 1;
+}
+
+message CmdBroadcastTx{
+	bytes Tx = 1;
+}
+
+message CmdQuery{
+	bytes Query = 1;
+}
+
+message CmdEventCode{
+	bytes CodeHash = 1;
+}
+
+message CmdHash {
+	bytes Hash = 1;
+}

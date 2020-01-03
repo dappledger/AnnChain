@@ -18,9 +18,9 @@ import (
 	"bytes"
 	"io"
 
+	"github.com/dappledger/AnnChain/gemmill/go-hash"
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
-	"github.com/dappledger/AnnChain/gemmill/go-hash"
 )
 
 // Node
