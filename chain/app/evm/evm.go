@@ -400,7 +400,9 @@ func (app *EVMApp) CheckTx(bs []byte) error {
 		return err
 	}
 	from, _ := etypes.Sender(app.Signer, tx)
-
+    defer func() {
+		log.Audit().Info("check tx",zap.String("from",from.String()),zap.Uint64("nonce",tx.Nonce()))
+	}()
 	app.stateMtx.Lock()
 	defer app.stateMtx.Unlock()
 	// Last but not least check for nonce errors
