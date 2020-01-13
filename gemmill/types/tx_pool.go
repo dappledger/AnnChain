@@ -15,8 +15,9 @@
 package types
 
 import (
-	"github.com/dappledger/AnnChain/gemmill/modules/go-clist"
 	"sync/atomic"
+
+	"github.com/dappledger/AnnChain/gemmill/modules/go-clist"
 )
 
 type TxPool interface {
@@ -29,6 +30,7 @@ type TxPool interface {
 	TxsFrontWait() *clist.CElement
 	Flush()
 	RegisterFilter(filter IFilter)
+	GetPendingMaxNonce([]byte) (uint64, error)
 }
 
 // A transaction that successfully ran

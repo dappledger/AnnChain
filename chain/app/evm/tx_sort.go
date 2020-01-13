@@ -128,6 +128,19 @@ func (m *txSortedMap) MaxNonce() uint64 {
 	return maxNonce
 }
 
+// return min nonce in txSortedMap, call from empty m will cause a panic.
+func (m *txSortedMap) MinNonce() uint64 {
+	var sortedTxs types.Transactions
+	if m.cache != nil {
+		sortedTxs = m.cache
+	} else {
+		sortedTxs = m.Flatten()
+	}
+
+	minNonce := (sortedTxs)[0].Nonce()
+	return minNonce
+}
+
 // Remove deletes a transaction from the maintained map, returning whether the
 // transaction was found.
 func (m *txSortedMap) Remove(nonce uint64) bool {
