@@ -177,6 +177,29 @@ func (tp *ethTxPool) ReceiveTx(rawTx types.Tx) error {
 	return nil
 }
 
+func (tp *ethTxPool) GetPendingMaxNonce(bytAddress []byte) (uint64, error) {
+	tp.Lock()
+	defer tp.Unlock()
+	address := common.BytesToAddress(bytAddress)
+	txWSMap, ok := tp.waiting[address]
+	if ok && txWSMap != nil {
+		pendingMaxNonce := tp.unSafeGetPendingMaxNonce(address)
+		if pendingMaxNonce != txWSMap.MinNonce() {
+			return pendingMaxNonce, nil
+		}
+		return txWSMap.MaxNonce() + 1, nil
+	}
+	return tp.unSafeGetPendingMaxNonce(address), nil
+}
+
+func (tp *ethTxPool) unSafeGetPendingMaxNonce(address common.Address) uint64 {
+	txSMap, ok := tp.pending[address]
+	if ok && txSMap != nil {
+		return txSMap.MaxNonce() + 1
+	}
+	return tp.safeGetNonce(address)
+}
+
 // receive and handle adminOp txs
 func (tp *ethTxPool) handleAdminOP(tx types.Tx) error {
 	tp.Lock()

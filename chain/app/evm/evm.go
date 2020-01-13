@@ -517,6 +517,8 @@ func (app *EVMApp) Query(query []byte) (res gtypes.Result) {
 		res = app.queryKey(load)
 	case rtypes.QueryType_Key_Prefix:
 		res = app.queryKeyWithPrefix(load)
+	case rtypes.QueryType_Pending_Nonce:
+		res = app.queryPendingNonce(load)
 	default:
 		res = gtypes.NewError(gtypes.CodeType_BaseInvalidInput, "unimplemented query")
 	}
@@ -606,6 +608,21 @@ func makeETHHeader(header *gtypes.Header) *etypes.Header {
 		Time:       big.NewInt(header.Time.Unix()),
 		Number:     big.NewInt(header.Height),
 	}
+}
+
+func (app *EVMApp) queryPendingNonce(addrBytes []byte) gtypes.Result {
+	if len(addrBytes) != 20 {
+		return gtypes.NewError(gtypes.CodeType_BaseInvalidInput, "Invalid address")
+	}
+	nonce, err := app.GetTxPool().GetPendingMaxNonce(addrBytes)
+	if err != nil {
+		return gtypes.NewError(gtypes.CodeType_UnknownRequest, err.Error())
+	}
+	data, err := rlp.EncodeToBytes(nonce)
+	if err != nil {
+		log.Warn("query error", zap.Error(err))
+	}
+	return gtypes.NewResultOK(data, "")
 }
 
 func (app *EVMApp) queryNonce(addrBytes []byte) gtypes.Result {

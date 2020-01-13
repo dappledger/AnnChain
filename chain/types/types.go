@@ -37,7 +37,7 @@ type (
 
 	KVs []*KV
 
-	QueryType       = byte
+	QueryType = byte
 )
 
 const (
@@ -53,6 +53,7 @@ const (
 	QueryTypeContractByHeight QueryType = 10
 	QueryType_Key             QueryType = 11
 	QueryType_Key_Prefix      QueryType = 12
+	QueryType_Pending_Nonce   QueryType = 13
 )
 
 var KVTxType = []byte("kvTx-")
