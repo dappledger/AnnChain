@@ -49,6 +49,11 @@ func RegisterRPCFuncs(mux *http.ServeMux, funcMap map[string]*RPCFunc) {
 	mux.HandleFunc("/", makeJSONRPCHandler(funcMap))
 }
 
+const (
+	MinReturnParamNum = iota + 2
+	MaxReturnParamNum = MinReturnParamNum + 1
+)
+
 //-------------------------------------
 // function introspection
 
@@ -89,6 +94,10 @@ func newRPCFunc(f interface{}, args string, ws bool) *RPCFunc {
 func funcArgTypes(f interface{}) []reflect.Type {
 	t := reflect.TypeOf(f)
 	n := t.NumIn()
+	numOut:= t.NumOut()
+	if numOut > MaxReturnParamNum || numOut < MinReturnParamNum {
+		gcmn.PanicSanity(fmt.Sprintf("rpc functions param len is not in range %d ", numOut))
+	}
 	typez := make([]reflect.Type, n)
 	for i := 0; i < n; i++ {
 		typez[i] = t.In(i)
@@ -153,7 +162,10 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc) http.HandlerFunc {
 
 		returns := rpcFunc.f.Call(args)
 		// log.Debugw("HTTPJSONRPC", "method", request.Method, "args", args, "returns", returns)
-		result, err := unreflectResult(returns)
+		result, logFields, err := unreflectResult(returns)
+		if rww, ok := w.(*ResponseWriterWrapper); ok {
+			rww.SetLogFields(logFields)
+		}
 		if err != nil {
 			WriteRPCResponseHTTP(w, gtypes.NewRPCResponse(request.ID, result, fmt.Sprintf("Error unreflecting result: %v", err.Error())))
 			return
@@ -232,7 +244,10 @@ func makeHTTPHandler(rpcFunc *RPCFunc) func(http.ResponseWriter, *http.Request) 
 		}
 		returns := rpcFunc.f.Call(args)
 		log.Debugw("HTTPRestRPC", "method", r.URL.Path, "args", args, "returns", returns)
-		result, err := unreflectResult(returns)
+		result, logFields, err := unreflectResult(returns)
+		if rww, ok := w.(*ResponseWriterWrapper); ok {
+			rww.SetLogFields(logFields)
+		}
 		if err != nil {
 			WriteRPCResponseHTTP(w, gtypes.NewRPCResponse("", nil, fmt.Sprintf("Error unreflecting result: %v", err.Error())))
 			return
@@ -493,7 +508,7 @@ func (wsc *wsConnection) readRoutine() {
 			}
 			returns := rpcFunc.f.Call(args)
 			log.Infow("WSJSONRPC", "method", request.Method, "args", args, "returns", returns)
-			result, err := unreflectResult(returns)
+			result, _, err := unreflectResult(returns)
 			if err != nil {
 				wsc.WriteRPCResponse(gtypes.NewRPCResponse(request.ID, nil, err.Error()))
 				continue
@@ -580,18 +595,30 @@ func (wm *WebsocketManager) WebsocketHandler(w http.ResponseWriter, r *http.Requ
 // rpc.websocket
 //-----------------------------------------------------------------------------
 
-// NOTE: assume returns is result struct and error. If error is not nil, return it
-func unreflectResult(returns []reflect.Value) (interface{}, error) {
-	errV := returns[1]
+// NOTE: assume returns is result struct and error or  result struct and logfields and error.  If error is not nil, return it
+func unreflectResult(returns []reflect.Value) (result interface{}, logFields map[string]string, err error) {
+	if len(returns) > MaxReturnParamNum || len(returns) < MinReturnParamNum {
+		gcmn.PanicSanity(fmt.Sprintf("returned params num is tot the range %v ", len(returns)))
+	}
+	if len(returns) == MaxReturnParamNum {
+		i := returns[MaxReturnParamNum-2].Interface()
+		if i != nil {
+			logFields, _ = i.(map[string]string)
+		}
+	}
+
+	//errV := returns[1]
+	errV := returns[len(returns)-1]
 	if errV.Interface() != nil {
-		return nil, fmt.Errorf("%v", errV.Interface())
+		err = fmt.Errorf("%v", errV.Interface())
 	}
 	rv := returns[0]
 	// the result is a registered interface,
 	// we need a pointer to it so we can marshal with type byte
 	rvp := reflect.New(rv.Type())
 	rvp.Elem().Set(rv)
-	return rvp.Interface(), nil
+	result = rvp.Interface()
+	return
 }
 
 // writes a list of available rpc endpoints as an html page

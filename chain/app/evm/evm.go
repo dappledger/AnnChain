@@ -393,30 +393,34 @@ func (app *EVMApp) OnCommit(height, round int64, block *gtypes.Block) (interface
 	}, nil
 }
 
-func (app *EVMApp) CheckTx(bs []byte) error {
+func (app *EVMApp) GetAddressFromTx(tx *etypes.Transaction) (from common.Address, err error) {
+	from, err = etypes.Sender(app.Signer, tx)
+	return
+}
+
+func (app *EVMApp) CheckTx(bs []byte) (from common.Address,nonce uint64, err error) {
 	tx := &etypes.Transaction{}
-	err := rlp.DecodeBytes(bs, tx)
+	err = rlp.DecodeBytes(bs, &tx)
 	if err != nil {
-		return err
+		return
 	}
-	from, _ := etypes.Sender(app.Signer, tx)
-    defer func() {
-		log.Audit().Info("check tx",zap.String("from",from.String()),zap.Uint64("nonce",tx.Nonce()))
-	}()
+	from, _ = etypes.Sender(app.Signer, tx)
 	app.stateMtx.Lock()
 	defer app.stateMtx.Unlock()
 	// Last but not least check for nonce errors
-	nonce := tx.Nonce()
+	nonce = tx.Nonce()
 	getNonce := app.state.GetNonce(from)
 	if getNonce > nonce {
 		txhash := gtypes.Tx(bs).Hash()
-		return fmt.Errorf("nonce(%d) different with getNonce(%d), transaction already exists %v", nonce, getNonce, hex.EncodeToString(txhash))
+		err = fmt.Errorf("nonce(%d) different with getNonce(%d), transaction already exists %v", nonce, getNonce, hex.EncodeToString(txhash))
+		return
 	}
 
 	// Transactor should have enough funds to cover the costs
 	// cost == V + GP * GL
 	if app.state.GetBalance(from).Cmp(tx.Cost()) < 0 {
-		return fmt.Errorf("not enough funds")
+		err = fmt.Errorf("not enough funds")
+		return
 	}
 
 	txType := common.Bytes2Hex(tx.Data())
@@ -424,18 +428,20 @@ func (app *EVMApp) CheckTx(bs []byte) error {
 	if strings.HasPrefix(txType, common.Bytes2Hex(rtypes.KVTxType)) {
 		txData := tx.Data()[len(rtypes.KVTxType):]
 		kvData := &rtypes.KV{}
-		if err := rlp.DecodeBytes(txData, kvData); err != nil {
-			return fmt.Errorf("rlp decode to kv error %s", err.Error())
+		if err = rlp.DecodeBytes(txData, kvData); err != nil {
+			err = fmt.Errorf("rlp decode to kv error %s", err.Error())
+			return
 		}
 		if len(kvData.Key) > MaxKey || len(kvData.Value) > MaxValue {
-			return fmt.Errorf("key or value too big,MaxKey:%v,MaxValue:%v", MaxKey, MaxValue)
+			err = fmt.Errorf("key or value too big,MaxKey:%v,MaxValue:%v", MaxKey, MaxValue)
+			return
 		}
 		if ok, _ := app.stateDb.Has(append(KvPrefix, kvData.Key...)); ok {
-			return fmt.Errorf("duplicate key :%v", kvData.Key)
+			err = fmt.Errorf("duplicate key :%v", kvData.Key)
+			return
 		}
 	}
-
-	return nil
+	return
 }
 
 func (app *EVMApp) SaveReceipts() ([]byte, error) {

@@ -222,14 +222,14 @@ func (a *Angine) OnRecvExchangeData(data *p2p.ExchangeData) error {
 			// TODO wait ...
 			return errors.New("no genesis file found in other node")
 		}
-		othGenesis, err := types.GenesisDocFromJSONRet(data.GenesisJSON)
+		otherGenesis, err := types.GenesisDocFromJSONRet(data.GenesisJSON)
 		if err != nil {
 			// TODO log err
-			log.Warn("oth genesis err:", zap.Error(err))
+			log.Warn("other genesis err:", zap.Error(err))
 			return err
 		}
 		a.p2pSwitch.GetExchangeData().GenesisJSON = data.GenesisJSON
-		if err = a.buildState(othGenesis); err != nil {
+		if err = a.buildState(otherGenesis); err != nil {
 			// TODO log err
 			log.Warn("build state err:",  zap.Error(err))
 			return err
