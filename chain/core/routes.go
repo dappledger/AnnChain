@@ -234,6 +234,8 @@ func (h *rpcHandler) BroadcastTxCommit(tx []byte) (*gtypes.ResultBroadcastTxComm
 	return &gtypes.ResultBroadcastTxCommit{TxHash: hexutil.Encode(hash), Code: 0}, nil
 }
 
+//this is a test don't merge
+
 func (h *rpcHandler) QueryTx(query []byte) (*gtypes.ResultNumLimitTx, error) {
 	kind := query[0]
 	switch kind {
