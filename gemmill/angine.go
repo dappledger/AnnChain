@@ -150,7 +150,7 @@ func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 
 	logger, err := getLogger(conf)
 	if err != nil {
-		fmt.Println("failed to get logger: ", err)
+		err  = fmt.Errorf("failed to get logger: %v", err)
 		return nil, err
 	}
 	log.SetLog(logger)
@@ -163,13 +163,13 @@ func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 	crypto.NodeInit(crypto.CryptoType)
 	privValidator, err := types.LoadPrivValidator(conf.GetString("priv_validator_file"))
 	if err != nil {
-		fmt.Println("LoadPrivValidator error: ", err)
+		err  = fmt.Errorf("LoadPrivValidator error: %v", err)
 		return nil, err
 	}
 	refuseList = refuse_list.NewRefuseList(dbBackend, dbDir)
 	p2psw, err := prepareP2P(conf, genesis, privValidator, refuseList)
 	if err != nil {
-		fmt.Println("prepare p2p error: ", err)
+		err  = fmt.Errorf("prepare p2p error: %v", err)
 		return nil, err
 	}
 
@@ -222,16 +222,16 @@ func (a *Angine) OnRecvExchangeData(data *p2p.ExchangeData) error {
 			// TODO wait ...
 			return errors.New("no genesis file found in other node")
 		}
-		othGenesis, err := types.GenesisDocFromJSONRet(data.GenesisJSON)
+		otherGenesis, err := types.GenesisDocFromJSONRet(data.GenesisJSON)
 		if err != nil {
 			// TODO log err
-			fmt.Println("oth genesis err:", err)
+			log.Warn("other genesis err:", zap.Error(err))
 			return err
 		}
 		a.p2pSwitch.GetExchangeData().GenesisJSON = data.GenesisJSON
-		if err = a.buildState(othGenesis); err != nil {
+		if err = a.buildState(otherGenesis); err != nil {
 			// TODO log err
-			fmt.Println("build state err:", err)
+			log.Warn("build state err:",  zap.Error(err))
 			return err
 		}
 		if a.stateMachine == nil {
@@ -245,7 +245,7 @@ func (a *Angine) OnRecvExchangeData(data *p2p.ExchangeData) error {
 func (a *Angine) buildState(genesis *types.GenesisDoc) error {
 	stateM, err := getOrMakeState(a.conf, a.dbs["state"], genesis)
 	if err != nil {
-		fmt.Println("getOrMakeState error: ", err)
+		log.Warn("getOrMakeState error: ", zap.Error(err))
 		return err
 	}
 
@@ -572,7 +572,7 @@ func (e *Angine) Start() error {
 	}
 
 	if _, err := (*e.eventSwitch).Start(); err != nil {
-		fmt.Println("fail to start event switch, error: ", err)
+		log.Warn("fail to start event switch, error: ", zap.Error(err))
 		return err
 	}
 
@@ -1008,7 +1008,6 @@ func (ang *Angine) InitPlugins() {
 			if err != nil {
 				// querydb failure is something that we can bear with
 				log.Error("[QueryCachePlugin Init]", zap.Error(err))
-				fmt.Println(err)
 			}
 			params.StateDB = querydb
 			p.Init(params)

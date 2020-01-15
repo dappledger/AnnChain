@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -30,6 +29,8 @@ import (
 	"time"
 
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
+	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
+	"go.uber.org/zap"
 )
 
 /*
@@ -216,18 +217,18 @@ func (g *Group) checkTotalSizeLimit() {
 		}
 		if index == gInfo.MaxIndex {
 			// Special degenerate case, just do nothing.
-			log.Println("WARNING: Group's head " + g.Head.Path + "may grow without bound")
+			log.Warn("WARNING: Group's head " + g.Head.Path + "may grow without bound")
 			return
 		}
 		pathToRemove := filePathForIndex(g.Head.Path, index, gInfo.MaxIndex)
 		fileInfo, err := os.Stat(pathToRemove)
 		if err != nil {
-			log.Println("WARNING: Failed to fetch info for file @" + pathToRemove)
+			log.Warn("WARNING: Failed to fetch info for file @" + pathToRemove)
 			continue
 		}
 		err = os.Remove(pathToRemove)
 		if err != nil {
-			log.Println(err)
+			log.Warn("remove file err",zap.Error(err))
 			return
 		}
 		totalSize -= fileInfo.Size()
@@ -245,7 +246,7 @@ func (g *Group) RotateFile() {
 		err := os.Rename(g.Head.Path, dstPath)
 		if err != nil {
 			if strings.Contains(err.Error(), "The process cannot access the file because it is being used by another process") {
-				log.Printf("Rename old(%s) to new(%s) error:%s\n", g.Head.Path, dstPath, err.Error())
+				log.Infof("Rename old(%s) to new(%s) error:%s\n", g.Head.Path, dstPath, err.Error())
 				err = g.Head.closeFile()
 				if err != nil {
 					panic(err)
@@ -255,7 +256,7 @@ func (g *Group) RotateFile() {
 				panic(err)
 			}
 		} else {
-			log.Printf("Rename old(%s) to new(%s) OK\n", g.Head.Path, dstPath)
+			log.Warnf("Rename old(%s) to new(%s) OK\n", g.Head.Path, dstPath)
 			break
 		}
 	}

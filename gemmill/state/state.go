@@ -16,9 +16,7 @@ package state
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
-	"reflect"
 	"sync"
 	"time"
 
@@ -74,17 +72,6 @@ type State struct {
 	ReceiptsHash []byte
 }
 
-func (s *State) CheckPubkeyPtr() {
-	for _, v := range s.GenesisDoc.Validators {
-		fmt.Println("genes:", reflect.TypeOf(v.PubKey))
-	}
-	for _, v := range s.Validators.Validators {
-		fmt.Println("vldts:", reflect.TypeOf(v.PubKey))
-	}
-	for _, v := range s.LastValidators.Validators {
-		fmt.Println("last vldts:", reflect.TypeOf(v.PubKey))
-	}
-}
 
 func LoadState(db dbm.DB) *State {
 	return loadState(db, stateKey)

@@ -210,28 +210,36 @@ func (h *rpcHandler) UnsafeFlushMempool() (*gtypes.ResultUnsafeFlushMempool, err
 	return &gtypes.ResultUnsafeFlushMempool{}, nil
 }
 
-func (h *rpcHandler) BroadcastTx(tx []byte) (*gtypes.ResultBroadcastTx, error) {
-	if err := h.node.Application.CheckTx(tx); err != nil {
-		return nil, err
+func (h *rpcHandler) BroadcastTx(tx []byte) (result *gtypes.ResultBroadcastTx, logFields map[string]string, err error) {
+	logFields = make(map[string]string)
+	from, nonce, err := h.node.Application.CheckTx(tx)
+	logFields["account"] = from.String()
+	logFields["nonce"] = fmt.Sprintf("%d", nonce)
+	if err != nil {
+		return
 	}
-	if err := h.node.Angine.BroadcastTx(tx); err != nil {
-		return nil, err
+	if err = h.node.Angine.BroadcastTx(tx); err != nil {
+		return
 	}
 
 	hash := gtypes.Tx(tx).Hash()
-	return &gtypes.ResultBroadcastTx{TxHash: hexutil.Encode(hash), Code: 0}, nil
+	return &gtypes.ResultBroadcastTx{TxHash: hexutil.Encode(hash), Code: 0}, logFields, nil
 }
 
-func (h *rpcHandler) BroadcastTxCommit(tx []byte) (*gtypes.ResultBroadcastTxCommit, error) {
-	if err := h.node.Application.CheckTx(tx); err != nil {
-		return nil, err
+func (h *rpcHandler) BroadcastTxCommit(tx []byte) (result *gtypes.ResultBroadcastTxCommit, logFields map[string]string, err error) {
+	logFields = make(map[string]string)
+	from, nonce, err := h.node.Application.CheckTx(tx)
+	logFields["account"] = from.String()
+	logFields["nonce"] = fmt.Sprintf("%d", nonce)
+	if err != nil {
+		return
 	}
-	if err := h.node.Angine.BroadcastTxCommit(tx); err != nil {
-		return nil, err
+	if err = h.node.Angine.BroadcastTxCommit(tx); err != nil {
+		return
 	}
 
 	hash := gtypes.Tx(tx).Hash()
-	return &gtypes.ResultBroadcastTxCommit{TxHash: hexutil.Encode(hash), Code: 0}, nil
+	return &gtypes.ResultBroadcastTxCommit{TxHash: hexutil.Encode(hash), Code: 0}, logFields, nil
 }
 
 func (h *rpcHandler) QueryTx(query []byte) (*gtypes.ResultNumLimitTx, error) {
