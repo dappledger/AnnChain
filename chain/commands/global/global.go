@@ -37,10 +37,11 @@ const (
 )
 
 type GlobalFlags struct {
-	Debug      bool
-	RuntimeDir string
-	LogDir     string
-	ApiAddr    string
+	Debug       bool
+	RuntimeDir  string
+	LogDir      string
+	AuditLogDir string
+	ApiAddr     string
 }
 
 var (

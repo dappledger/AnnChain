@@ -39,6 +39,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&globalFlags.Debug, "debug", false, "enable client-side debug logging")
 	rootCmd.PersistentFlags().StringVar(&globalFlags.RuntimeDir, "runtime", global.DefaultRuntimeDir, "runtime dir")
 	rootCmd.PersistentFlags().StringVar(&globalFlags.LogDir, "log_path", "", "log path, default: ./output.log")
+	rootCmd.PersistentFlags().StringVar(&globalFlags.AuditLogDir, "audit_log_path", "", "audit log path, default: ./audit.log")
 	rootCmd.PersistentFlags().StringVar(&globalFlags.ApiAddr, "apiaddr", global.DefaultApiAddr, "api listening address")
 
 	rootCmd.AddCommand(

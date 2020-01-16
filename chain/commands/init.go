@@ -73,9 +73,20 @@ func newInitCommandFunc(cmd *cobra.Command, args []string) {
 			panic(err)
 		}
 	}
+	if global.GFlags().AuditLogDir == "" {
+		global.GFlags().AuditLogDir = "./"
+	} else {
+		var err error
+		if global.GFlags().AuditLogDir, err = homedir.Expand(global.GFlags().AuditLogDir); err != nil {
+			panic(err)
+		}
+	}
 
 	log.Println("Log dir is: ", global.GFlags().LogDir)
 	defConf.Set("log_dir", global.GFlags().LogDir)
+
+	log.Println("audit_log_path is: ", global.GFlags().AuditLogDir)
+	defConf.Set("audit_log_path", global.GFlags().AuditLogDir)
 
 	gemmill.Initialize(&gemmill.Tunes{Runtime: global.GFlags().RuntimeDir, Conf: defConf}, chainId)
 }

@@ -48,7 +48,16 @@ func NewRunCommand() *cobra.Command {
 					global.GConf().Set("log_path", logDir)
 				}
 			}
+			auditLogDir, _ := cmd.Flags().GetString("audit_log_path")
+
+			if auditLogDir != "" {
+				if auditLogDir, err = homedir.Expand(auditLogDir); err == nil {
+					global.GConf().Set("audit_log_path", auditLogDir)
+				}
+			}
+
 			fmt.Println("Log path is: ", global.GConf().Get("log_path"))
+			fmt.Println("audit_log path is: ", global.GConf().Get("audit_log_path"))
 			fmt.Println("CryptoType is: ", crypto.CryptoType)
 
 			return err
