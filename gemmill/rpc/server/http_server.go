@@ -83,7 +83,7 @@ func WriteRPCResponseHTTP(w http.ResponseWriter, res gtypes.RPCResponse) {
 		if res.Error != "" {
 			rww.recordErr(errors.New(res.Error))
 		} else {
-			if res.Result!=nil {
+			if res.Result != nil {
 				rww.recordResponse(*res.Result)
 			}
 		}
@@ -175,6 +175,9 @@ func RecoverAndLogHandler(handler http.Handler) http.Handler {
 		if len(rww.responseContent) > 0 {
 			fields = append(fields, zap.ByteString("response_content", rww.responseContent))
 		}
+		for k,v:= range  rww.logFields {
+			fields = append(fields,zap.String(k,v))
+		}
 		log.Audit().Info("rpc got response ", fields...)
 		rww.Flush()
 	})
@@ -189,6 +192,7 @@ type ResponseWriterWrapper struct {
 	err             error
 	requestContent  []byte
 	responseContent []byte
+	logFields       map[string]string
 }
 
 func (w *ResponseWriterWrapper) WriteHeader(status int) {
@@ -240,4 +244,8 @@ func (w *ResponseWriterWrapper) recordRequest(data []byte) {
 		return
 	}
 	w.requestContent = data
+}
+
+func (w *ResponseWriterWrapper) SetLogFields(fields map[string]string) {
+	w.logFields = fields
 }
