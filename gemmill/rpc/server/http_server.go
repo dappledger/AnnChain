@@ -182,6 +182,9 @@ func RecoverAndLogHandler(handler http.Handler) http.Handler {
 				fields = append(fields, zap.ByteString("response_content", data))
 			}
 		}
+		for k,v:= range  rww.logFields {
+			fields = append(fields,zap.String(k,v))
+		}
 		log.Audit().Info("rpc got response ", fields...)
 		rww.Flush()
 	})
@@ -196,6 +199,7 @@ type ResponseWriterWrapper struct {
 	err             error
 	requestContent  []byte
 	responseContent []byte
+	logFields       map[string]string
 	isJsonRpc       bool
 }
 
@@ -254,4 +258,8 @@ func (w *ResponseWriterWrapper) recordRequest(data []byte) {
 	}
 	w.requestContent = data
 	w.isJsonRpc = true
+}
+
+func (w *ResponseWriterWrapper) SetLogFields(fields map[string]string) {
+	w.logFields = fields
 }

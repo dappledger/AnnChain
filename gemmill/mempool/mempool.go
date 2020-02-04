@@ -64,6 +64,10 @@ func NewMempool(conf *viper.Viper) *Mempool {
 	return mempool
 }
 
+func (mem *Mempool) GetPendingMaxNonce(byt []byte) (uint64, error) {
+	return 0, errors.New("raft consense please use GetNonce() interface")
+}
+
 func (mem *Mempool) RegisterFilter(filter types.IFilter) {
 	mem.txFilters = append(mem.txFilters, filter)
 }
