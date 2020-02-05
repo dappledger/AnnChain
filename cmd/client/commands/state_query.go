@@ -44,6 +44,14 @@ var (
 				},
 			},
 			{
+				Name:   "pending_nonce",
+				Usage:  "query account's pending nonce",
+				Action: queryPendingNonce,
+				Flags: []cli.Flag{
+					anntoolFlags.addr,
+				},
+			},
+			{
 				Name:   "receipt",
 				Usage:  "",
 				Action: queryReceipt,
@@ -69,10 +77,35 @@ func queryNonce(ctx *cli.Context) error {
 	}
 
 	nonce := new(uint64)
-	rlp.DecodeBytes(rpcResult.Result.Data, nonce)
+	err = rlp.DecodeBytes(rpcResult.Result.Data, nonce)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
 
 	fmt.Println("query result:", *nonce)
+	return nil
+}
 
+func queryPendingNonce(ctx *cli.Context) error {
+	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
+	rpcResult := new(gtypes.ResultQuery)
+
+	addrHex := gcmn.SanitizeHex(ctx.String("address"))
+	addr := common.Hex2Bytes(addrHex)
+	query := append([]byte{13}, addr...)
+
+	_, err := clientJSON.Call("query", []interface{}{query}, rpcResult)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	nonce := new(uint64)
+	err = rlp.DecodeBytes(rpcResult.Result.Data, nonce)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	fmt.Println("query result:", *nonce)
 	return nil
 }
 
