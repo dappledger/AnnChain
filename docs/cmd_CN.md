@@ -222,15 +222,36 @@ query result nonce
 query result: 2
 ```
 
+## 查询 Pending Nonce
+
+##### 命令
+
+```
+gtool --backend <validator's IP:RPC Port>  query pending_nonce --address <account address>
+```
+
+##### 结果
+
+```
+query result pending nonce
+```
+
+##### Demo
+
+```
+./build/gtool --backend "tcp://127.0.0.1:46657" query pending_nonce --address 771403c283a3f46cda462f7aeff5dfd28b00f106
+query result: 2
+```
+
 ## 查询 Receipt
 
-##### Commadn
+##### 命令
 
 ```
 gtool --backend <validator's IP:RPC Port> query receipt --hash <tx hash>
 ```
 
-##### 命令
+##### 结果
 
 ```
 query result receipt
@@ -291,7 +312,7 @@ Check the files generated, make sure everything is OK.
   Node Privkey for user://CA node's private key
   ```
 
-  ##### Result
+  ##### 结果
 
   ```
   <new node's public key>:<CA node's signature>
@@ -374,6 +395,8 @@ hash= 0x110ee98edba177ede906e5d8175d9f787bfed61f3bb841537327d6f8128c6dbe
 ```
 
 ## 删除节点
+
+##### 命令
 
 ```
 ./build/gtool admin remove_node --validator_pubkey <the public key of the node which needed to be removed> --nPrivs <the number of CA nodes which needed to validate the behavior>
