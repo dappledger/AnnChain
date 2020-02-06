@@ -12,6 +12,7 @@ import (
 	"github.com/dappledger/AnnChain/chain/types"
 	"github.com/dappledger/AnnChain/eth/common/hexutil"
 	gtypes "github.com/dappledger/AnnChain/gemmill/types"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 
 	"github.com/dappledger/AnnChain/gemmill/protos/rpc"
 	pbtypes "github.com/dappledger/AnnChain/gemmill/protos/types"
@@ -141,10 +142,15 @@ func (g *grpcHandler) BroadcastTx(ctx context.Context, req *grpc2.CmdBroadcastTx
 	if req == nil || req.Tx == nil {
 		return nil, errors.New("miss request")
 	}
-	if err := g.node.Application.CheckTx(req.Tx); err != nil {
+	from, nonce, err := g.node.Application.CheckTx(req.Tx)
+	tags := grpc_ctxtags.Extract(ctx)
+	tags.Set("account", from.String())
+	tags.Set("nonce", fmt.Sprintf("%d", nonce))
+
+	if err != nil {
 		return nil, err
 	}
-	if err := g.node.Angine.BroadcastTx(req.Tx); err != nil {
+	if err = g.node.Angine.BroadcastTx(req.Tx); err != nil {
 		return nil, err
 	}
 
@@ -156,7 +162,11 @@ func (g *grpcHandler) BroadcastTxCommit(ctx context.Context, req *grpc2.CmdBroad
 	if req == nil || req.Tx == nil {
 		return nil, errors.New("miss request")
 	}
-	if err := g.node.Application.CheckTx(req.Tx); err != nil {
+	from, nonce, err := g.node.Application.CheckTx(req.Tx)
+	tags := grpc_ctxtags.Extract(ctx)
+	tags.Set("account", from.String())
+	tags.Set("nonce", fmt.Sprintf("%d", nonce))
+	if err != nil {
 		return nil, err
 	}
 	if err := g.node.Angine.BroadcastTxCommit(req.Tx); err != nil {

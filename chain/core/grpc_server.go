@@ -12,14 +12,15 @@ import (
 	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	server "github.com/dappledger/AnnChain/gemmill/rpc/server"
 	gtypes "github.com/dappledger/AnnChain/gemmill/rpc/types"
+	"github.com/dappledger/AnnChain/utils"
 	"github.com/gogo/gateway"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"go.uber.org/zap"
-
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"google.golang.org/grpc"
 )
 
@@ -36,11 +37,15 @@ var _ grpc2.RpcServiceServer = (*grpcHandler)(nil)
 func (n *Node) startGrpc(listenAddr string) (proto, addr string, err error) {
 	s := grpc.NewServer(
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			grpc_validator.StreamServerInterceptor(),
+			grpc_ctxtags.StreamServerInterceptor(),
+			AuditLogStreamServerInterceptor(),
 			grpc_zap.StreamServerInterceptor(log.Audit()),
 			grpc_recovery.StreamServerInterceptor(),
+			grpc_validator.StreamServerInterceptor(),
 		)),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_ctxtags.UnaryServerInterceptor(),
+			AuditLogUnaryServerInterceptor(),
 			grpc_zap.UnaryServerInterceptor(log.Audit()),
 			grpc_recovery.UnaryServerInterceptor(),
 			grpc_validator.UnaryServerInterceptor(),
@@ -140,4 +145,41 @@ func dialUnix(ctx context.Context, addr string) (*grpc.ClientConn, error) {
 		return net.DialTimeout("unix", addr, timeout)
 	}
 	return grpc.DialContext(ctx, addr, grpc.WithInsecure(), grpc.WithDialer(d))
+}
+
+// UnaryServerInterceptor returns a new unary server interceptors that adds zap.Logger to the context.
+func AuditLogUnaryServerInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		tags := grpc_ctxtags.Extract(ctx)
+		if !tags.Has(server.TraceIdKey) {
+			if val := ctx.Value(server.TraceIdKey); val != nil {
+				tags.Set(server.TraceIdKey, val)
+			} else {
+				traceId := utils.NewTraceId(time.Now())
+				tags.Set(server.TraceIdKey, traceId)
+			}
+
+		}
+		resp, err := handler(ctx, req)
+
+		return resp, err
+	}
+}
+
+func AuditLogStreamServerInterceptor() grpc.StreamServerInterceptor {
+	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		ctx := stream.Context()
+		tags := grpc_ctxtags.Extract(ctx)
+		if !tags.Has(server.TraceIdKey) {
+			if val := ctx.Value(server.TraceIdKey); val != nil {
+				tags.Set(server.TraceIdKey, val)
+			} else {
+				traceId := utils.NewTraceId(time.Now())
+				tags.Set(server.TraceIdKey, traceId)
+			}
+
+		}
+		err := handler(srv, stream)
+		return err
+	}
 }

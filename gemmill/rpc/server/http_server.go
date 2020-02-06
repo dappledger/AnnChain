@@ -38,6 +38,8 @@ import (
 
 var MaxAuditLogContentSize = 40
 
+const TraceIdKey = "trace_id"
+
 func StartHTTPServer(listenAddr string, handler http.Handler) (listener net.Listener, err error) {
 	// listenAddr should be fully formed including tcp:// or unix:// prefix
 	var proto, addr string
@@ -112,7 +114,7 @@ func RecoverAndLogHandler(handler http.Handler) http.Handler {
 		if query != "" {
 			path += "?" + query
 		}
-		log.Audit().Info("rpc got request", zap.String("trace_id", traceId),
+		log.Audit().Info("rpc got request", zap.String(TraceIdKey, traceId),
 			zap.String("client_ip", r.RemoteAddr),
 			zap.String("method", r.Method),
 			zap.String("path", path),
@@ -160,7 +162,7 @@ func RecoverAndLogHandler(handler http.Handler) http.Handler {
 		handler.ServeHTTP(rww, r)
 		reqDuration := time.Since(begin)
 		var fields []zapcore.Field
-		fields = append(fields, zap.String("trace_id", traceId),
+		fields = append(fields, zap.String(TraceIdKey, traceId),
 			zap.Int("status", rww.Status),
 			zap.Stringer("req_duration", reqDuration),
 			zap.Int("length", len(rww.Data())),
@@ -182,15 +184,22 @@ func RecoverAndLogHandler(handler http.Handler) http.Handler {
 				fields = append(fields, zap.ByteString("response_content", data))
 			}
 		}
-		for k,v:= range  rww.logFields {
-			fields = append(fields,zap.String(k,v))
+		for k, v := range rww.logFields {
+			fields = append(fields, zap.String(k, v))
+		}
+		if logFields := r.Context().Value("logFields"); logFields != nil {
+			if m, ok := logFields.(map[string]string); ok {
+				for k, v := range m {
+					fields = append(fields, zap.String(k, v))
+				}
+			}
 		}
 		log.Audit().Info("rpc got response ", fields...)
 		rww.Flush()
 	})
 }
 
-// Remember the status for logging
+// Record the status for logging
 type ResponseWriterWrapper struct {
 	Status int
 	http.ResponseWriter

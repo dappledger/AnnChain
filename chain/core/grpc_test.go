@@ -1,21 +1,31 @@
 package core
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"os"
 	"testing"
 	"time"
 
 	grpc2 "github.com/dappledger/AnnChain/chain/proto"
+	"github.com/dappledger/AnnChain/eth/common"
+	etypes "github.com/dappledger/AnnChain/eth/core/types"
+	"github.com/dappledger/AnnChain/eth/crypto"
+	"github.com/dappledger/AnnChain/eth/rlp"
 	"github.com/dappledger/AnnChain/gemmill/config"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	rpcserver "github.com/dappledger/AnnChain/gemmill/rpc/server"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
+
+var accPriv = "48deaa73f328f38d5fcb29d076b2b639c8491f97d245fc22e95a86366687903a"
+var accAddr = "28112ca022224ae7757bcd559666be5340ff109a"
 
 func runNode(testDir string) (node *Node, err error) {
 	conf := config.DefaultConfig()
@@ -84,7 +94,7 @@ func TestGrpc(t *testing.T) {
 	req, err := http.NewRequest("GET", grpcGateway+"/api/v1/net_info", nil)
 	assert.NoError(t, err)
 	httpClient := http.Client{
-		Timeout: time.Second * 10,
+		Timeout: time.Second * 50,
 	}
 	resp, err := httpClient.Do(req)
 	assert.NoError(t, err)
@@ -100,5 +110,52 @@ func TestGrpc(t *testing.T) {
 	data, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	log.Infof("http got response %v", string(data))
+	rawTx, err := genTx(0)
+	assert.NoError(t, err)
+	tx := grpc2.CmdBroadcastTx{Tx: rawTx}
+	txByte, err := json.Marshal(tx)
+	assert.NoError(t, err)
+	req, err = http.NewRequest("POST", grpcGateway+"/api/v1/broadcast_tx_commit", bytes.NewBuffer(txByte))
+	assert.NoError(t, err)
+	resp, err = httpClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, 200, resp.Status)
+	data, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
 
+}
+
+func genTx(nonce uint64) ([]byte, error) {
+	to := common.Address{}
+	to[1] = byte(2)
+	tx := etypes.NewTransaction(nonce, to, big.NewInt(0), 99999, big.NewInt(0), []byte("haha"))
+	privBytes := common.Hex2Bytes(accPriv)
+
+	signer, sig, err := SignTx(privBytes, tx)
+	if err != nil {
+		return nil, err
+	}
+	sigTx, err := tx.WithSignature(signer, sig)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := rlp.EncodeToBytes(sigTx)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func SignTx(privBytes []byte, tx *etypes.Transaction) (signer etypes.Signer, sig []byte, err error) {
+	signer = new(etypes.HomesteadSigner)
+
+	privkey, err := crypto.ToECDSA(privBytes)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sig, err = crypto.Sign(signer.Hash(tx).Bytes(), privkey)
+
+	return signer, sig, nil
 }
