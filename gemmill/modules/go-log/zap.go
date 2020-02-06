@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -39,7 +40,7 @@ func ensureDir(dir string) error {
 }
 
 func productionLogger(logPath string) *zap.Logger {
-	zapEncodeConfig := zap.NewProductionEncoderConfig()
+	zapEncodeConfig := productionConfig()
 	jsonEncoder := zapcore.NewJSONEncoder(zapEncodeConfig)
 
 	w := zapcore.AddSync(&lumberjack.Logger{
@@ -56,6 +57,26 @@ func productionLogger(logPath string) *zap.Logger {
 		}),
 	)
 	return zap.New(core)
+}
+
+func productionConfig() zapcore.EncoderConfig {
+	return zapcore.EncoderConfig{
+		TimeKey:        "time",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.LowercaseLevelEncoder,
+		EncodeTime:     productionTimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+	}
+}
+
+func productionTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format("2006-01-02T15:04:05.000Z07:00"))
 }
 
 func Initialize(env, logpath string) (*zap.Logger, error) {
