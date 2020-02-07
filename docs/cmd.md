@@ -223,6 +223,27 @@ query result nonce
 query result: 2
 ```
 
+## Query Pending Nonce
+
+##### Command
+
+```
+gtool --backend <validator's IP:RPC Port>  query pending_nonce --address <account address>
+```
+
+##### Result
+
+```
+query result pending nonce
+```
+
+##### Demo
+
+```
+./build/gtool --backend "tcp://127.0.0.1:46657" query pending_nonce --address 771403c283a3f46cda462f7aeff5dfd28b00f106
+query result: 2
+```
+
 ## Query Receipt
 
 ##### Commadn
