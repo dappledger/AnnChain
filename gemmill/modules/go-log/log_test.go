@@ -27,3 +27,15 @@ func TestLog(t *testing.T) {
 	Warn("warn log")
 	Info("info log")
 }
+
+func TestGetLog(t *testing.T) {
+	Error("error log")
+	Warn("warn log")
+	Info("info log")
+	Debug("debug msg")
+	GetLog()
+	Error("error log")
+	Warn("warn log")
+	Info("info log")
+	Debug("debug msg")
+}

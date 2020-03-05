@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package p2p;
+option go_package ="github.com/dappledger/AnnChain/gemmill/protos/p2p";
+import "gemmill/protos/crypto/crypto.proto";
+
+message NodeInfo {
+    crypto.PubKey  PubKey     = 1;
+    string SigndPubKey = 2 ;
+    string Moniker     = 3;
+    string Network    = 4;
+    string RemoteAddr  = 5;
+    string ListenAddr  = 6;
+    string Version    = 7;
+    repeated string Other  = 8;
+}
+
+message FlowStatus {
+    bool   Active   =  1;
+    int64  Start   = 2;
+	int64  Duration  = 3;
+	int64  Idle    = 4;
+	int64  Bytes    = 5;
+    int64 Samples = 6;
+    int64 InstRate = 7;
+	int64 CurRate  = 8;
+    int64 AvgRate  = 9;
+	int64 PeakRate = 10;
+    int64 BytesRem = 11;
+	int64 TimeRem  = 12;
+    uint32 Progress = 13;
+}
+
+message ChannelStatus {
+   uint32   ID             = 1 ;
+   int32   SendQueueCapacity = 2;
+   int32  SendQueueSize    = 3;
+   int32   Priority        = 4;
+   int64   RecentlySent     = 5;
+}
+
+message ConnectionStatus {
+    FlowStatus   SendMonitor  = 1;
+    FlowStatus RecvMonitor = 2;
+	repeated ChannelStatus Channels    = 3;
+}

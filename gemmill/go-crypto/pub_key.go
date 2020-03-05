@@ -23,6 +23,7 @@ import (
 	ghash "github.com/dappledger/AnnChain/gemmill/go-hash"
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
+	pbcrypto "github.com/dappledger/AnnChain/gemmill/protos/crypto"
 )
 
 const (
@@ -37,6 +38,7 @@ type PubKey interface {
 	KeyString() string
 	VerifyBytes(msg []byte, sig Signature) bool
 	Equals(PubKey) bool
+	ToPbData() *pbcrypto.PubKey
 }
 
 // Types of PubKey implementations
@@ -44,6 +46,21 @@ const (
 	PubKeyTypeEd25519   = byte(0x01)
 	PubKeyTypeSecp256k1 = byte(0x02)
 )
+
+func PbDataToPubkey(pubkey *pbcrypto.PubKey) PubKey {
+	switch pubkey.Type {
+	case pbcrypto.KeyType_Ed25519:
+		pk := PubKeyEd25519{}
+		copy(pk[:], pubkey.Bytes)
+		return &pk
+	case pbcrypto.KeyType_Secp256k1:
+		pk := PubKeySecp256k1{}
+		copy(pk[:], pubkey.Bytes)
+		return &pk
+	default:
+		return nil
+	}
+}
 
 // for wire.readReflect
 var _ = wire.RegisterInterface(

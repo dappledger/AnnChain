@@ -32,11 +32,13 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
-	log "github.com/dappledger/AnnChain/gemmill/modules/go-log"
+	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	gtypes "github.com/dappledger/AnnChain/gemmill/rpc/types"
 )
 
-const MaxAuditLogContentSize = 40
+var MaxAuditLogContentSize = 40
+
+const TraceIdKey = "trace_id"
 
 func StartHTTPServer(listenAddr string, handler http.Handler) (listener net.Listener, err error) {
 	// listenAddr should be fully formed including tcp:// or unix:// prefix
@@ -112,7 +114,7 @@ func RecoverAndLogHandler(handler http.Handler) http.Handler {
 		if query != "" {
 			path += "?" + query
 		}
-		log.Audit().Info("rpc got request", zap.String("trace_id", traceId),
+		log.Audit().Info("rpc got request", zap.String(TraceIdKey, traceId),
 			zap.String("client_ip", r.RemoteAddr),
 			zap.String("method", r.Method),
 			zap.String("path", path),
@@ -141,7 +143,7 @@ func RecoverAndLogHandler(handler http.Handler) http.Handler {
 				} else {
 					// For the rest,
 					log.Errorw("Panic in RPC HTTP handler", "error", e, "stack", string(debug.Stack()))
-					fmt.Println(string(debug.Stack()))
+					fmt.Println(e, string(debug.Stack()))
 					rww.WriteHeader(http.StatusInternalServerError)
 					WriteRPCResponseHTTP(rww, gtypes.NewRPCResponse("", nil, gcmn.Fmt("Internal Server Error: %v", e)))
 				}
@@ -160,30 +162,44 @@ func RecoverAndLogHandler(handler http.Handler) http.Handler {
 		handler.ServeHTTP(rww, r)
 		reqDuration := time.Since(begin)
 		var fields []zapcore.Field
-		fields = append(fields, zap.String("trace_id", traceId),
+		fields = append(fields, zap.String(TraceIdKey, traceId),
 			zap.Int("status", rww.Status),
 			zap.Stringer("req_duration", reqDuration),
 			zap.Int("length", len(rww.Data())),
 			zap.Error(rww.err),
 		)
-		if len(rww.jsonRpcMethod) > 0 {
-			fields = append(fields, zap.String("json_rpc_method", rww.jsonRpcMethod))
+		if rww.isJsonRpc {
+			if len(rww.jsonRpcMethod) > 0 {
+				fields = append(fields, zap.String("json_rpc_method", rww.jsonRpcMethod))
+			}
+			if len(rww.requestContent) > 0 {
+				fields = append(fields, zap.ByteString("request_content", rww.requestContent))
+			}
+			if len(rww.responseContent) > 0 {
+				fields = append(fields, zap.ByteString("response_content", rww.responseContent))
+			}
+		} else {
+			data := rww.Data()
+			if len(data) > 0 && len(data) < MaxAuditLogContentSize {
+				fields = append(fields, zap.ByteString("response_content", data))
+			}
 		}
-		if len(rww.requestContent) > 0 {
-			fields = append(fields, zap.ByteString("request_content", rww.requestContent))
+		for k, v := range rww.logFields {
+			fields = append(fields, zap.String(k, v))
 		}
-		if len(rww.responseContent) > 0 {
-			fields = append(fields, zap.ByteString("response_content", rww.responseContent))
-		}
-		for k,v:= range  rww.logFields {
-			fields = append(fields,zap.String(k,v))
+		if logFields := r.Context().Value("logFields"); logFields != nil {
+			if m, ok := logFields.(map[string]string); ok {
+				for k, v := range m {
+					fields = append(fields, zap.String(k, v))
+				}
+			}
 		}
 		log.Audit().Info("rpc got response ", fields...)
 		rww.Flush()
 	})
 }
 
-// Remember the status for logging
+// Record the status for logging
 type ResponseWriterWrapper struct {
 	Status int
 	http.ResponseWriter
@@ -193,6 +209,7 @@ type ResponseWriterWrapper struct {
 	requestContent  []byte
 	responseContent []byte
 	logFields       map[string]string
+	isJsonRpc       bool
 }
 
 func (w *ResponseWriterWrapper) WriteHeader(status int) {
@@ -220,6 +237,9 @@ func (w *ResponseWriterWrapper) recordErr(err error) {
 }
 
 func (w *ResponseWriterWrapper) Flush() {
+	if w.Status == 0 {
+		w.Status = 200
+	}
 	w.ResponseWriter.WriteHeader(w.Status)
 	w.ResponseWriter.Write(w.buf.Bytes())
 	w.buf.Reset()
@@ -230,6 +250,7 @@ func (w *ResponseWriterWrapper) Flush() {
 
 func (w *ResponseWriterWrapper) recordJsonRpcMethod(jsonRpcMethod string) {
 	w.jsonRpcMethod = jsonRpcMethod
+	w.isJsonRpc = true
 }
 
 func (w *ResponseWriterWrapper) recordResponse(data []byte) {
@@ -237,6 +258,7 @@ func (w *ResponseWriterWrapper) recordResponse(data []byte) {
 		return
 	}
 	w.responseContent = data
+	w.isJsonRpc = true
 }
 
 func (w *ResponseWriterWrapper) recordRequest(data []byte) {
@@ -244,6 +266,7 @@ func (w *ResponseWriterWrapper) recordRequest(data []byte) {
 		return
 	}
 	w.requestContent = data
+	w.isJsonRpc = true
 }
 
 func (w *ResponseWriterWrapper) SetLogFields(fields map[string]string) {

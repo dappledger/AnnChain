@@ -18,9 +18,9 @@ import (
 	"errors"
 	"fmt"
 
-	cfg "github.com/spf13/viper"
 	dbm "github.com/dappledger/AnnChain/gemmill/modules/go-db"
 	"github.com/dappledger/AnnChain/gemmill/types"
+	cfg "github.com/spf13/viper"
 )
 
 var (

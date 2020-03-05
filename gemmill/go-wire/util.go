@@ -21,8 +21,8 @@ import (
 
 	"golang.org/x/crypto/ripemd160"
 
-	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/go-hash"
+	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 )
 
 func BinaryBytes(o interface{}) []byte {

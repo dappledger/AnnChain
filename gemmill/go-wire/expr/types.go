@@ -18,8 +18,8 @@ import (
 	"errors"
 	"strconv"
 
-	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
+	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 )
 
 type Byteful interface {

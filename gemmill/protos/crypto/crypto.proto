@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package crypto;
+option go_package ="github.com/dappledger/AnnChain/gemmill/protos/crypto";
+
+
+enum KeyType{
+    Ed25519 = 0;
+    Secp256k1 = 1;
+}
+
+message PubKey {
+    bytes bytes= 1;
+    KeyType type = 2;
+}
+
+message Signature {
+    bytes bytes= 1;
+    KeyType type = 2;
+}

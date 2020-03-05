@@ -37,15 +37,15 @@ func setAuditLogger(logWriter io.Writer) {
 	log.SetAuditLog(logger)
 }
 
-func mustNewRequest(t *testing.T, path string , body interface{}) *http.Request{
+func mustNewRequest(t *testing.T, path string, body interface{}) *http.Request {
 	uri := "http://127.0.0.1:54329"
 	var data []byte
-	if body!= nil {
-		data,_ = gtypes.JsonBytes(body)
+	if body != nil {
+		data, _ = gtypes.JsonBytes(body)
 	}
-	req,err := http.NewRequest("POST",uri+"/"+path,bytes.NewReader(data))
-	req.RemoteAddr ="10.2.3.4"
-	assert.NoError(t,err)
+	req, err := http.NewRequest("POST", uri+"/"+path, bytes.NewReader(data))
+	req.RemoteAddr = "10.2.3.4"
+	assert.NoError(t, err)
 	return req
 }
 
@@ -53,51 +53,51 @@ func TestAuditLog(t *testing.T) {
 	logData := bytes.NewBuffer(nil)
 	setAuditLogger(logData)
 	var okResponse string
-    handleAndCheck(t,handleOk,mustNewRequest(t,"ok",nil),&okResponse,nil)
+	handleAndCheck(t, handleOk, mustNewRequest(t, "ok", nil), &okResponse, nil)
 	assert.Equal(t, okResponse, "ok")
-	checkLog(t,logData)
+	checkLog(t, logData)
 	var echoResponse responseData
 	var expectedResp = responseData{
-		Data:   []byte( "\"this is a test\""),
+		Data:    []byte("\"this is a test\""),
 		Message: "hello",
 		Code:    200,
 	}
-	reqData:= "this is a test"
-	handleAndCheck(t,handleEcho,mustNewRequest(t,"echo",&reqData),&echoResponse,nil)
+	reqData := "this is a test"
+	handleAndCheck(t, handleEcho, mustNewRequest(t, "echo", &reqData), &echoResponse, nil)
 	assert.Equal(t, echoResponse, expectedResp)
-	checkLog(t,logData)
-	handleAndCheck(t,handleErr,mustNewRequest(t,"err",nil),nil,errors.New("this is an error"))
-	checkLog(t,logData)
+	checkLog(t, logData)
+	handleAndCheck(t, handleErr, mustNewRequest(t, "err", nil), nil, errors.New("this is an error"))
+	checkLog(t, logData)
 }
 
-func checkLog (t *testing.T, r *bytes.Buffer) {
-	firstLine,err := r.ReadBytes('\n')
-	assert.NoError(t,err)
-	secondLine,err := r.ReadBytes('\n')
-	assert.NoError(t,err)
-	var request = make( map[string]interface{})
+func checkLog(t *testing.T, r *bytes.Buffer) {
+	firstLine, err := r.ReadBytes('\n')
+	assert.NoError(t, err)
+	secondLine, err := r.ReadBytes('\n')
+	assert.NoError(t, err)
+	var request = make(map[string]interface{})
 	var response = make(map[string]interface{})
-	err  = json.Unmarshal(firstLine, &request)
-	assert.NoError(t,err)
-	err  = json.Unmarshal(secondLine, &response)
-	assert.NoError(t,err)
-	assert.Equal(t,request["client_ip"],"10.2.3.4")
-	assert.Equal(t,response["status"],float64(200))
-	assert.Equal(t,request["trace_id"],response["trace_id"])
-	traceId ,err := utils.TraceIDFromString(fmt.Sprintf("%v",request["trace_id"]))
-	assert.NoError(t,err)
-	timeStamp:= traceId.Timestamp()
-	reqDuration,err := time.ParseDuration(fmt.Sprintf("%v",response["req_duration"]))
-	assert.NoError(t,err)
-	assert.True(t, 0<=reqDuration && reqDuration < time.Second*10)
-	latency:= time.Now().Sub(timeStamp)
-	assert.True(t, 0<=latency && latency< time.Second*20)
+	err = json.Unmarshal(firstLine, &request)
+	assert.NoError(t, err)
+	err = json.Unmarshal(secondLine, &response)
+	assert.NoError(t, err)
+	assert.Equal(t, request["client_ip"], "10.2.3.4")
+	assert.Equal(t, response["status"], float64(200))
+	assert.Equal(t, request["trace_id"], response["trace_id"])
+	traceId, err := utils.TraceIDFromString(fmt.Sprintf("%v", request["trace_id"]))
+	assert.NoError(t, err)
+	timeStamp := traceId.Timestamp()
+	reqDuration, err := time.ParseDuration(fmt.Sprintf("%v", response["req_duration"]))
+	assert.NoError(t, err)
+	assert.True(t, 0 <= reqDuration && reqDuration < time.Second*10)
+	latency := time.Now().Sub(timeStamp)
+	assert.True(t, 0 <= latency && latency < time.Second*20)
 }
 
 func handleAndCheck(t *testing.T, handler http.HandlerFunc, req *http.Request, actual interface{}, expectedErr error) {
-	rw :=httptest.NewRecorder()
-	h:= RecoverAndLogHandler(handler)
-	h.ServeHTTP(rw,req)
+	rw := httptest.NewRecorder()
+	h := RecoverAndLogHandler(handler)
+	h.ServeHTTP(rw, req)
 	assert.Equal(t, rw.Code, 200)
 	var res gtypes.RPCResponse
 	err := json.NewDecoder(rw.Body).Decode(&res)
@@ -117,11 +117,9 @@ func handleAndCheck(t *testing.T, handler http.HandlerFunc, req *http.Request, a
 	return
 }
 
-
-
-func handleOk( w http.ResponseWriter ,req*http.Request) {
+func handleOk(w http.ResponseWriter, req *http.Request) {
 	var str = "ok"
-	WriteRPCResponseHTTP(w,gtypes.NewRPCResponse("",&str,""))
+	WriteRPCResponseHTTP(w, gtypes.NewRPCResponse("", &str, ""))
 }
 
 type responseData struct {
@@ -130,19 +128,19 @@ type responseData struct {
 	Message string `json:"message"`
 }
 
-func handleEcho( w http.ResponseWriter ,req*http.Request) {
+func handleEcho(w http.ResponseWriter, req *http.Request) {
 	var body []byte
-	if req.Body!=nil {
-		body,_ = ioutil.ReadAll(req.Body)
+	if req.Body != nil {
+		body, _ = ioutil.ReadAll(req.Body)
 	}
-	res:=  &responseData {
+	res := &responseData{
 		Data:    body,
 		Message: "hello",
 		Code:    200,
 	}
-	WriteRPCResponseHTTP(w,gtypes.NewRPCResponse("",res,""))
+	WriteRPCResponseHTTP(w, gtypes.NewRPCResponse("", res, ""))
 }
 
-func handleErr(w http.ResponseWriter ,req*http.Request) {
-	WriteRPCResponseHTTP(w,gtypes.NewRPCResponse("",nil,"this is an error"))
+func handleErr(w http.ResponseWriter, req *http.Request) {
+	WriteRPCResponseHTTP(w, gtypes.NewRPCResponse("", nil, "this is an error"))
 }

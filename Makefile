@@ -16,6 +16,13 @@ gtool:
 
 clean:
 	rm -rf build
+proto:
+	./codegen.sh
+
+swagger:
+    #go get and go install : github.com/go-swagger/go-swagger
+	swagger serve -p 8090 --no-open docs/grpc.swagger.json
+
 
 test-eth:
 	go test -v ./chain/app/evm

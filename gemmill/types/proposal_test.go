@@ -54,8 +54,9 @@ func BenchmarkProposalSign(b *testing.B) {
 func BenchmarkProposalVerifySignature(b *testing.B) {
 	signBytes := SignBytes("test_chain_id", testProposal)
 	privVal, err := GenPrivValidator("ZA", nil)
-	if err != nil {}
+	if err != nil {
 		panic(err)
+	}
 	signature := privVal.Sign(signBytes)
 	pubKey := privVal.PubKey
 

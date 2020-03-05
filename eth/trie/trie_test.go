@@ -29,11 +29,11 @@ import (
 	"testing"
 	"testing/quick"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dappledger/AnnChain/eth/common"
 	"github.com/dappledger/AnnChain/eth/crypto"
 	"github.com/dappledger/AnnChain/eth/ethdb"
 	"github.com/dappledger/AnnChain/eth/rlp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func init() {

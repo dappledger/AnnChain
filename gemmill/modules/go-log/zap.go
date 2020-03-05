@@ -101,8 +101,28 @@ func SetLog(l *zap.Logger) {
 	slogger = l.Sugar()
 }
 
+func GetLog() (l *zap.Logger) {
+	if logger == nil {
+		setDefaultLogger()
+		logger.Info("set logger")
+	}
+	return logger
+}
+
 func SetAuditLog(l *zap.Logger) {
 	auditLogger = l
+}
+
+func newStdLogger(enc zapcore.Encoder, level zapcore.Level) *zap.Logger {
+	w := zapcore.AddSync(os.Stdout)
+	core := zapcore.NewCore(
+		enc,
+		w,
+		zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl >= level
+		}),
+	)
+	return zap.New(core)
 }
 
 func setDefaultAuditLog() {
@@ -111,16 +131,17 @@ func setDefaultAuditLog() {
 	}
 	zapEncodeConfig := zap.NewProductionEncoderConfig()
 	jsonEncoder := zapcore.NewJSONEncoder(zapEncodeConfig)
+	auditLogger = newStdLogger(jsonEncoder, zapcore.InfoLevel)
+}
 
-	w := zapcore.AddSync(os.Stdout)
-	core := zapcore.NewCore(
-		jsonEncoder,
-		w,
-		zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl >= zapcore.InfoLevel
-		}),
-	)
-	auditLogger = zap.New(core)
+func setDefaultLogger() {
+	if logger != nil {
+		return
+	}
+	zapEncodeConfig := zap.NewDevelopmentEncoderConfig()
+	encoder := zapcore.NewConsoleEncoder(zapEncodeConfig)
+	logger = newStdLogger(encoder, zapcore.DebugLevel)
+	slogger = logger.Sugar()
 }
 
 func InitAuditLog(logPath string) (*zap.Logger, error) {

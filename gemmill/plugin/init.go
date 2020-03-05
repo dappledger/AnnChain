@@ -30,7 +30,7 @@ const (
 )
 
 var (
-	pluginTypeAdminOP  = byte(0x01)
+	pluginTypeAdminOP    = byte(0x01)
 	pluginTypeSuspect    = byte(0x02)
 	pluginTypeQueryCache = byte(0x03)
 )

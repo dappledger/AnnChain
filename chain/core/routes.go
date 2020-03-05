@@ -32,8 +32,6 @@ type RPCNode interface {
 	// GetShard(string) (*ShardNode, error)
 	Height() int
 	GetBlock(height int) (*gtypes.Block, *gtypes.BlockMeta, error)
-	BroadcastTx(tx []byte) error
-	BroadcastTxCommit(tx []byte) error
 	FlushMempool()
 	GetValidators() (int, []*gtypes.Validator)
 	GetP2PNetInfo() (bool, []string, []*gtypes.Peer)
@@ -43,6 +41,29 @@ type RPCNode interface {
 	GetUnconfirmedTxs() []gtypes.Tx
 	IsNodeValidator(pub crypto.PubKey) bool
 	GetBlacklist() []string
+
+	Status() (*gtypes.ResultStatus, error)
+	Genesis() (*gtypes.ResultGenesis, error)
+	HealthInfo() (*gtypes.ResultHealthInfo, error)
+	Block(height int64) (*gtypes.ResultBlock, error)
+	BlockchainInfo(minHeight, maxHeight int64) (*gtypes.ResultBlockchainInfo, error)
+	DumpConsensusState() (*gtypes.ResultDumpConsensusState, error)
+	UnconfirmedTxs() (*gtypes.ResultUnconfirmedTxs, error)
+	NumUnconfirmedTxs() (*gtypes.ResultUnconfirmedTxs, error)
+	NumArchivedBlocks() (*gtypes.ResultNumArchivedBlocks, error)
+	UnsafeFlushMempool() (*gtypes.ResultUnsafeFlushMempool, error)
+	BroadcastTx(tx []byte) (*gtypes.ResultBroadcastTx, error)
+	BroadcastTxCommit(tx []byte) (*gtypes.ResultBroadcastTxCommit, error)
+	QueryTx(query []byte) (*gtypes.ResultNumLimitTx, error)
+	Query(query []byte) (*gtypes.ResultQuery, error)
+	GetTransactionByHash(hash []byte) (*gtypes.ResultQuery, error)
+	Info() (*gtypes.ResultInfo, error)
+	Validators() (*gtypes.ResultValidators, error)
+	CoreVersion() (*gtypes.ResultCoreVersion, error)
+	LastHeight() (*gtypes.ResultLastHeight, error)
+	ZaSurveillance() (*gtypes.ResultSurveillance, error)
+	NetInfo() (*gtypes.ResultNetInfo, error)
+	Blacklist() (*gtypes.ResultRefuseList, error)
 }
 
 type rpcHandler struct {

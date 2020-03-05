@@ -124,6 +124,11 @@ func RunNodeRet(config *viper.Viper, runtime, appName string) error {
 			return fmt.Errorf("failed to start rpc: %v", err)
 		}
 	}
+	if config.GetString("grpc_laddr") != "" {
+		if err := node.StartGRPC(); err != nil {
+			return fmt.Errorf("failed to start rpc: %v", err)
+		}
+	}
 	if config.GetBool("pprof") {
 		go func() {
 			http.ListenAndServe(":6060", nil)
@@ -224,6 +229,23 @@ func (n *Node) StartRPC() ([]net.Listener, error) {
 	}
 
 	return listeners, nil
+}
+
+func (n *Node) StartGRPC() error {
+	grpcPort := n.config.GetString("grpc_laddr")
+	if grpcPort != "" {
+		proto, addr, err := n.startGrpc(grpcPort)
+		if err != nil {
+			return err
+		}
+		log.Infof("Serving gRPC on %s", grpcPort)
+		gatewayPort := n.config.GetInt("grpc_gateway_port")
+		if gatewayPort > 0 {
+			n.startGrpcGateway(addr, proto, gatewayPort)
+			log.Infof("Serving gRPC gateway on %d", gatewayPort)
+		}
+	}
+	return nil
 }
 
 func (n *Node) PrivValidator() *gtypes.PrivValidator {
