@@ -27,7 +27,7 @@ func main() {
 	commands.InitLog()
 
 	app := cli.NewApp()
-	app.Name = "anntool"
+	app.Name = "gtool"
 	app.Version = types.GetVersion()
 
 	app.Commands = []cli.Command{

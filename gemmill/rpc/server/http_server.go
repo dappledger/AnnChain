@@ -36,7 +36,7 @@ import (
 	gtypes "github.com/dappledger/AnnChain/gemmill/rpc/types"
 )
 
-const MaxAuditLogContentSize = 40
+const MaxAuditLogContentSize = 50
 
 func StartHTTPServer(listenAddr string, handler http.Handler) (listener net.Listener, err error) {
 	// listenAddr should be fully formed including tcp:// or unix:// prefix
@@ -175,8 +175,8 @@ func RecoverAndLogHandler(handler http.Handler) http.Handler {
 		if len(rww.responseContent) > 0 {
 			fields = append(fields, zap.ByteString("response_content", rww.responseContent))
 		}
-		for k,v:= range  rww.logFields {
-			fields = append(fields,zap.String(k,v))
+		for k, v := range rww.logFields {
+			fields = append(fields, zap.String(k, v))
 		}
 		log.Audit().Info("rpc got response ", fields...)
 		rww.Flush()
@@ -234,6 +234,7 @@ func (w *ResponseWriterWrapper) recordJsonRpcMethod(jsonRpcMethod string) {
 
 func (w *ResponseWriterWrapper) recordResponse(data []byte) {
 	if len(data) > MaxAuditLogContentSize {
+		w.responseContent = data[:MaxAuditLogContentSize]
 		return
 	}
 	w.responseContent = data
@@ -241,6 +242,7 @@ func (w *ResponseWriterWrapper) recordResponse(data []byte) {
 
 func (w *ResponseWriterWrapper) recordRequest(data []byte) {
 	if len(data) > MaxAuditLogContentSize {
+		w.requestContent = data[:MaxAuditLogContentSize]
 		return
 	}
 	w.requestContent = data
