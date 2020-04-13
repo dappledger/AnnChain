@@ -223,6 +223,7 @@ func (h *rpcHandler) BroadcastTx(tx []byte) (result *gtypes.ResultBroadcastTx, l
 	}
 
 	hash := gtypes.Tx(tx).Hash()
+	logFields["hash"] = fmt.Sprintf("0x%x", hash)
 	return &gtypes.ResultBroadcastTx{TxHash: hexutil.Encode(hash), Code: 0}, logFields, nil
 }
 
@@ -239,6 +240,7 @@ func (h *rpcHandler) BroadcastTxCommit(tx []byte) (result *gtypes.ResultBroadcas
 	}
 
 	hash := gtypes.Tx(tx).Hash()
+	logFields["hash"] = fmt.Sprintf("0x%x", hash)
 	return &gtypes.ResultBroadcastTxCommit{TxHash: hexutil.Encode(hash), Code: 0}, logFields, nil
 }
 
