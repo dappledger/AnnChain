@@ -1,7 +1,7 @@
 # compile environment;
-FROM golang:1.13-alpine as builder
+FROM golang:1.12-alpine as builder
 #install libs
-#you shold repace when you in china.
+#you shold replace when you in china.
 RUN sed -i "s/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g" /etc/apk/repositories
 RUN apk add build-base make git
 #copy files;
@@ -11,7 +11,7 @@ RUN GO111MODULE="on" GOPROXY="https://goproxy.cn" make genesis
 
 # package environment;
 FROM alpine:latest
-#you shold repace when you in china.
+#you shold replace when you in china.
 RUN sed -i "s/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g" /etc/apk/repositories
 RUN apk add libc6-compat
 WORKDIR /genesis
