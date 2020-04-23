@@ -1,14 +1,5 @@
 version: '3'
 services:
-  mgo:
-    image: mongo:3.2
-    ports:
-      - '27017:27017'
-    command: mongod
-    restart: always
-    networks:
-      app_net:
-        ipv4_address: 192.168.10.7
   validator-0:
     hostname: validator-0
     image: annchain/genesis:latest
