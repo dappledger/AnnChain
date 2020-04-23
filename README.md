@@ -122,6 +122,8 @@ consensus = "raft"
 #### Single node
 
 ``` shell
+./build.sh genesis
+
 ./build/genesis init
 
 ./build/genesis run
@@ -130,11 +132,11 @@ consensus = "raft"
 #### Local cluster using docker-compose
 
 ``` shell
-## start cluster
-➜  docker-compose up
+# docker build image and docker-compose run
+make fastrun
 
-## remove cluster
-➜  docker-compose down
+# remove cluster
+make clean_fastrun
 ```
 
 ## Usage

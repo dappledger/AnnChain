@@ -121,6 +121,8 @@ consensus = "raft"
 #### 单节点
 
 ``` shell
+./build.sh genesis
+
 ./build/genesis init
 
 ./build/genesis run
@@ -129,11 +131,11 @@ consensus = "raft"
 #### 使用docker-compose的本地集群
 
 ``` shell
-## start cluster
-➜  docker-compose up
+# docker build image and docker-compose run
+make fastrun
 
-## remove cluster
-➜  docker-compose down
+# remove cluster
+make clean_fastrun
 ```
 
 ## 用法

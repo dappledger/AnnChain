@@ -49,6 +49,7 @@ test-gemmill:
 	go test -v ./gemmill/modules/go-common
 	go test -v ./gemmill/modules/go-db
 	go test -v ./gemmill/modules/go-events
+	# 'go test flowrate' failed maybe your machine upgrade required.
 	go test -v ./gemmill/modules/go-flowrate/flowrate
 	go test -v ./gemmill/modules/go-log
 	go test -v ./gemmill/modules/go-merkle
@@ -56,3 +57,15 @@ test-gemmill:
 	go test -v ./gemmill/refuse_list
 	go test -v ./gemmill/types
 	go test -v ./gemmill/utils
+
+image:
+	docker build -t genesis:latest -f Dockerfile .
+	docker tag genesis:latest annchain/genesis:latest
+
+# docker build and run
+fastrun:image
+	docker-compose -f docker-compose.yaml up
+
+clean_fastrun:
+	docker-compose -f docker-compose.yaml stop
+	docker-compose -f docker-compose.yaml rm
