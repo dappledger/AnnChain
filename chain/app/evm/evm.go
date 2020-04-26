@@ -104,14 +104,16 @@ type EVMApp struct {
 	currentHeader *etypes.Header
 	chainConfig   *params.ChainConfig
 
-	stateDb      ethdb.Database
-	stateMtx     sync.Mutex
-	state        *estate.StateDB
-	currentState *estate.StateDB
+	stateDb                ethdb.Database
+	keyValueHistoryManager *KeyValueHistoryManager
+	stateMtx               sync.Mutex
+	state                  *estate.StateDB
+	currentState           *estate.StateDB
 
-	receipts etypes.Receipts
-	kvs      rtypes.KVs
-	Signer   etypes.Signer
+	receipts          etypes.Receipts
+	kvs               rtypes.KVs
+	keyValueHistories gtypes.KeyValueHistories
+	Signer            etypes.Signer
 }
 
 type LastBlockInfo struct {
@@ -143,6 +145,12 @@ func NewEVMApp(config *viper.Viper) (*EVMApp, error) {
 	if app.stateDb, err = OpenDatabase(app.datadir, "chaindata", DatabaseCache, DatabaseHandles); err != nil {
 		log.Error("OpenDatabase error", zap.Error(err))
 		return nil, errors.Wrap(err, "app error")
+	}
+	if kvdb, err := OpenDatabase(app.datadir, "kv_update_history", DatabaseCache, DatabaseHandles); err != nil {
+		log.Error("OpenDatabase error", zap.Error(err))
+		return nil, errors.Wrap(err, "app error")
+	} else {
+		app.keyValueHistoryManager = NewKeyValueHistoryManager(kvdb)
 	}
 
 	app.pool = NewEthTxPool(app, config)
@@ -220,6 +228,7 @@ func (app *EVMApp) GetTxPool() gtypes.TxPool {
 func (app *EVMApp) Stop() {
 	app.BaseApplication.Stop()
 	app.stateDb.Close()
+	app.keyValueHistoryManager.Close()
 }
 
 func (app *EVMApp) GetAngineHooks() gtypes.Hooks {
@@ -286,6 +295,7 @@ func (app *EVMApp) genExecFun(block *gtypes.Block, res *gtypes.ExecuteResult) Be
 		stateSnapshot := state.Snapshot()
 		temReceipt := make([]*etypes.Receipt, 0)
 		temKv := make([]*rtypes.KV, 0)
+		tempKeyValueUpdateHistories := make([]*gtypes.KeyValueHistory, 0)
 
 		execFunc := func(txIndex int, raw []byte, tx *etypes.Transaction) error {
 			txType := common.Bytes2Hex(tx.Data())
@@ -295,6 +305,18 @@ func (app *EVMApp) genExecFun(block *gtypes.Block, res *gtypes.ExecuteResult) Be
 					return err
 				}
 				temKv = append(temKv, kv)
+				txBytes, _ := rlp.EncodeToBytes(tx)
+				history := &gtypes.KeyValueHistory{
+					Key: kv.Key,
+					ValueUpdateHistory: &gtypes.ValueUpdateHistory{
+						Value:       kv.Value,
+						TxHash:      gtypes.Tx(txBytes).Hash(),
+						BlockHeight: uint64(block.Height),
+						TimeStamp:   uint64(block.Time.Unix()),
+						TxIndex:uint32(txIndex),
+					},
+				}
+				tempKeyValueUpdateHistories = append(tempKeyValueUpdateHistories, history)
 			} else {
 				receipt, err := app.executeOriginTx(blockHash, state, txIndex, raw, tx)
 				if err != nil {
@@ -317,6 +339,7 @@ func (app *EVMApp) genExecFun(block *gtypes.Block, res *gtypes.ExecuteResult) Be
 			}
 			app.receipts = append(app.receipts, temReceipt...)
 			app.kvs = append(app.kvs, temKv...)
+			app.keyValueHistories = append(app.keyValueHistories, tempKeyValueUpdateHistories...)
 			res.ValidTxs = append(res.ValidTxs, raw)
 			return true
 		}
@@ -398,7 +421,7 @@ func (app *EVMApp) GetAddressFromTx(tx *etypes.Transaction) (from common.Address
 	return
 }
 
-func (app *EVMApp) CheckTx(bs []byte) (from common.Address,nonce uint64, err error) {
+func (app *EVMApp) CheckTx(bs []byte) (from common.Address, nonce uint64, err error) {
 	tx := &etypes.Transaction{}
 	err = rlp.DecodeBytes(bs, &tx)
 	if err != nil {
@@ -434,10 +457,6 @@ func (app *EVMApp) CheckTx(bs []byte) (from common.Address,nonce uint64, err err
 		}
 		if len(kvData.Key) > MaxKey || len(kvData.Value) > MaxValue {
 			err = fmt.Errorf("key or value too big,MaxKey:%v,MaxValue:%v", MaxKey, MaxValue)
-			return
-		}
-		if ok, _ := app.stateDb.Has(append(KvPrefix, kvData.Key...)); ok {
-			err = fmt.Errorf("duplicate key :%v", kvData.Key)
 			return
 		}
 	}
@@ -477,6 +496,12 @@ func (app *EVMApp) SaveReceipts() ([]byte, error) {
 	if err := receiptBatch.Write(); err != nil {
 		return nil, fmt.Errorf("persist receipts failed:%v", err.Error())
 	}
+	err := app.keyValueHistoryManager.SaveKeyHistory(app.keyValueHistories)
+	if err != nil {
+		log.Warnf("save key value history error", zap.Error(err))
+	}
+
+	app.keyValueHistories = nil
 	rHash := merkle.SimpleHashFromHashes(savedReceipts)
 	return rHash, nil
 }
@@ -525,6 +550,13 @@ func (app *EVMApp) Query(query []byte) (res gtypes.Result) {
 		res = app.queryKeyWithPrefix(load)
 	case rtypes.QueryType_Pending_Nonce:
 		res = app.queryPendingNonce(load)
+	case rtypes.QueryType_Key_Update_History:
+		if len(load) < (PageNumLen + PageSizeLen+1) {
+			return gtypes.NewError(gtypes.CodeType_BaseInvalidInput, "wrong pageNo and pageSize")
+		}
+		pageNo := binary.BigEndian.Uint32(load[:PageNumLen])
+		pageSize := binary.BigEndian.Uint32(load[PageNumLen:PageNumLen+PageSizeLen])
+		res = app.queryKeyUpdateHistory(load[PageNumLen+PageSizeLen:], pageNo, pageSize)
 	default:
 		res = gtypes.NewError(gtypes.CodeType_BaseInvalidInput, "unimplemented query")
 	}
@@ -731,6 +763,24 @@ func (app *EVMApp) queryKeyWithPrefix(load []byte) gtypes.Result {
 		return gtypes.NewError(gtypes.CodeType_WrongRLP, "rlp encode error:"+err.Error())
 	}
 	return gtypes.NewResultOK(bytKvs, "")
+}
+
+func (app *EVMApp) queryKeyUpdateHistory(key []byte, pageNo uint32, pageSize uint32) gtypes.Result {
+
+	kvs, total, err := app.keyValueHistoryManager.Query(key, pageNo, pageSize)
+	if err != nil {
+		return gtypes.NewError(gtypes.CodeType_InternalError, fmt.Sprintf("fail to get value history  %s %v:",string(key),err))
+	}
+	result := gtypes.ValueHistoryResult{
+		Key:                  key,
+		ValueUpdateHistories: kvs,
+		Total:                total,
+	}
+	byteKvs, err := rlp.EncodeToBytes(result)
+	if err != nil {
+		return gtypes.NewError(gtypes.CodeType_WrongRLP, "rlp encode error:"+err.Error())
+	}
+	return gtypes.NewResultOK(byteKvs, "")
 }
 
 func (app *EVMApp) SetCore(core gtypes.Core) {

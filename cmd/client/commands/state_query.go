@@ -14,6 +14,7 @@
 package commands
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -57,6 +58,24 @@ var (
 				Action: queryReceipt,
 				Flags: []cli.Flag{
 					anntoolFlags.hash,
+				},
+			},
+			{
+				Name:   "key",
+				Usage:  "",
+				Action: queryKey,
+				Flags: []cli.Flag{
+					anntoolFlags.key,
+				},
+			},
+			{
+				Name:   "key_update_history",
+				Usage:  "",
+				Action: queryKeyUpdateHistory,
+				Flags: []cli.Flag{
+					anntoolFlags.key,
+					anntoolFlags.pageNum,
+					anntoolFlags.pageSize,
 				},
 			},
 		},
@@ -191,4 +210,64 @@ func getTxByHash(hash []byte) (rt *gtypes.ResultTransaction, ethtx *types.Transa
 	}
 
 	return
+}
+
+func queryKey(ctx *cli.Context) error {
+	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
+	rpcResult := new(gtypes.ResultQuery)
+
+	keyStr := ctx.String("key")
+	query := append([]byte{11}, []byte(keyStr)...)
+
+	_, err := clientJSON.Call("query", []interface{}{query}, rpcResult)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+	fmt.Println("query result:", string(rpcResult.Result.Data))
+	return nil
+}
+
+func queryKeyUpdateHistory(ctx *cli.Context) error {
+	clientJSON := cl.NewClientJSONRPC(commons.QueryServer)
+	rpcResult := new(gtypes.ResultQuery)
+	//ValueHistoryResult
+	keyStr := ctx.String("key")
+	pageNum := ctx.Uint("page_num")
+	if pageNum == 0 {
+		pageNum = 1
+	}
+	pageSize := ctx.Uint("page_size")
+	if pageSize == 0 {
+		pageSize = 10
+	}
+	query := append([]byte{14}, putUint32(uint32(pageNum))... )
+	query = append(query, putUint32(uint32(pageSize))...)
+	query = append(query,[]byte(keyStr)... )
+
+	_, err := clientJSON.Call("query", []interface{}{query}, rpcResult)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	response := &gtypes.ValueHistoryResult{}
+	err = rlp.DecodeBytes(rpcResult.Result.Data, response)
+	if err != nil {
+		fmt.Println(rpcResult.Result)
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 127)
+	}
+
+	fmt.Println("query result:", string(responseJSON))
+
+	return nil
+}
+
+func putUint32(i uint32) []byte {
+	index := make([]byte, 4)
+	binary.BigEndian.PutUint32(index, i)
+	return index
 }

@@ -41,19 +41,20 @@ type (
 )
 
 const (
-	APIQueryTx                          = iota
-	QueryType_Contract        QueryType = 0
-	QueryType_Nonce           QueryType = 1
-	QueryType_Balance         QueryType = 2
-	QueryType_Receipt         QueryType = 3
-	QueryType_Existence       QueryType = 4
-	QueryType_PayLoad         QueryType = 5
-	QueryType_TxRaw           QueryType = 6
-	QueryTxLimit              QueryType = 9
-	QueryTypeContractByHeight QueryType = 10
-	QueryType_Key             QueryType = 11
-	QueryType_Key_Prefix      QueryType = 12
-	QueryType_Pending_Nonce   QueryType = 13
+	APIQueryTx                             = iota
+	QueryType_Contract           QueryType = 0
+	QueryType_Nonce              QueryType = 1
+	QueryType_Balance            QueryType = 2
+	QueryType_Receipt            QueryType = 3
+	QueryType_Existence          QueryType = 4
+	QueryType_PayLoad            QueryType = 5
+	QueryType_TxRaw              QueryType = 6
+	QueryTxLimit                 QueryType = 9
+	QueryTypeContractByHeight    QueryType = 10
+	QueryType_Key                QueryType = 11
+	QueryType_Key_Prefix         QueryType = 12
+	QueryType_Pending_Nonce      QueryType = 13
+	QueryType_Key_Update_History QueryType = 14
 )
 
 var KVTxType = []byte("kvTx-")
