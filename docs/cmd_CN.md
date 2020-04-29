@@ -243,6 +243,50 @@ query result pending nonce
 query result: 2
 ```
 
+
+## 查询  KV 
+
+##### 命令
+
+```
+ gtool  --backend <validator's IP:RPC Port>  query  key  --key=<key>
+```
+
+##### 结果
+
+```
+query result value
+```
+
+##### Demo
+
+```
+./build/gtool --backend "tcp://127.0.0.1:46657" query key  --key=test_key_0
+query result: v_015
+```
+
+
+## 查询  KV  key 更新记录 
+
+#### 命令
+```
+ gtool  --backend <validator's IP:RPC Port>  query  key_update_history  --key=<key> --page_num=<page_num> --page_size=<page_size>
+```
+
+##### 结果
+
+```
+query result key_update_history
+```
+
+##### Demo
+
+```
+./build/gtool --backend "tcp://127.0.0.1:46657" key_update_history  --key=test_key_0 --page_num=3  --page_size=5
+query result: {"key":"dGVzdF9rZXlfMA==","value_update_histories":[{"tx_hash":"FeRokvXDPmeUSlmQg5RhU6Y0bEsuVuWA8l0KQr8SaYE=","block_height":69227,"time_stamp":1587984079,"value":"dl8wMTA="},{"tx_hash":"353zPzemMeT6alb26T3BTbLTI/O15S5KuGCJKzN2FFg=","block_height":69226,"time_stamp":1587984078,"value":"dl8wIDk="},{"tx_hash":"ZRWO+tx6N/9AxXv/DgkxOSmRcSZgOsZUD9Axp3tZrsc=","block_height":69225,"time_stamp":1587984076,"value":"dl8wIDg="},{"tx_hash":"MTdIYMOLQ53L89shQB/vMb086JIunyFKT3a35ueqK3E=","block_height":69224,"time_stamp":1587984075,"value":"dl8wIDc="},{"tx_hash":"5r/FXxa+sNMIFNytEAEdPTD2A0BUXAowabsyXq93zsc=","block_height":69223,"time_stamp":1587984074,"value":"dl8wIDY="}],"total":20}
+```
+
+
 ## 查询 Receipt
 
 ##### 命令

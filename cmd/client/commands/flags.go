@@ -38,6 +38,9 @@ type AnntoolFlags struct {
 	cType,
 	verbose,
 	nPrivs,
+	pageNum ,
+	pageSize ,
+	key ,
 	codeHash cli.Flag
 }
 
@@ -116,5 +119,14 @@ var anntoolFlags = AnntoolFlags{
 	nPrivs: cli.IntFlag{
 		Name:  "nPrivs",
 		Usage: "number of ca privateKey!",
+	},
+	pageNum:cli.UintFlag{
+		Name:"page_num",
+	},
+	pageSize:cli.UintFlag{
+		Name:"page_size",
+	},
+	key:cli.StringFlag{
+		Name:"key",
 	},
 }
