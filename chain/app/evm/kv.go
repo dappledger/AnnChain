@@ -127,6 +127,9 @@ func (m *KeyValueHistoryManager) Query(key []byte, pageNo uint32, pageSize uint3
 	if pageSize == 0 {
 		pageSize = 10
 	}
+	if pageSize >20 {
+		pageSize = 20
+	}
 	total, err = m.GetKeyHistorySize(key)
 	if err != nil {
 		log.Infof("get size err %v", err)

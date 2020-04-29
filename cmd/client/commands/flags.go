@@ -29,6 +29,7 @@ type AnntoolFlags struct {
 	hash,
 	accountPubkey,
 	peerPubkey,
+	privateKey,
 	validatorPubkey,
 	validatorSignature,
 	validatorPrivKey,
@@ -38,9 +39,8 @@ type AnntoolFlags struct {
 	cType,
 	verbose,
 	nPrivs,
-	pageNum ,
-	pageSize ,
-	key ,
+	pageNum,
+	pageSize,
 	codeHash cli.Flag
 }
 
@@ -120,13 +120,13 @@ var anntoolFlags = AnntoolFlags{
 		Name:  "nPrivs",
 		Usage: "number of ca privateKey!",
 	},
-	pageNum:cli.UintFlag{
-		Name:"page_num",
+	pageNum: cli.UintFlag{
+		Name: "page_num",
 	},
-	pageSize:cli.UintFlag{
-		Name:"page_size",
+	pageSize: cli.UintFlag{
+		Name: "page_size",
 	},
-	key:cli.StringFlag{
-		Name:"key",
+	privateKey: cli.StringFlag{
+		Name: "priv_key",
 	},
 }
