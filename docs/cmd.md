@@ -265,11 +265,11 @@ query result receipt
 query result: {"root":null,"status":1,"cumulativeGasUsed":21656,"logsBloom":"0x00000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000020000000000000000000000000000000000000000000000000000000000000","logs":[{"address":"0xae119075bd77de2d8e32629bdb439d967a1ecfe6","topics":["0xb45ab3e8c50935ce2fa51d37817fd16e7358a3087fd93a9ac7fbddb22a926c35"],"data":"0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000064","blockNumber":"0x64e","transactionHash":"0x2b41d9c05a7be5b85586c53b5a2d3cacc1ded323a18f1c62c51bc2aea0953b55","transactionIndex":"0x0","blockHash":"0x000000000000000000000000ec83a146ca731fdffe4bef69ad260d7389732e87","logIndex":"0x0","removed":false}],"transactionHash":"0x2b41d9c05a7be5b85586c53b5a2d3cacc1ded323a18f1c62c51bc2aea0953b55","contractAddress":"0x0000000000000000000000000000000000000000","gasUsed":21656}
 ```
 
-## Query KV 
+## KeyValue : get value by key 
 
 ####Command 
 ```
- gtool  --backend <validator's IP:RPC Port>  query  key  --key=<key>
+ gtool  --backend <validator's IP:RPC Port>  get <key>
 ```
 
 ##### Result
@@ -281,18 +281,39 @@ query result value
 ##### Demo
 
 ```
-./build/gtool --backend "tcp://127.0.0.1:46657" query key  --key=test_key_0
+./build/gtool --backend "tcp://127.0.0.1:46657" get test_key_0
 query result: v_015
 ```
 
+## KeyValue : store a  key value data
 
-## Query KV  key update history 
+
+##### Command
+
+```
+gtool --backend <validator's IP:RPC Port> put <key> <value> --priv_key=<priv_key>
+```
+
+##### Result
+
+```
+tx result 
+```
+
+##### Demo
+
+```
+gtool --backend "tcp://127.0.0.1:46657" put foo bar --priv_key=B37D1C91C2320911EFA1433EC8BBBE48AF15409743F8CB1830708CBBA0DB6690									
+tx result: 0x8eaf236bf0d760c15e798161de84a11c8ed06e7b3622653d85f9dabbd7a44609
+```
+
+## KeyValue  get  key update history 
 
 ####Command 
 ```
- gtool  --backend <validator's IP:RPC Port>  query  key_update_history  --key=<key> --page_num=<page_num> --page_size=<page_size>
+ gtool  --backend <validator's IP:RPC Port>  get <key> --page_num=<page_num> --page_size=<page_size>
 ```
-
+default page_size is 10, max is 20
 ##### Result
 
 ```
@@ -302,8 +323,8 @@ query result key_update_history
 ##### Demo
 
 ```
-./build/gtool --backend "tcp://127.0.0.1:46657" key_update_history  --key=test_key_0 --page_num=3  --page_size=5
-query result: {"key":"dGVzdF9rZXlfMA==","value_update_histories":[{"tx_hash":"FeRokvXDPmeUSlmQg5RhU6Y0bEsuVuWA8l0KQr8SaYE=","block_height":69227,"time_stamp":1587984079,"value":"dl8wMTA="},{"tx_hash":"353zPzemMeT6alb26T3BTbLTI/O15S5KuGCJKzN2FFg=","block_height":69226,"time_stamp":1587984078,"value":"dl8wIDk="},{"tx_hash":"ZRWO+tx6N/9AxXv/DgkxOSmRcSZgOsZUD9Axp3tZrsc=","block_height":69225,"time_stamp":1587984076,"value":"dl8wIDg="},{"tx_hash":"MTdIYMOLQ53L89shQB/vMb086JIunyFKT3a35ueqK3E=","block_height":69224,"time_stamp":1587984075,"value":"dl8wIDc="},{"tx_hash":"5r/FXxa+sNMIFNytEAEdPTD2A0BUXAowabsyXq93zsc=","block_height":69223,"time_stamp":1587984074,"value":"dl8wIDY="}],"total":20}
+gtool get foo --page_num=1
+query result: {"key":"Zm9v","value_update_histories":[{"tx_hash":"0sWVAv8hCoMp7qcwsdJ57yOAps2zbFFARAa6H3Ad6ko=","block_height":50283,"time_stamp":1588149308,"value":"YmFyMg==","tx_index":0},{"tx_hash":"3gmcnXK6yQvW4oNbZhV0kEVJtZ/GKIsgP/lcRFmO3aI=","block_height":50273,"time_stamp":1588149294,"value":"YmFyMQ==","tx_index":0}],"total":3}
 ```
 
 

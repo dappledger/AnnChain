@@ -41,6 +41,8 @@ func main() {
 		commands.InfoCommand,
 
 		commands.VersionCommands,
+		commands.KvGetCommands,
+		commands.KvPutCommands,
 	}
 
 	app.Flags = []cli.Flag{

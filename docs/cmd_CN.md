@@ -244,12 +244,12 @@ query result: 2
 ```
 
 
-## 查询  KV 
+##KeyValue: 通过key查询value 
 
 ##### 命令
 
 ```
- gtool  --backend <validator's IP:RPC Port>  query  key  --key=<key>
+ gtool  --backend <validator's IP:RPC Port>  get <key>
 ```
 
 ##### 结果
@@ -261,18 +261,40 @@ query result value
 ##### Demo
 
 ```
-./build/gtool --backend "tcp://127.0.0.1:46657" query key  --key=test_key_0
+./build/gtool --backend "tcp://127.0.0.1:46657" get test_key_0
 query result: v_015
 ```
 
 
-## 查询  KV  key 更新记录 
+## KeyValue : 写入数据
 
-#### 命令
+
+##### 命令
+
 ```
- gtool  --backend <validator's IP:RPC Port>  query  key_update_history  --key=<key> --page_num=<page_num> --page_size=<page_size>
+gtool --backend <validator's IP:RPC Port> put <key> <value> --priv_key=<priv_key>
 ```
 
+##### 结果
+
+```
+tx result 
+```
+
+##### Demo
+
+```
+gtool --backend "tcp://127.0.0.1:46657" put foo bar --priv_key=B37D1C91C2320911EFA1433EC8BBBE48AF15409743F8CB1830708CBBA0DB6690									
+tx result: 0x8eaf236bf0d760c15e798161de84a11c8ed06e7b3622653d85f9dabbd7a44609
+```
+
+## KeyValue  查询更新历史
+
+####Command 
+```
+ gtool  --backend <validator's IP:RPC Port>  get <key> --page_num=<page_num> --page_size=<page_size>
+```
+默认 page_size 为 10， 最大page_size为20
 ##### 结果
 
 ```
@@ -282,10 +304,9 @@ query result key_update_history
 ##### Demo
 
 ```
-./build/gtool --backend "tcp://127.0.0.1:46657" key_update_history  --key=test_key_0 --page_num=3  --page_size=5
-query result: {"key":"dGVzdF9rZXlfMA==","value_update_histories":[{"tx_hash":"FeRokvXDPmeUSlmQg5RhU6Y0bEsuVuWA8l0KQr8SaYE=","block_height":69227,"time_stamp":1587984079,"value":"dl8wMTA="},{"tx_hash":"353zPzemMeT6alb26T3BTbLTI/O15S5KuGCJKzN2FFg=","block_height":69226,"time_stamp":1587984078,"value":"dl8wIDk="},{"tx_hash":"ZRWO+tx6N/9AxXv/DgkxOSmRcSZgOsZUD9Axp3tZrsc=","block_height":69225,"time_stamp":1587984076,"value":"dl8wIDg="},{"tx_hash":"MTdIYMOLQ53L89shQB/vMb086JIunyFKT3a35ueqK3E=","block_height":69224,"time_stamp":1587984075,"value":"dl8wIDc="},{"tx_hash":"5r/FXxa+sNMIFNytEAEdPTD2A0BUXAowabsyXq93zsc=","block_height":69223,"time_stamp":1587984074,"value":"dl8wIDY="}],"total":20}
+gtool get foo --page_num=1
+query result: {"key":"Zm9v","value_update_histories":[{"tx_hash":"0sWVAv8hCoMp7qcwsdJ57yOAps2zbFFARAa6H3Ad6ko=","block_height":50283,"time_stamp":1588149308,"value":"YmFyMg==","tx_index":0},{"tx_hash":"3gmcnXK6yQvW4oNbZhV0kEVJtZ/GKIsgP/lcRFmO3aI=","block_height":50273,"time_stamp":1588149294,"value":"YmFyMQ==","tx_index":0}],"total":3}
 ```
-
 
 ## 查询 Receipt
 
