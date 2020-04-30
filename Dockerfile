@@ -3,7 +3,7 @@ FROM annchain/builder:go1.12 as builder
 #copy files;
 ADD . /AnnChain
 WORKDIR /AnnChain
-RUN GO111MODULE="on" GOPROXY="https://goproxy.cn" make genesis
+RUN GO111MODULE="on" GOPROXY="https://goproxy.io" make genesis
 
 # package environment;
 FROM annchain/runner:alpine3.11

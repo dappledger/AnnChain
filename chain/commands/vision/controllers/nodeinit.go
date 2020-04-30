@@ -14,13 +14,8 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
 	"github.com/dappledger/AnnChain/chain/commands/vision/models"
 )
-
-type InitNode struct {
-	beego.Controller
-}
 
 func (c *InitNode) Get() {
 	c.TplName = "initnode.tpl"
