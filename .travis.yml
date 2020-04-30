@@ -9,6 +9,7 @@ jobs:
       env: GO111MODULE=on TEST_PLATFORM=binary TEST_GENESIS_IMAGE=$GOPATH/src/github.com/dappledger/AnnChain/build/genesis TEST_CONSENSUS_TYPE=pbft
       before_script:
         - make
+        - make image
       script:
         - make test
         - go test ./gemmill/... -coverprofile=coverage.txt -covermode=atomic
