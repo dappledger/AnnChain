@@ -19,17 +19,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"time"
 
-	"github.com/astaxie/beego"
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/dappledger/AnnChain/chain/commands/global"
-	"github.com/dappledger/AnnChain/chain/core"
 	"github.com/dappledger/AnnChain/gemmill/config"
 	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 	"github.com/dappledger/AnnChain/gemmill/go-utils"
-	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	"github.com/dappledger/AnnChain/gemmill/types"
 )
 
@@ -182,45 +178,4 @@ func (n *NodeInit) DoInit() error {
 		os.RemoveAll(n.ConfigPath)
 	}
 	return err
-}
-
-func DoInitNode(c *beego.Controller) {
-	n := &NodeInit{}
-	c.ParseForm(n)
-	if err := n.DoInit(); err != nil {
-		c.Data["json"] = err.Error()
-		return
-	}
-
-	if _, ok := c.Data["json"]; !ok {
-		c.Data["json"] = "Done!"
-	}
-}
-
-func RunNode(c *beego.Controller) {
-	n := &NodeInit{}
-	c.ParseForm(n)
-	err := global.CheckAndReadRuntimeConfig(n.ConfigPath)
-	if err != nil {
-		c.Data["json"] = err.Error()
-		return
-	}
-	chret := make(chan error, 0)
-	go func() {
-		defer log.DumpStack()
-		if err := core.RunNodeRet(global.GConf(), "", global.GConf().GetString("app_name")); err != nil {
-			chret <- err
-		}
-	}()
-	timer := time.NewTimer(time.Second * 2)
-	select {
-	case <-timer.C:
-		c.Data["json"] = "node is running..."
-	case err := <-chret:
-		c.Data["json"] = fmt.Sprintf("Failed to start node: %v", err)
-	}
-}
-
-func CloseServer(c *beego.Controller) {
-	beego.BeeApp.Server.Close()
 }

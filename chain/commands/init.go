@@ -16,12 +16,10 @@ package commands
 import (
 	"log"
 
-	"github.com/astaxie/beego"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	"github.com/dappledger/AnnChain/chain/commands/global"
-	"github.com/dappledger/AnnChain/chain/commands/vision/routers"
 	"github.com/dappledger/AnnChain/gemmill"
 	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 )
@@ -51,8 +49,6 @@ func NewInitCommand() *cobra.Command {
 
 func newInitCommandFunc(cmd *cobra.Command, args []string) {
 	if visual {
-		routers.InitNode()
-		beego.Run(vport)
 		select {}
 	}
 	if !global.CheckAppName(appName) {

@@ -6,7 +6,6 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/allegro/bigcache v1.2.0
 	github.com/aristanetworks/goarista v0.0.0-20180424004133-70dca2f27708
-	github.com/astaxie/beego v0.0.0-20171218111859-f16688817aa4
 	github.com/bitly/go-simplejson v0.0.0-20170206154632-da1a8928f709
 	github.com/btcsuite/btcd v0.0.0-20190427004231-96897255fd17
 	github.com/davecgh/go-spew v1.1.1
