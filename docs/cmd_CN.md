@@ -243,6 +243,71 @@ query result pending nonce
 query result: 2
 ```
 
+
+##KeyValue: 通过key查询value 
+
+##### 命令
+
+```
+ gtool  --backend <validator's IP:RPC Port>  get <key>
+```
+
+##### 结果
+
+```
+query result value
+```
+
+##### Demo
+
+```
+./build/gtool --backend "tcp://127.0.0.1:46657" get test_key_0
+query result: v_015
+```
+
+
+## KeyValue : 写入数据
+
+
+##### 命令
+
+```
+gtool --backend <validator's IP:RPC Port> put <key> <value> --priv_key=<priv_key>
+```
+
+##### 结果
+
+```
+tx result 
+```
+
+##### Demo
+
+```
+gtool --backend "tcp://127.0.0.1:46657" put foo bar --priv_key=B37D1C91C2320911EFA1433EC8BBBE48AF15409743F8CB1830708CBBA0DB6690									
+tx result: 0x8eaf236bf0d760c15e798161de84a11c8ed06e7b3622653d85f9dabbd7a44609
+```
+
+## KeyValue  查询更新历史
+
+####Command 
+```
+ gtool  --backend <validator's IP:RPC Port>  get <key> --page_num=<page_num> --page_size=<page_size>
+```
+默认 page_size 为 10， 最大page_size为20
+##### 结果
+
+```
+query result key_update_history
+```
+
+##### Demo
+
+```
+gtool get foo --page_num=1
+query result: {"key":"Zm9v","value_update_histories":[{"tx_hash":"0sWVAv8hCoMp7qcwsdJ57yOAps2zbFFARAa6H3Ad6ko=","block_height":50283,"time_stamp":1588149308,"value":"YmFyMg==","tx_index":0},{"tx_hash":"3gmcnXK6yQvW4oNbZhV0kEVJtZ/GKIsgP/lcRFmO3aI=","block_height":50273,"time_stamp":1588149294,"value":"YmFyMQ==","tx_index":0}],"total":3}
+```
+
 ## 查询 Receipt
 
 ##### 命令

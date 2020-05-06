@@ -192,3 +192,4 @@ func getTxByHash(hash []byte) (rt *gtypes.ResultTransaction, ethtx *types.Transa
 
 	return
 }
+
