@@ -86,20 +86,18 @@ func NewNode(conf *viper.Viper, runtime, appName string) (*Node, error) {
 	newAngine.SetQueryPayLoadTxParser(queryPayLoadTxParser)
 
 	newAngine.ConnectApp(initApp)
-
 	node := &Node{
 		Application: initApp,
 		Angine:      newAngine,
 		AngineTune:  tune,
 		GenesisDoc:  newAngine.Genesis(),
 
-		nodeInfo:      makeNodeInfo(conf, newAngine.PrivValidator().PubKey, newAngine.P2PHost(), newAngine.P2PPort()),
+		nodeInfo:      newAngine.GetNodeInfo(),
 		config:        conf,
 		privValidator: newAngine.PrivValidator(),
 	}
 	vm.DefaultAdminContract.SetCallback(node.ExecAdminTx)
 	// newAngine.SetAdminVoteRPC(node.GetAdminVote)
-	newAngine.RegisterNodeInfo(node.nodeInfo)
 	initApp.SetCore(newAngine)
 
 	return node, nil
