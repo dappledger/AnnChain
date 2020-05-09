@@ -86,14 +86,17 @@ func NewNode(conf *viper.Viper, runtime, appName string) (*Node, error) {
 	newAngine.SetQueryPayLoadTxParser(queryPayLoadTxParser)
 
 	newAngine.ConnectApp(initApp)
-
+	nodeinfo := newAngine.GetNodeInfo()
+	if nodeinfo == nil {
+		nodeinfo = makeNodeInfo(conf, newAngine.PrivValidator().PubKey, newAngine.P2PHost(), newAngine.P2PPort())
+	}
 	node := &Node{
 		Application: initApp,
 		Angine:      newAngine,
 		AngineTune:  tune,
 		GenesisDoc:  newAngine.Genesis(),
 
-		nodeInfo:      makeNodeInfo(conf, newAngine.PrivValidator().PubKey, newAngine.P2PHost(), newAngine.P2PPort()),
+		nodeInfo:      nodeinfo,
 		config:        conf,
 		privValidator: newAngine.PrivValidator(),
 	}
