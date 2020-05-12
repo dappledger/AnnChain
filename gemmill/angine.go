@@ -150,7 +150,7 @@ func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 
 	logger, err := getLogger(conf)
 	if err != nil {
-		err  = fmt.Errorf("failed to get logger: %v", err)
+		err = fmt.Errorf("failed to get logger: %v", err)
 		return nil, err
 	}
 	log.SetLog(logger)
@@ -163,13 +163,13 @@ func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 	crypto.NodeInit(crypto.CryptoType)
 	privValidator, err := types.LoadPrivValidator(conf.GetString("priv_validator_file"))
 	if err != nil {
-		err  = fmt.Errorf("LoadPrivValidator error: %v", err)
+		err = fmt.Errorf("LoadPrivValidator error: %v", err)
 		return nil, err
 	}
 	refuseList = refuse_list.NewRefuseList(dbBackend, dbDir)
 	p2psw, err := prepareP2P(conf, genesis, privValidator, refuseList)
 	if err != nil {
-		err  = fmt.Errorf("prepare p2p error: %v", err)
+		err = fmt.Errorf("prepare p2p error: %v", err)
 		return nil, err
 	}
 
@@ -231,7 +231,7 @@ func (a *Angine) OnRecvExchangeData(data *p2p.ExchangeData) error {
 		a.p2pSwitch.GetExchangeData().GenesisJSON = data.GenesisJSON
 		if err = a.buildState(otherGenesis); err != nil {
 			// TODO log err
-			log.Warn("build state err:",  zap.Error(err))
+			log.Warn("build state err:", zap.Error(err))
 			return err
 		}
 		if a.stateMachine == nil {
@@ -344,7 +344,7 @@ func (ang *Angine) assembleStateMachine(stateM *state.State) {
 	var addrBook *p2p.AddrBook
 	if conf.GetBool("pex_reactor") {
 		addrBook = p2p.NewAddrBook(conf.GetString("addrbook_file"), conf.GetBool("addrbook_strict"))
-		pexReactor := p2p.NewPEXReactor(addrBook)
+		pexReactor := p2p.NewPEXReactor(addrBook, conf.GetString("p2p_proxy_addr"))
 		ang.p2pSwitch.AddReactor("PEX", pexReactor)
 	}
 
@@ -1131,11 +1131,12 @@ func prepareP2P(conf *viper.Viper, genesis *types.GenesisDoc, privValidator *typ
 		return nil, errors.Wrap(err, "prepareP2P")
 	}
 	nodeInfo := &p2p.NodeInfo{
-		PubKey:      privValidator.GetPubKey(),
-		SigndPubKey: conf.GetString("signbyCA"),
-		Moniker:     conf.GetString("moniker"),
-		ListenAddr:  defaultListener.ExternalAddress().String(),
-		Version:     version,
+		PubKey:       privValidator.GetPubKey(),
+		SigndPubKey:  conf.GetString("signbyCA"),
+		Moniker:      conf.GetString("moniker"),
+		ListenAddr:   defaultListener.ExternalAddress().String(),
+		P2pProxyAddr: conf.GetString("p2p_proxy_addr"),
+		Version:      version,
 	}
 	privKey := privValidator.GetPrivKey()
 	p2psw.AddListener(defaultListener)
