@@ -73,9 +73,9 @@ package {{.Package}}
 		const {{.Type}}Bin = ` + "`" + `{{.InputBin}}` + "`" + `
 
 		// Deploy{{.Type}} deploys a new Ethereum contract, binding an instance of {{.Type}} to it.
-		func Deploy{{.Type}}(goSDK *rpcclient.GoSDK, auth rpcclient.AccountBase {{range .Constructor.Inputs}}, {{.Name}} {{bindtype .Type}}{{end}}) (common.Hash, *{{.Type}}, error) {
+		func Deploy{{.Type}}(goSDK *client.GoSDK, auth client.AccountBase {{range .Constructor.Inputs}}, {{.Name}} {{bindtype .Type}}{{end}}) (common.Hash, *{{.Type}}, error) {
 
-		  cc := rpcclient.ContractCreate{
+		  cc := client.ContractCreate{
 			AccountBase: auth,
 			Code:        {{.Type}}Bin,
 			ABI:         {{.Type}}ABI,
@@ -94,11 +94,11 @@ package {{.Package}}
 	// {{.Type}} is an auto generated Go binding around an Ethereum contract.
 	type {{.Type}} struct {
 	  address common.Address
-	  cli     *rpcclient.GoSDK
+	  cli     *client.GoSDK
 	}
 
 	// New{{.Type}} creates a new instance of {{.Type}}, bound to a specific deployed contract.
-	func New{{.Type}}(goSdk *rpcclient.GoSDK, address common.Address) *{{.Type}} {
+	func New{{.Type}}(goSdk *client.GoSDK, address common.Address) *{{.Type}} {
 	  return &{{.Type}}{address: address, cli: goSdk}
 	}
 
@@ -108,13 +108,13 @@ package {{.Package}}
 
 	{{range .Calls}}
 		
-		func (_{{$contract.Type}} *{{$contract.Type}}) {{.Normalized.Name}}(auth rpcclient.AccountBase {{range .Normalized.Inputs}}, {{.Name}} {{bindtype .Type}} {{end}}) ( {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type}},{{end}} error) {
+		func (_{{$contract.Type}} *{{$contract.Type}}) {{.Normalized.Name}}(auth client.AccountBase {{range .Normalized.Inputs}}, {{.Name}} {{bindtype .Type}} {{end}}) ( {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type}},{{end}} error) {
 			
 			var (
 				{{range $i, $_ := .Normalized.Outputs}}ret{{$i}}  {{bindtype .Type}}
 				{{end}}
 			)
-			m := rpcclient.ContractMethod{
+			m := client.ContractMethod{
 				AccountBase: auth,
 				Contract:    _{{$contract.Type}}.address.Hex(),
 				ABI:         {{$contract.Type}}ABI,
@@ -129,12 +129,12 @@ package {{.Package}}
 			return {{range $i, $_ := .Normalized.Outputs}}ret{{$i}}, {{end}}err
 		}
 
-		func (_{{$contract.Type}} *{{$contract.Type}}) {{.Normalized.Name}}ByHeight(auth rpcclient.AccountBase {{range .Normalized.Inputs}}, {{.Name}} {{bindtype .Type}} {{end}}, height uint64) ( {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type}},{{end}} error) {	
+		func (_{{$contract.Type}} *{{$contract.Type}}) {{.Normalized.Name}}ByHeight(auth client.AccountBase {{range .Normalized.Inputs}}, {{.Name}} {{bindtype .Type}} {{end}}, height uint64) ( {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type}},{{end}} error) {	
 			var (
 				{{range $i, $_ := .Normalized.Outputs}}ret{{$i}}  {{bindtype .Type}}
 				{{end}}
 			)
-			m := rpcclient.ContractMethod{
+			m := client.ContractMethod{
 				AccountBase: auth,
 				Contract:    _{{$contract.Type}}.address.Hex(),
 				ABI:         {{$contract.Type}}ABI,
@@ -152,9 +152,9 @@ package {{.Package}}
 	{{end}}
 
 	{{range .Transacts}}
-		func (_{{$contract.Type}} *{{$contract.Type}}) {{.Normalized.Name}}(auth rpcclient.AccountBase {{range .Normalized.Inputs}}, {{.Name}} {{bindtype .Type}} {{end}}) ( txHash string, err error) {
+		func (_{{$contract.Type}} *{{$contract.Type}}) {{.Normalized.Name}}(auth client.AccountBase {{range .Normalized.Inputs}}, {{.Name}} {{bindtype .Type}} {{end}}) ( txHash string, err error) {
 			
-			m := rpcclient.ContractMethod{
+			m := client.ContractMethod{
 				AccountBase: auth,
 				Contract:    _{{$contract.Type}}.address.Hex(),
 				ABI:         {{$contract.Type}}ABI,
@@ -165,12 +165,12 @@ package {{.Package}}
 			return _{{$contract.Type}}.cli.ContractAsync(&m)
 		}
 
-		func (_{{$contract.Type}} *{{$contract.Type}}) {{.Normalized.Name}}ByHeight(auth rpcclient.AccountBase {{range .Normalized.Inputs}}, {{.Name}} {{bindtype .Type}} {{end}}, height uint64) ( {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type}},{{end}} error) {
+		func (_{{$contract.Type}} *{{$contract.Type}}) {{.Normalized.Name}}ByHeight(auth client.AccountBase {{range .Normalized.Inputs}}, {{.Name}} {{bindtype .Type}} {{end}}, height uint64) ( {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type}},{{end}} error) {
 			var (
 				{{range $i, $_ := .Normalized.Outputs}}ret{{$i}}  {{bindtype .Type}}
 				{{end}}
 			)
-			m := rpcclient.ContractMethod{
+			m := client.ContractMethod{
 				AccountBase: auth,
 				Contract:    _{{$contract.Type}}.address.Hex(),
 				ABI:         {{$contract.Type}}ABI,

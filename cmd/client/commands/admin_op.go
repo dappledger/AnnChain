@@ -212,7 +212,7 @@ func adminContractCall(au *AdminOPUser) (string, error) {
 		return "", err
 	}
 
-	clt := rpcclient.NewClientJSONRPC(commons.QueryServer)
+	clt := client.NewClientJSONRPC(commons.QueryServer)
 	rpcResult := new(gtypes.ResultBroadcastTxCommit)
 	_, err = clt.Call("broadcast_tx_commit", []interface{}{b}, rpcResult)
 	if err != nil {
@@ -261,7 +261,7 @@ func NewAdminOPUser(ctx *cli.Context) (*AdminOPUser, error) {
 
 func getNonce(addrBytes []byte) (uint64, error) {
 	query := append([]byte{types.QueryType_Nonce}, addrBytes...)
-	clientJSON := rpcclient.NewClientJSONRPC(commons.QueryServer)
+	clientJSON := client.NewClientJSONRPC(commons.QueryServer)
 	rpcResult := new(gtypes.ResultQuery)
 	_, err := clientJSON.Call("query", []interface{}{query}, rpcResult)
 	if err != nil {

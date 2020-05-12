@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rpcclient
+package client
 
 import (
 	"encoding/json"
@@ -21,9 +21,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/websocket"
 	gcmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	gtypes "github.com/dappledger/AnnChain/gemmill/rpc/types"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -39,7 +39,7 @@ type WSClient struct {
 	Dialer   func(string, string) (net.Conn, error)
 	*websocket.Conn
 	ResultsCh chan interface{} // closes upon WSClient.Stop()
-	ErrorsCh  chan error           // closes upon WSClient.Stop()
+	ErrorsCh  chan error       // closes upon WSClient.Stop()
 }
 
 // create a new connection

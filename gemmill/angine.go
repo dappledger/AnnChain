@@ -27,7 +27,7 @@ import (
 	"sync"
 	"time"
 
-	rpcserver "github.com/dappledger/AnnChain/gemmill/rpc/server"
+	"github.com/dappledger/AnnChain/gemmill/rpc/server"
 
 	"github.com/dappledger/AnnChain/gemmill/consensus/pbft"
 	"github.com/dappledger/AnnChain/gemmill/consensus/raft"
@@ -92,7 +92,7 @@ type Angine struct {
 
 	queryPayLoadTxParser func([]byte) ([]byte, error)
 
-	apis []map[string]*rpcserver.RPCFunc
+	apis []map[string]*server.RPCFunc
 }
 
 type Tunes struct {
@@ -205,7 +205,7 @@ func NewAngine(app types.Application, tune *Tunes) (angine *Angine, err error) {
 	return
 }
 
-func (a *Angine) APIs() []map[string]*rpcserver.RPCFunc {
+func (a *Angine) APIs() []map[string]*server.RPCFunc {
 	return a.apis
 }
 

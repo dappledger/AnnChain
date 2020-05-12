@@ -93,13 +93,11 @@ func NewNode(conf *viper.Viper, runtime, appName string) (*Node, error) {
 		AngineTune:  tune,
 		GenesisDoc:  newAngine.Genesis(),
 
-		nodeInfo:      makeNodeInfo(conf, newAngine.PrivValidator().PubKey, newAngine.P2PHost(), newAngine.P2PPort()),
+		nodeInfo:      newAngine.GetNodeInfo(),
 		config:        conf,
 		privValidator: newAngine.PrivValidator(),
 	}
 	vm.DefaultAdminContract.SetCallback(node.ExecAdminTx)
-	// newAngine.SetAdminVoteRPC(node.GetAdminVote)
-	newAngine.RegisterNodeInfo(node.nodeInfo)
 	initApp.SetCore(newAngine)
 
 	return node, nil
@@ -206,17 +204,15 @@ func (n *Node) StartRPC() ([]net.Listener, error) {
 
 	for i, listenAddr := range listenAddrs {
 		mux := http.NewServeMux()
-		// wm := rpcserver.NewWebsocketManager(rpcRoutes, n.evsw)
-		// mux.HandleFunc("/websocket", wm.WebsocketHandler)
 		routes := n.rpcRoutes()
 		for _, v := range n.Angine.APIs() {
 			for n, h := range v {
 				routes[n] = h
 			}
 		}
-		rpcserver.RegisterRPCFuncs(mux, routes)
+		server.RegisterRPCFuncs(mux, routes)
 
-		listener, err := rpcserver.StartHTTPServer(listenAddr, mux)
+		listener, err := server.StartHTTPServer(listenAddr, mux)
 		if err != nil {
 			return nil, err
 		}
