@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rpcserver
+package server
 
 import (
 	"bytes"
@@ -94,7 +94,7 @@ func newRPCFunc(f interface{}, args string, ws bool) *RPCFunc {
 func funcArgTypes(f interface{}) []reflect.Type {
 	t := reflect.TypeOf(f)
 	n := t.NumIn()
-	numOut:= t.NumOut()
+	numOut := t.NumOut()
 	if numOut > MaxReturnParamNum || numOut < MinReturnParamNum {
 		gcmn.PanicSanity(fmt.Sprintf("rpc functions param len is not in range %d ", numOut))
 	}

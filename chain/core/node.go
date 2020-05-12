@@ -36,7 +36,7 @@ import (
 	cmn "github.com/dappledger/AnnChain/gemmill/modules/go-common"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
 	"github.com/dappledger/AnnChain/gemmill/p2p"
-	rpcserver "github.com/dappledger/AnnChain/gemmill/rpc/server"
+	"github.com/dappledger/AnnChain/gemmill/rpc/server"
 	gtypes "github.com/dappledger/AnnChain/gemmill/types"
 )
 
@@ -204,17 +204,15 @@ func (n *Node) StartRPC() ([]net.Listener, error) {
 
 	for i, listenAddr := range listenAddrs {
 		mux := http.NewServeMux()
-		// wm := rpcserver.NewWebsocketManager(rpcRoutes, n.evsw)
-		// mux.HandleFunc("/websocket", wm.WebsocketHandler)
 		routes := n.rpcRoutes()
 		for _, v := range n.Angine.APIs() {
 			for n, h := range v {
 				routes[n] = h
 			}
 		}
-		rpcserver.RegisterRPCFuncs(mux, routes)
+		server.RegisterRPCFuncs(mux, routes)
 
-		listener, err := rpcserver.StartHTTPServer(listenAddr, mux)
+		listener, err := server.StartHTTPServer(listenAddr, mux)
 		if err != nil {
 			return nil, err
 		}

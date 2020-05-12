@@ -7,8 +7,8 @@ import (
 
 	"github.com/dappledger/AnnChain/gemmill/go-crypto"
 	"github.com/dappledger/AnnChain/gemmill/modules/go-log"
-	rpcclient "github.com/dappledger/AnnChain/gemmill/rpc/client"
-	rpcserver "github.com/dappledger/AnnChain/gemmill/rpc/server"
+	"github.com/dappledger/AnnChain/gemmill/rpc/client"
+	"github.com/dappledger/AnnChain/gemmill/rpc/server"
 	"github.com/dappledger/AnnChain/gemmill/types"
 	"github.com/hashicorp/raft"
 	"github.com/pkg/errors"
@@ -19,14 +19,14 @@ type PublicAPI struct {
 	*ConsensusState
 }
 
-func (p *PublicAPI) API() map[string]*rpcserver.RPCFunc {
+func (p *PublicAPI) API() map[string]*server.RPCFunc {
 
-	return map[string]*rpcserver.RPCFunc{
-		"raft/role":        rpcserver.NewRPCFunc(p.Role, ""),
-		"raft/leader":      rpcserver.NewRPCFunc(p.Leader, ""),
-		"raft/add_peer":    rpcserver.NewRPCFunc(p.AddPeer, "addr,rpc,pubKey"),
-		"raft/remove_peer": rpcserver.NewRPCFunc(p.RemovePeer, "pubKey"),
-		"raft/stats":       rpcserver.NewRPCFunc(p.Stats, ""),
+	return map[string]*server.RPCFunc{
+		"raft/role":        server.NewRPCFunc(p.Role, ""),
+		"raft/leader":      server.NewRPCFunc(p.Leader, ""),
+		"raft/add_peer":    server.NewRPCFunc(p.AddPeer, "addr,rpc,pubKey"),
+		"raft/remove_peer": server.NewRPCFunc(p.RemovePeer, "pubKey"),
+		"raft/stats":       server.NewRPCFunc(p.Stats, ""),
 	}
 }
 
@@ -81,7 +81,7 @@ func (p *PublicAPI) AddPeer(addr, rpc string, pubKey string) (*AddPeerResult, er
 				continue
 			}
 
-			cli := rpcclient.NewClientJSONRPC(peer.RPC)
+			cli := client.NewClientJSONRPC(peer.RPC)
 			r := AddPeerResult{}
 			if _, err := cli.Call("raft/add_peer", []interface{}{addr, rpc, pubKey}, &r); err != nil {
 				log.Error("call raft add peer", zap.String("rpc", peer.RPC), zap.Error(err))
@@ -133,7 +133,7 @@ func (p *PublicAPI) RemovePeer(pubKey string) (*RemovePeerResult, error) {
 				continue
 			}
 
-			cli := rpcclient.NewClientJSONRPC(peer.RPC)
+			cli := client.NewClientJSONRPC(peer.RPC)
 			r := RemovePeerResult{}
 			if _, err := cli.Call("raft/remove_peer", []interface{}{pubKey}, &r); err != nil {
 				log.Error("call peers remove peer", zap.String("rpc", peer.RPC), zap.Error(err))

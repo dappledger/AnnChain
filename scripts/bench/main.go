@@ -62,7 +62,7 @@ func main() {
 	}
 
 	endpoints := strings.Split(flag.Arg(0), ",")
-	client := rpcclient.NewClientJSONRPC(endpoints[0])
+	client := client.NewClientJSONRPC(endpoints[0])
 
 	switch *actionType {
 	case "basic":
@@ -95,7 +95,7 @@ func main() {
 	}
 }
 
-func basic(client *rpcclient.ClientJSONRPC) {
+func basic(client *client.ClientJSONRPC) {
 	timeStart := time.Now().UnixNano() / 1000000
 	fmt.Printf("START: %v\n", timeStart)
 	for i := 0; i < requestNum; i++ {
@@ -126,7 +126,7 @@ func basic(client *rpcclient.ClientJSONRPC) {
 	fmt.Printf("END: %v\n", time.Now().UnixNano()/1000000)
 }
 
-func basic_goroutine(client *rpcclient.ClientJSONRPC) {
+func basic_goroutine(client *client.ClientJSONRPC) {
 	timeStart := time.Now().UnixNano() / 1000000
 	// fmt.Printf("START: %v\n", timeStart)
 
@@ -219,7 +219,7 @@ func basic_goroutine(client *rpcclient.ClientJSONRPC) {
 	fmt.Printf("[Estimated TPS 	  ]: %v\n", float64(requestNum*1000)/float64(timeSpent))
 }
 
-func createContract(client *rpcclient.ClientJSONRPC, pkEcdsa *ecdsa.PrivateKey, wg *sync.WaitGroup) {
+func createContract(client *client.ClientJSONRPC, pkEcdsa *ecdsa.PrivateKey, wg *sync.WaitGroup) {
 	bytecode := "6060604052341561000f57600080fd5b6101818061001e6000396000f30060606040526004361061004c576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063a6226f2114610051578063b051c1e01461007d575b600080fd5b341561005c57600080fd5b61007b60048080359060200190919080359060200190919050506100b4565b005b341561008857600080fd5b61009e6004808035906020019091905050610136565b6040518082815260200191505060405180910390f35b60007fb45ab3e8c50935ce2fa51d37817fd16e7358a3087fd93a9ac7fbddb22a926c358383604051808381526020018281526020019250505060405180910390a1828160000181905550818160010181905550806000808581526020019081526020016000206000820154816000015560018201548160010155905050505050565b60008060008381526020019081526020016000206001015490509190505600a165627a7a723058207eaf119132cfc4008c97339b874c4c16d20d27a72875e55a6a22a29fee30876d0029"
 	// timeStart := time.Now().UnixNano() / 1000000
 	// fmt.Printf("START: %v\n", timeStart)
@@ -296,7 +296,7 @@ func createContract(client *rpcclient.ClientJSONRPC, pkEcdsa *ecdsa.PrivateKey, 
 	// ======================================================================
 }
 
-func readContract(client *rpcclient.ClientJSONRPC) {
+func readContract(client *client.ClientJSONRPC) {
 	contractAddr := "0x670958483e7281a77832642d4856e309276b48fc"
 	contractAbi := "[{\"constant\":false,\"inputs\":[{\"name\":\"Id\",\"type\":\"uint256\"},{\"name\":\"Amount\",\"type\":\"uint256\"}],\"name\":\"createCheckInfos\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"Id\",\"type\":\"uint256\"}],\"name\":\"getPremiumInfos\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"Id\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"Amount\",\"type\":\"uint256\"}],\"name\":\"InputLog\",\"type\":\"event\"}]"
 
@@ -343,7 +343,7 @@ func readContract(client *rpcclient.ClientJSONRPC) {
 	// fmt.Printf("TPS: %v\n", int64(requestNum)*1000/timeSpent)
 }
 
-func callContract(client *rpcclient.ClientJSONRPC, method string, args []interface{}) {
+func callContract(client *client.ClientJSONRPC, method string, args []interface{}) {
 	contractAddr := "0x670958483e7281a77832642d4856e309276b48fc"
 	contractAbi := "[{\"constant\":false,\"inputs\":[{\"name\":\"Id\",\"type\":\"uint256\"},{\"name\":\"Amount\",\"type\":\"uint256\"}],\"name\":\"createCheckInfos\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"Id\",\"type\":\"uint256\"}],\"name\":\"getPremiumInfos\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"Id\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"Amount\",\"type\":\"uint256\"}],\"name\":\"InputLog\",\"type\":\"event\"}]"
 
@@ -397,7 +397,7 @@ func callContract(client *rpcclient.ClientJSONRPC, method string, args []interfa
 	// fmt.Printf("TPS: %v\n", int64(requestNum)*1000/timeSpent)
 }
 
-func create_goroutine(client *rpcclient.ClientJSONRPC) {
+func create_goroutine(client *client.ClientJSONRPC) {
 	timeStart := time.Now().UnixNano() / 1000000
 
 	var wg sync.WaitGroup
@@ -449,7 +449,7 @@ func create_goroutine(client *rpcclient.ClientJSONRPC) {
 	fmt.Printf("[Estimated TPS 	  ]: %v\n", float64(requestNum*1000)/float64(timeSpent))
 }
 
-func read_goroutine(client *rpcclient.ClientJSONRPC) {
+func read_goroutine(client *client.ClientJSONRPC) {
 	timeStart := time.Now().UnixNano() / 1000000
 	var wg sync.WaitGroup
 	for i := 0; i < requestNum; i++ {
@@ -500,7 +500,7 @@ func read_goroutine(client *rpcclient.ClientJSONRPC) {
 	fmt.Printf("[Estimated TPS 	  ]: %v\n", float64(requestNum*1000)/float64(timeSpent))
 }
 
-func call_goroutine(client *rpcclient.ClientJSONRPC) {
+func call_goroutine(client *client.ClientJSONRPC) {
 	timeStart := time.Now().UnixNano() / 1000000
 
 	contractAddr := "0xb24e3d7537b4389e6c730799fc64701e95457706"
@@ -576,7 +576,7 @@ func generateTx(connIndex int, txNumber int, chainId string) []byte {
 	return tx
 }
 
-func getNonce(client *rpcclient.ClientJSONRPC, fromAddress string) (uint64, error) {
+func getNonce(client *client.ClientJSONRPC, fromAddress string) (uint64, error) {
 	rpcResult := new(gtypes.RPCResult)
 
 	addr := common.Hex2Bytes(gcmn.SanitizeHex(fromAddress))

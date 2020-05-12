@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Commons for HTTP handling
-package rpcserver
+package server
 
 import (
 	"bufio"
