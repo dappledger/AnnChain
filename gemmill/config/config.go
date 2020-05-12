@@ -194,6 +194,7 @@ func SetDefaults(runtime string, conf *viper.Viper) *viper.Viper {
 	conf.SetDefault("db_archive_dir", path.Join(runtime, ARCHIVEDIR))
 	conf.SetDefault("revision_file", path.Join(runtime, "revision"))
 	conf.SetDefault("filter_peers", false)
+	conf.SetDefault("p2p_proxy_addr", "")
 
 	setMempoolDefaults(conf)
 	setConsensusDefaults(conf)
