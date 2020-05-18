@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/dappledger/AnnChain/gemmill/go-wire"
@@ -45,11 +46,21 @@ type PEXReactor struct {
 	BaseReactor
 
 	book *AddrBook
+	//
+	localP2pProxyAddr *NetAddress
 }
 
-func NewPEXReactor(book *AddrBook) *PEXReactor {
+func NewPEXReactor(book *AddrBook, localProxy string) *PEXReactor {
 	pexR := &PEXReactor{
 		book: book,
+	}
+	log.Infof("NewPEXReactor(%s)",localProxy)
+	pexR.localP2pProxyAddr = &NetAddress{}
+	if localProxy != "" {
+		addr, _ := NewNetAddressString(localProxy)
+		if addr != nil {
+			pexR.localP2pProxyAddr = addr
+		}
 	}
 	pexR.BaseReactor = *NewBaseReactor("PEXReactor", pexR)
 	return pexR
@@ -78,6 +89,15 @@ func (pexR *PEXReactor) GetChannels() []*ChannelDescriptor {
 
 // Implements Reactor
 func (pexR *PEXReactor) AddPeer(peer *Peer) {
+	if strings.TrimSpace(peer.P2pProxyAddr) != "" {
+		//如果用相同的代理，那么就是同一套内网系统，可以直接走原来的流程;否则，走proxy流程.
+		netAddr, _ := NewNetAddressString(peer.P2pProxyAddr)
+		if !bytes.Equal(pexR.localP2pProxyAddr.IP, netAddr.IP) {
+			pexR.book.AddAddress(netAddr, netAddr)
+			log.Debugf("AddPeer(%s)",netAddr.String())
+			return
+		}
+	}
 	// Add the peer to the address book
 	netAddr, _ := NewNetAddressString(peer.ListenAddr)
 	if peer.IsOutbound() {

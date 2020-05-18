@@ -26,14 +26,15 @@ import (
 const maxNodeInfoSize = 10240 // 10Kb
 
 type NodeInfo struct {
-	PubKey      crypto.PubKey `json:"pub_key"`
-	SigndPubKey string        `json:"signd_pub_key"`
-	Moniker     string        `json:"moniker"`
-	Network     string        `json:"network"`
-	RemoteAddr  string        `json:"remote_addr"`
-	ListenAddr  string        `json:"listen_addr"`
-	Version     string        `json:"version"` // major.minor.revision
-	Other       []string      `json:"other"`   // other application specific data
+	PubKey       crypto.PubKey `json:"pub_key"`
+	SigndPubKey  string        `json:"signd_pub_key"`
+	Moniker      string        `json:"moniker"`
+	Network      string        `json:"network"`
+	RemoteAddr   string        `json:"remote_addr"`
+	ListenAddr   string        `json:"listen_addr"`
+	P2pProxyAddr string        `json:"p2p_proxy_addr"`
+	Version      string        `json:"version"` // major.minor.revision
+	Other        []string      `json:"other"`   // other application specific data
 }
 
 type ExchangeData struct {
