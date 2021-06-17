@@ -267,7 +267,7 @@ query result: {"root":null,"status":1,"cumulativeGasUsed":21656,"logsBloom":"0x0
 
 ## KeyValue : get value by key 
 
-####Command 
+#### Command 
 ```
  gtool  --backend <validator's IP:RPC Port>  get <key>
 ```
