@@ -7,9 +7,9 @@ require (
 	github.com/allegro/bigcache v1.2.0
 	github.com/aristanetworks/goarista v0.0.0-20180424004133-70dca2f27708
 	github.com/bitly/go-simplejson v0.0.0-20170206154632-da1a8928f709
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/btcsuite/btcd v0.0.0-20190427004231-96897255fd17
 	github.com/davecgh/go-spew v1.1.1
-	github.com/ethereum/go-ethereum v1.8.27
 	github.com/go-stack/stack v1.8.0
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
@@ -43,7 +43,7 @@ require (
 	go.uber.org/zap v0.0.0-20170802171341-e68420e36ce8
 	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
 	golang.org/x/net v0.0.0-20190501004415-9ce7a6920f09 // indirect
-	golang.org/x/sys v0.0.0-20190602015325-4c4f7f33c9ed
+	golang.org/x/sys v0.1.0
 	golang.org/x/text v0.3.1-0.20181227161524-e6919f6577db // indirect
 	golang.org/x/tools v0.0.0-20190517183331-d88f79806bbd
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
